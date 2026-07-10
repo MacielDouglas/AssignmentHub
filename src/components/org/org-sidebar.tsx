@@ -1,4 +1,3 @@
-import Link from "next/link";
 import {
 	HiOutlineCalendarDays,
 	HiOutlineCheckBadge,
@@ -6,6 +5,8 @@ import {
 	HiOutlineSquares2X2,
 	HiOutlineUsers,
 } from "react-icons/hi2";
+
+import { OrgNavLinks } from "./org-nav-links";
 
 type OrgSidebarProps = {
 	currentSlug: string;
@@ -61,24 +62,7 @@ export function OrgSidebar({ currentSlug, organizationName }: OrgSidebarProps) {
 			</div>
 
 			<nav className="flex-1 px-4 py-4" aria-label="Navegação da organização">
-				<ul className="space-y-1">
-					{navItems.map((item) => {
-						const Icon = item.icon;
-						const href = `/org/${currentSlug}${item.href}`;
-
-						return (
-							<li key={item.label}>
-								<Link
-									href={href}
-									className="flex items-center gap-3 border border-transparent px-3 py-2 text-sm font-medium text-muted-foreground hover:border-border hover:bg-background hover:text-foreground"
-								>
-									<Icon className="h-5 w-5" aria-hidden="true" />
-									{item.label}
-								</Link>
-							</li>
-						);
-					})}
-				</ul>
+				<OrgNavLinks currentSlug={currentSlug} items={navItems} />
 			</nav>
 		</aside>
 	);

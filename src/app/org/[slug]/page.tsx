@@ -63,7 +63,7 @@ export default async function OrganizationPage({
 					<p className="mt-2 text-sm leading-6 text-muted-foreground">
 						Você está no ambiente da organização{" "}
 						<span className="font-medium text-foreground">{slug}</span>. Aqui
-						entraremos com o resumo de tarefas prioritárias, reuniões do dia e
+						entrarão os dados reais de tarefas prioritárias, reuniões do dia e
 						alertas de designação.
 					</p>
 				</div>

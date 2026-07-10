@@ -42,12 +42,14 @@ export default async function OrgLayout({ children, params }: OrgLayoutProps) {
 		},
 	});
 
-	const organizations = memberships.map((membership) => ({
-		id: membership.organization.id,
-		name: membership.organization.name,
-		slug: membership.organization.slug,
-		role: membership.role,
-	}));
+	const organizations = memberships
+		.map((membership) => ({
+			id: membership.organization.id,
+			name: membership.organization.name,
+			slug: membership.organization.slug,
+			role: membership.role,
+		}))
+		.filter((organization) => organization.id && organization.slug);
 
 	const currentOrganization = organizations.find(
 		(organization) => organization.slug === slug,

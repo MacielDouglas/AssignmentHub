@@ -28,10 +28,12 @@ export function OrgSwitcher({
 	const router = useRouter();
 	const [open, setOpen] = useState(false);
 	const [pendingId, setPendingId] = useState<string | null>(null);
+	const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
 	const handleChangeOrganization = async (organization: OrganizationItem) => {
 		try {
 			setPendingId(organization.id);
+			setErrorMessage(null);
 
 			await authClient.organization.setActive({
 				organizationId: organization.id,
@@ -40,9 +42,9 @@ export function OrgSwitcher({
 			router.push(`/org/${organization.slug}`);
 			router.refresh();
 			setOpen(false);
-		} catch (error) {
-			console.error("Erro ao trocar organização:", error);
+		} catch {
 			setPendingId(null);
+			setErrorMessage("Não foi possível trocar de organização agora.");
 		}
 	};
 
@@ -51,9 +53,9 @@ export function OrgSwitcher({
 			<button
 				type="button"
 				onClick={() => setOpen((value) => !value)}
-				className="inline-flex min-h-11 items-center gap-3 border border-border bg-card px-4 py-2 text-left hover:bg-muted"
+				className="inline-flex min-h-11 max-w-full items-center gap-3 border border-border bg-card px-4 py-2 text-left hover:bg-muted"
 			>
-				<span className="flex h-9 w-9 items-center justify-center bg-blue-50 text-blue-600">
+				<span className="flex h-9 w-9 shrink-0 items-center justify-center bg-blue-50 text-blue-600">
 					<HiOutlineBuildingOffice2 className="h-5 w-5" aria-hidden="true" />
 				</span>
 
@@ -66,11 +68,11 @@ export function OrgSwitcher({
 					</span>
 				</span>
 
-				<HiOutlineChevronDown className="h-4 w-4 text-muted-foreground" />
+				<HiOutlineChevronDown className="h-4 w-4 shrink-0 text-muted-foreground" />
 			</button>
 
 			{open ? (
-				<div className="absolute left-0 top-full z-20 mt-2 min-w-70 border border-border bg-background shadow-sm">
+				<div className="absolute left-0 top-full z-20 mt-2 min-w-70 max-w-[90vw] border border-border bg-background shadow-sm">
 					<div className="border-b border-border px-4 py-3">
 						<p className="text-xs font-semibold uppercase tracking-[0.12em] text-muted-foreground">
 							Trocar organização
@@ -90,16 +92,16 @@ export function OrgSwitcher({
 									disabled={isCurrent || Boolean(pendingId)}
 									className="flex w-full items-center justify-between gap-3 px-3 py-3 text-left hover:bg-muted disabled:cursor-not-allowed disabled:opacity-60"
 								>
-									<div>
-										<p className="text-sm font-medium text-foreground">
+									<div className="min-w-0">
+										<p className="truncate text-sm font-medium text-foreground">
 											{organization.name}
 										</p>
-										<p className="text-xs text-muted-foreground">
+										<p className="truncate text-xs text-muted-foreground">
 											{isCurrent ? "Organização atual" : organization.role}
 										</p>
 									</div>
 
-									<span className="text-xs font-medium text-blue-700">
+									<span className="shrink-0 text-xs font-medium text-blue-700">
 										{isPending
 											? "Entrando..."
 											: isCurrent
@@ -111,6 +113,12 @@ export function OrgSwitcher({
 						})}
 					</div>
 				</div>
+			) : null}
+
+			{errorMessage ? (
+				<p className="mt-2 text-sm text-destructive" role="alert">
+					{errorMessage}
+				</p>
 			) : null}
 		</div>
 	);

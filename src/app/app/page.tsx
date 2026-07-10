@@ -28,7 +28,7 @@ export default async function AppEntryPage() {
 		}
 	}
 
-	const membership = await db.organizationMember.findFirst({
+	const memberships = await db.organizationMember.findMany({
 		where: {
 			userId: session.user.id,
 		},
@@ -45,9 +45,19 @@ export default async function AppEntryPage() {
 		},
 	});
 
-	if (!membership?.organization) {
+	const organizations = memberships
+		.map((membership) => membership.organization)
+		.filter((organization): organization is { id: string; slug: string } =>
+			Boolean(organization?.id && organization?.slug),
+		);
+
+	if (organizations.length === 0) {
 		redirect("/welcome");
 	}
 
-	redirect(`/org/${membership.organization.slug}`);
+	if (organizations.length === 1) {
+		redirect(`/org/${organizations[0].slug}`);
+	}
+
+	redirect("/select-organization");
 }

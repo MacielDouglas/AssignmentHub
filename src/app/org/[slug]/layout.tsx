@@ -2,6 +2,7 @@ import { headers } from "next/headers";
 import { notFound, redirect } from "next/navigation";
 import { OrgHeader } from "@/components/org/org-header";
 import { OrgSidebar } from "@/components/org/org-sidebar";
+import { getOrganizationAccessRole } from "@/features/organization/domain/member-role";
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
 
@@ -28,7 +29,8 @@ export default async function OrgLayout({ children, params }: OrgLayoutProps) {
 			userId: session.user.id,
 		},
 		select: {
-			role: true,
+			isOwner: true,
+			isAdmin: true,
 			organization: {
 				select: {
 					id: true,
@@ -42,14 +44,15 @@ export default async function OrgLayout({ children, params }: OrgLayoutProps) {
 		},
 	});
 
-	const organizations = memberships
-		.map((membership) => ({
-			id: membership.organization.id,
-			name: membership.organization.name,
-			slug: membership.organization.slug,
-			role: membership.role,
-		}))
-		.filter((organization) => organization.id && organization.slug);
+	const organizations = memberships.map((membership) => ({
+		id: membership.organization.id,
+		name: membership.organization.name,
+		slug: membership.organization.slug,
+		role: getOrganizationAccessRole({
+			isOwner: membership.isOwner,
+			isAdmin: membership.isAdmin,
+		}),
+	}));
 
 	const currentOrganization = organizations.find(
 		(organization) => organization.slug === slug,

@@ -10,6 +10,7 @@ import {
 	HiOutlineSquares2X2,
 	HiOutlineUsers,
 } from "react-icons/hi2";
+import { LogoutButton } from "@/components/auth/logout-button";
 import {
 	Card,
 	CardContent,
@@ -51,7 +52,7 @@ export default async function WelcomePage() {
 						className="inline-flex items-center gap-2 text-sm font-medium text-muted-foreground hover:text-foreground"
 					>
 						<HiOutlineArrowLeft className="h-4 w-4" aria-hidden="true" />
-						Voltar
+						Voltar <LogoutButton />
 					</Link>
 				</header>
 

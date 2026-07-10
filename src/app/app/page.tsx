@@ -4,18 +4,30 @@ import { redirect } from "next/navigation";
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
 
+type SessionWithRole = {
+	user?: {
+		id: string;
+		role?: "USER" | "SUPER_ADMIN" | "admin" | "user";
+	} | null;
+	session?: {
+		activeOrganizationId?: string | null;
+	} | null;
+};
+
 export default async function AppEntryPage() {
-	const session = await auth.api.getSession({
+	const session = (await auth.api.getSession({
 		headers: await headers(),
-	});
+	})) as SessionWithRole | null;
 
 	if (!session?.user) {
 		redirect("/");
 	}
 
-	const activeOrganizationId =
-		(session.session as { activeOrganizationId?: string | null } | null)
-			?.activeOrganizationId ?? null;
+	const platformRole = session.user.role;
+	const isSuperUser =
+		platformRole === "SUPER_ADMIN" || platformRole === "admin";
+
+	const activeOrganizationId = session.session?.activeOrganizationId ?? null;
 
 	if (activeOrganizationId) {
 		const activeOrganization = await db.organization.findUnique({
@@ -52,6 +64,10 @@ export default async function AppEntryPage() {
 		);
 
 	if (organizations.length === 0) {
+		if (isSuperUser) {
+			redirect("/setup/organization");
+		}
+
 		redirect("/welcome");
 	}
 

@@ -10,6 +10,7 @@ import {
 	HiOutlineUsers,
 } from "react-icons/hi2";
 
+import { SheetClose } from "@/components/ui/sheet";
 import { cn } from "@/lib/utils";
 
 type OrgNavIconName =
@@ -25,7 +26,7 @@ type NavItem = {
 	iconName: OrgNavIconName;
 };
 
-type OrgNavLinksProps = {
+type OrgMobileNavLinksProps = {
 	currentSlug: string;
 	items: NavItem[];
 };
@@ -38,7 +39,10 @@ const iconMap = {
 	people: HiOutlineUsers,
 } as const;
 
-export function OrgNavLinks({ currentSlug, items }: OrgNavLinksProps) {
+export function OrgMobileNavLinks({
+	currentSlug,
+	items,
+}: OrgMobileNavLinksProps) {
 	const pathname = usePathname();
 
 	return (
@@ -50,18 +54,20 @@ export function OrgNavLinks({ currentSlug, items }: OrgNavLinksProps) {
 
 				return (
 					<li key={item.label}>
-						<Link
-							href={href}
-							className={cn(
-								"flex items-center gap-3 border px-3 py-2 text-sm font-medium transition-colors",
-								isActive
-									? "border-blue-100 bg-blue-50 text-blue-700"
-									: "border-transparent text-muted-foreground hover:border-border hover:bg-background hover:text-foreground",
-							)}
-						>
-							<Icon className="h-5 w-5" aria-hidden="true" />
-							{item.label}
-						</Link>
+						<SheetClose>
+							<Link
+								href={href}
+								className={cn(
+									"flex items-center gap-3 border px-3 py-3 text-sm font-medium transition-colors",
+									isActive
+										? "border-blue-100 bg-blue-50 text-blue-700"
+										: "border-transparent text-muted-foreground hover:border-border hover:bg-muted hover:text-foreground",
+								)}
+							>
+								<Icon className="h-5 w-5" aria-hidden="true" />
+								{item.label}
+							</Link>
+						</SheetClose>
 					</li>
 				);
 			})}

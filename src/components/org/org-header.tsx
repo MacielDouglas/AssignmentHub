@@ -1,5 +1,5 @@
 import { HiOutlineBell, HiOutlineMagnifyingGlass } from "react-icons/hi2";
-
+import { LogoutButton } from "@/components/auth/logout-button";
 import { OrgMobileDrawer } from "./org-mobile-drawer";
 import { OrgSwitcher } from "./org-switcher";
 
@@ -56,14 +56,31 @@ export function OrgHeader({
 							<HiOutlineBell className="h-5 w-5" />
 						</button>
 
-						<div className="hidden min-w-0 border border-border bg-card px-3 py-2 sm:block">
+						<div className="hidden items-center gap-3 sm:flex">
+							<div className="flex h-10 w-10 items-center justify-center rounded-none border border-border bg-muted text-sm font-semibold text-foreground">
+								{userName.slice(0, 1).toUpperCase()}
+							</div>
+
+							<div className="min-w-0 border border-border bg-card px-3 py-2">
+								<p className="truncate text-sm font-medium text-foreground">
+									{userName}
+								</p>
+								<p className="truncate text-xs text-muted-foreground">
+									{userEmail}
+								</p>
+							</div>
+
+							<LogoutButton />
+						</div>
+
+						{/* <div className="hidden min-w-0 border border-border bg-card px-3 py-2 sm:block">
 							<p className="truncate text-sm font-medium text-foreground">
 								{userName}
 							</p>
 							<p className="truncate text-xs text-muted-foreground">
 								{userEmail}
 							</p>
-						</div>
+						</div> */}
 					</div>
 				</div>
 

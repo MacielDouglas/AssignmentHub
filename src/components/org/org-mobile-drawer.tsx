@@ -1,23 +1,15 @@
 "use client";
 
-import Link from "next/link";
-import {
-	HiOutlineBars3,
-	HiOutlineCalendarDays,
-	HiOutlineCheckBadge,
-	HiOutlineClipboardDocumentList,
-	HiOutlineSquares2X2,
-	HiOutlineUsers,
-} from "react-icons/hi2";
+import { HiOutlineBars3 } from "react-icons/hi2";
 
 import {
 	Sheet,
-	SheetClose,
 	SheetContent,
 	SheetHeader,
 	SheetTitle,
 	SheetTrigger,
 } from "@/components/ui/sheet";
+import { OrgMobileNavLinks } from "./org-mobile-nav-links";
 
 type OrgMobileDrawerProps = {
 	currentSlug: string;
@@ -25,32 +17,12 @@ type OrgMobileDrawerProps = {
 };
 
 const navItems = [
-	{
-		href: "",
-		label: "Visão geral",
-		icon: HiOutlineSquares2X2,
-	},
-	{
-		href: "/tasks",
-		label: "Tarefas",
-		icon: HiOutlineClipboardDocumentList,
-	},
-	{
-		href: "/meetings",
-		label: "Reuniões",
-		icon: HiOutlineCalendarDays,
-	},
-	{
-		href: "/assignments",
-		label: "Designações",
-		icon: HiOutlineCheckBadge,
-	},
-	{
-		href: "/people",
-		label: "Pessoas",
-		icon: HiOutlineUsers,
-	},
-];
+	{ href: "", label: "Visão geral", iconName: "dashboard" },
+	{ href: "/tasks", label: "Tarefas", iconName: "tasks" },
+	{ href: "/meetings", label: "Reuniões", iconName: "meetings" },
+	{ href: "/assignments", label: "Designações", iconName: "assignments" },
+	{ href: "/people", label: "Pessoas", iconName: "people" },
+] as const;
 
 export function OrgMobileDrawer({
 	currentSlug,
@@ -59,14 +31,9 @@ export function OrgMobileDrawer({
 	return (
 		<div className="lg:hidden">
 			<Sheet>
-				<SheetTrigger>
-					<button
-						type="button"
-						className="inline-flex h-11 w-11 items-center justify-center rounded-none border border-border bg-background text-foreground hover:bg-muted"
-						aria-label="Abrir menu"
-					>
-						<HiOutlineBars3 className="h-5 w-5" aria-hidden="true" />
-					</button>
+				<SheetTrigger className="inline-flex h-11 w-11 items-center justify-center rounded-none border border-border bg-background text-foreground hover:bg-muted">
+					<span className="sr-only">Abrir menu</span>
+					<HiOutlineBars3 className="h-5 w-5" aria-hidden="true" />
 				</SheetTrigger>
 
 				<SheetContent side="left" className="w-75 rounded-none p-0">
@@ -77,26 +44,10 @@ export function OrgMobileDrawer({
 					</SheetHeader>
 
 					<nav className="px-3 py-4" aria-label="Menu mobile da organização">
-						<ul className="space-y-1">
-							{navItems.map((item) => {
-								const Icon = item.icon;
-								const href = `/org/${currentSlug}${item.href}`;
-
-								return (
-									<li key={item.label}>
-										<SheetClose>
-											<Link
-												href={href}
-												className="flex items-center gap-3 border border-transparent px-3 py-3 text-sm font-medium text-muted-foreground hover:border-border hover:bg-muted hover:text-foreground"
-											>
-												<Icon className="h-5 w-5" aria-hidden="true" />
-												{item.label}
-											</Link>
-										</SheetClose>
-									</li>
-								);
-							})}
-						</ul>
+						<OrgMobileNavLinks
+							currentSlug={currentSlug}
+							items={[...navItems]}
+						/>
 					</nav>
 				</SheetContent>
 			</Sheet>

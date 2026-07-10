@@ -1,11 +1,4 @@
-import {
-	HiOutlineCalendarDays,
-	HiOutlineCheckBadge,
-	HiOutlineClipboardDocumentList,
-	HiOutlineSquares2X2,
-	HiOutlineUsers,
-} from "react-icons/hi2";
-
+import { HiOutlineSquares2X2 } from "react-icons/hi2";
 import { OrgNavLinks } from "./org-nav-links";
 
 type OrgSidebarProps = {
@@ -17,29 +10,29 @@ const navItems = [
 	{
 		href: "",
 		label: "Visão geral",
-		icon: HiOutlineSquares2X2,
+		iconName: "dashboard",
 	},
 	{
 		href: "/tasks",
 		label: "Tarefas",
-		icon: HiOutlineClipboardDocumentList,
+		iconName: "tasks",
 	},
 	{
 		href: "/meetings",
 		label: "Reuniões",
-		icon: HiOutlineCalendarDays,
+		iconName: "meetings",
 	},
 	{
 		href: "/assignments",
 		label: "Designações",
-		icon: HiOutlineCheckBadge,
+		iconName: "assignments",
 	},
 	{
 		href: "/people",
 		label: "Pessoas",
-		icon: HiOutlineUsers,
+		iconName: "people",
 	},
-];
+] as const;
 
 export function OrgSidebar({ currentSlug, organizationName }: OrgSidebarProps) {
 	return (
@@ -62,7 +55,7 @@ export function OrgSidebar({ currentSlug, organizationName }: OrgSidebarProps) {
 			</div>
 
 			<nav className="flex-1 px-4 py-4" aria-label="Navegação da organização">
-				<OrgNavLinks currentSlug={currentSlug} items={navItems} />
+				<OrgNavLinks currentSlug={currentSlug} items={[...navItems]} />
 			</nav>
 		</aside>
 	);

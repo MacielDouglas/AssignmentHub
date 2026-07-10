@@ -29,6 +29,17 @@ export const auth = betterAuth({
 		},
 	},
 
+	user: {
+		additionalFields: {
+			role: {
+				type: "string",
+				required: false,
+				defaultValue: "USER",
+				input: false,
+			},
+		},
+	},
+
 	trustedOrigins: [process.env.BETTER_AUTH_URL || "http://localhost:3000"],
 
 	plugins: [nextCookies(), organization()],

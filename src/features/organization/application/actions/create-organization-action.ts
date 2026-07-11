@@ -1,5 +1,7 @@
 "use server";
 
+import "server-only";
+
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { z } from "zod";
@@ -7,7 +9,7 @@ import { z } from "zod";
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
 
-const createOrganizationSchema = z.object({
+const schema = z.object({
 	name: z.string().trim().min(3, "Informe um nome válido."),
 	slug: z
 		.string()
@@ -16,18 +18,24 @@ const createOrganizationSchema = z.object({
 		.regex(/^[a-z0-9-]+$/, "Use apenas letras minúsculas, números e hífen."),
 });
 
-type Input = {
-	name: string;
-	slug: string;
+export type CreateOrganizationActionState = {
+	success: boolean;
+	message: string;
 };
 
-export async function createOrganizationAction(input: Input) {
-	const parsed = createOrganizationSchema.safeParse(input);
+export async function createOrganizationAction(
+	_prevState: CreateOrganizationActionState,
+	formData: FormData,
+): Promise<CreateOrganizationActionState> {
+	const parsed = schema.safeParse({
+		name: formData.get("name"),
+		slug: formData.get("slug"),
+	});
 
 	if (!parsed.success) {
 		return {
 			success: false,
-			message: parsed.error.issues?.[0]?.message ?? "Dados inválidos.",
+			message: parsed.error.issues[0]?.message ?? "Dados inválidos.",
 		};
 	}
 
@@ -42,54 +50,51 @@ export async function createOrganizationAction(input: Input) {
 		};
 	}
 
-	const user = await db.user.findUnique({
-		where: {
-			id: session.user.id,
-		},
-		select: {
-			id: true,
-			role: true,
-		},
+	const currentUser = await db.user.findUnique({
+		where: { id: session.user.id },
+		select: { id: true, systemRole: true },
 	});
 
-	if (!user || user.role !== "SUPER_ADMIN") {
+	if (currentUser?.systemRole !== "SUPER_ADMIN") {
 		return {
 			success: false,
 			message: "Você não tem permissão para criar organizações.",
 		};
 	}
 
-	const existingOrganization = await db.organization.findUnique({
-		where: {
-			slug: parsed.data.slug,
-		},
-		select: {
-			id: true,
-		},
+	const existing = await db.organization.findUnique({
+		where: { slug: parsed.data.slug },
+		select: { id: true },
 	});
 
-	if (existingOrganization) {
+	if (existing) {
 		return {
 			success: false,
 			message: "Esse slug já está em uso.",
 		};
 	}
 
-	const organization = await db.organization.create({
-		data: {
-			name: parsed.data.name,
-			slug: parsed.data.slug,
-			members: {
-				create: {
-					userId: session.user.id,
-					isOwner: true,
-					isAdmin: true,
-				},
+	const organization = await db.$transaction(async (tx) => {
+		const createdOrganization = await tx.organization.create({
+			data: {
+				name: parsed.data.name,
+				slug: parsed.data.slug,
 			},
-		},
-		select: {
-			slug: true,
-		},
+			select: {
+				id: true,
+				slug: true,
+			},
+		});
+
+		await tx.organizationMembership.create({
+			data: {
+				organizationId: createdOrganization.id,
+				userId: currentUser.id,
+				role: "OWNER",
+			},
+		});
+
+		return createdOrganization;
 	});
 
 	redirect(`/org/${organization.slug}`);

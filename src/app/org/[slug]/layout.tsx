@@ -2,7 +2,6 @@ import { headers } from "next/headers";
 import { notFound, redirect } from "next/navigation";
 import { OrgHeader } from "@/components/org/org-header";
 import { OrgSidebar } from "@/components/org/org-sidebar";
-import { getOrganizationAccessRole } from "@/features/organization/domain/member-role";
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
 
@@ -24,13 +23,12 @@ export default async function OrgLayout({ children, params }: OrgLayoutProps) {
 		redirect("/");
 	}
 
-	const memberships = await db.organizationMember.findMany({
+	const memberships = await db.organizationMembership.findMany({
 		where: {
 			userId: session.user.id,
 		},
 		select: {
-			isOwner: true,
-			isAdmin: true,
+			role: true,
 			organization: {
 				select: {
 					id: true,
@@ -48,10 +46,7 @@ export default async function OrgLayout({ children, params }: OrgLayoutProps) {
 		id: membership.organization.id,
 		name: membership.organization.name,
 		slug: membership.organization.slug,
-		role: getOrganizationAccessRole({
-			isOwner: membership.isOwner,
-			isAdmin: membership.isAdmin,
-		}),
+		role: membership.role,
 	}));
 
 	const currentOrganization = organizations.find(

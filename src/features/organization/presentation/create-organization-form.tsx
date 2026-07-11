@@ -1,30 +1,24 @@
 "use client";
 
-import { useState, useTransition } from "react";
-import { createOrganizationAction } from "@/features/organization/application/actions/create-organization-action";
+import { useActionState } from "react";
+import {
+	type CreateOrganizationActionState,
+	createOrganizationAction,
+} from "@/features/organization/application/actions/create-organization-action";
+
+const initialState: CreateOrganizationActionState = {
+	success: false,
+	message: "",
+};
 
 export function CreateOrganizationForm() {
-	const [name, setName] = useState("");
-	const [slug, setSlug] = useState("");
-	const [errorMessage, setErrorMessage] = useState<string | null>(null);
-	const [isPending, startTransition] = useTransition();
+	const [state, formAction, isPending] = useActionState(
+		createOrganizationAction,
+		initialState,
+	);
 
 	return (
-		<form
-			className="space-y-4"
-			onSubmit={(event) => {
-				event.preventDefault();
-				setErrorMessage(null);
-
-				startTransition(async () => {
-					const result = await createOrganizationAction({ name, slug });
-
-					if (!result.success) {
-						setErrorMessage(result.message);
-					}
-				});
-			}}
-		>
+		<form action={formAction} className="space-y-4">
 			<div className="space-y-2">
 				<label htmlFor="name" className="text-sm font-medium text-foreground">
 					Nome da organização
@@ -32,8 +26,6 @@ export function CreateOrganizationForm() {
 				<input
 					id="name"
 					name="name"
-					value={name}
-					onChange={(event) => setName(event.target.value)}
 					className="h-11 w-full rounded-none border border-input bg-background px-3 text-sm outline-none focus-visible:ring-2 focus-visible:ring-ring"
 					placeholder="Ex.: AssignmentHub Brasil"
 				/>
@@ -46,16 +38,14 @@ export function CreateOrganizationForm() {
 				<input
 					id="slug"
 					name="slug"
-					value={slug}
-					onChange={(event) => setSlug(event.target.value)}
 					className="h-11 w-full rounded-none border border-input bg-background px-3 text-sm outline-none focus-visible:ring-2 focus-visible:ring-ring"
 					placeholder="assignmenthub-brasil"
 				/>
 			</div>
 
-			{errorMessage ? (
+			{state.message ? (
 				<p className="text-sm text-destructive" role="alert">
-					{errorMessage}
+					{state.message}
 				</p>
 			) : null}
 

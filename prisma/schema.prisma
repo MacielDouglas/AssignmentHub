@@ -1,8 +1,3 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Get a free hosted Postgres database in seconds: `npx create-db`
-
 generator client {
   provider = "prisma-client"
   output   = "../src/generated/prisma"
@@ -12,10 +7,15 @@ datasource db {
   provider = "postgresql"
 }
 
-enum UserRole {
+enum SystemRole {
   USER
-  ADMIN
   SUPER_ADMIN
+}
+
+enum OrganizationRole {
+  OWNER
+  ADMIN
+  MEMBER
 }
 
 enum Sex {
@@ -23,72 +23,21 @@ enum Sex {
   FEMALE
 }
 
-enum MeetingType {
-  WEEKEND
-  MIDWEEK
-}
-
-enum MeetingSection {
-  WEEKEND_MAIN
-  TREASURES
-  APPLY_YOURSELF
-  CHRISTIAN_LIFE
-  CLEANING
-  FINAL_PRAYER
-}
-
-enum MeetingPartType {
-  WEEKEND_PRESIDENT
-  WEEKEND_SPEAKER
-  WEEKEND_CHAIRMAN
-  WEEKEND_READER
-
-  TREASURES_TALK
-  TREASURES_GEMS
-  TREASURES_BIBLE_READING
-
-  APPLY_STARTING_CONVERSATIONS
-  APPLY_CULTIVATING_INTEREST
-  APPLY_MAKING_DISCIPLES
-  APPLY_EXPLAINING_BELIEFS
-  APPLY_TALK
-
-  CHRISTIAN_LIFE_PART
-  CONGREGATION_BIBLE_STUDY
-
-  FINAL_PRAYER
-
-  CLEANING_MALE_BATHROOM
-  CLEANING_FEMALE_BATHROOM
-  CLEANING_ACCESSIBLE_BATHROOM
-  CLEANING_SWEEP_FLOOR
-  CLEANING_WASH_CLOTHS
-  CLEANING_TAKE_OUT_TRASH
-}
-
-enum AssignmentRoleType {
-  ASSIGNEE
-  STUDENT
-  ASSISTANT
-  CHAIRMAN
-  READER
-  PRESIDENT
-  SPEAKER
-}
-
 model User {
-  id              String               @id
-  name            String
-  email           String               @unique
-  emailVerified   Boolean
-  image           String?
-  role            UserRole             @default(USER)
-  createdAt       DateTime             @default(now())
-  updatedAt       DateTime             @updatedAt
+  id            String                  @id
+  name          String
+  email         String                  @unique
+  emailVerified Boolean
+  image         String?
+  systemRole    SystemRole              @default(USER)
+  personId      String?                  @unique
+  createdAt     DateTime                @default(now())
+  updatedAt     DateTime                @updatedAt
 
-  sessions        Session[]
-  accounts        Account[]
-  organizationLinks OrganizationMember[]
+  person        Person?                  @relation(fields: [personId], references: [id], onDelete: Restrict)
+  sessions      Session[]
+  accounts      Account[]
+  memberships   OrganizationMembership[]
 
   @@map("user")
 }
@@ -102,6 +51,7 @@ model Session {
   ipAddress String?
   userAgent String?
   userId    String
+
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@map("session")
@@ -112,7 +62,6 @@ model Account {
   accountId             String
   providerId            String
   userId                String
-  user                  User      @relation(fields: [userId], references: [id], onDelete: Cascade)
   accessToken           String?
   refreshToken          String?
   idToken               String?
@@ -123,6 +72,10 @@ model Account {
   createdAt             DateTime  @default(now())
   updatedAt             DateTime  @updatedAt
 
+  user                  User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([providerId])
   @@map("account")
 }
 
@@ -139,144 +92,87 @@ model Verification {
 }
 
 model Organization {
-  id          String               @id @default(cuid())
-  name        String
-  slug        String               @unique
-  createdAt   DateTime             @default(now())
-  updatedAt   DateTime             @updatedAt
+  id               String                   @id @default(uuid())
+  name             String
+  slug             String                   @unique
+  createdAt        DateTime                 @default(now())
+  updatedAt        DateTime                 @updatedAt
 
-  members     OrganizationMember[]
-  families    Family[]
-  people      Person[]
-  meetings    Meeting[]
+  memberships      OrganizationMembership[]
+  people           Person[]
+  subOrganizations SubOrganization[]
+
+  @@index([slug])
 }
 
-model OrganizationMember {
-  id             String       @id @default(cuid())
+model OrganizationMembership {
+  id             String            @id @default(uuid())
   organizationId String
-  userId         String
-  isOwner        Boolean      @default(false)
-  isAdmin        Boolean      @default(false)
-  createdAt      DateTime     @default(now())
+  userId         String            @unique
+  role           OrganizationRole  @default(MEMBER)
+  createdAt      DateTime          @default(now())
+  updatedAt      DateTime          @updatedAt
 
-  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
-  user           User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  organization   Organization      @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  user           User              @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([organizationId, userId])
+  @@index([organizationId, role])
 }
 
-model Family {
-  id             String       @id @default(cuid())
+model Outline {
+  id         String      @id @default(uuid())
+  number     Int         @unique
+  name       String      @unique
+  createdAt  DateTime    @default(now())
+  updatedAt  DateTime    @updatedAt
+
+  subPeople  SubPerson[]
+  person     Person[]
+}
+
+model SubOrganization {
+  id             String       @id @default(uuid())
   organizationId String
   name           String
   createdAt      DateTime     @default(now())
   updatedAt      DateTime     @updatedAt
 
   organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
-  people         Person[]
+  people         SubPerson[]
 
   @@unique([organizationId, name])
+  @@index([organizationId])
+}
+
+model SubPerson {
+  id                String           @id @default(uuid())
+  subOrganizationId String
+  name              String
+  sex               Sex              @default(MALE)
+  isActive          Boolean          @default(true)
+  createdAt         DateTime         @default(now())
+  updatedAt         DateTime         @updatedAt
+
+  subOrganization   SubOrganization  @relation(fields: [subOrganizationId], references: [id], onDelete: Cascade)
+  outlines          Outline[]
+
+  @@index([subOrganizationId, name])
 }
 
 model Person {
-  id                        String       @id @default(cuid())
-  organizationId            String
-  familyId                  String?
-  firstName                 String
-  lastName                  String
-  sex                       Sex
-  isBaptized                Boolean      @default(false)
+  id             String        @id @default(uuid())
+  organizationId String?
+  name           String
+  sex            Sex           @default(MALE)
+  isActive       Boolean       @default(true)
+  isStudent      Boolean       @default(true)
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+  outlines       Outline[]
 
-  canStartingConversations  Boolean      @default(false)
-  canCultivatingInterest    Boolean      @default(false)
-  canMakingDisciples        Boolean      @default(false)
-  canExplainingBeliefs      Boolean      @default(false)
-  canCleaning               Boolean      @default(false)
+  organization   Organization? @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  user           User?
 
-  isElder                   Boolean      @default(false)
-  isMinisterialServant      Boolean      @default(false)
-  canReader                 Boolean      @default(false)
-  canTalk                   Boolean      @default(false)
-  canPrayer                 Boolean      @default(false)
-  canPresident              Boolean      @default(false)
-  canWatchtowerReader       Boolean      @default(false)
-  canBibleStudyReader       Boolean      @default(false)
-  canPublicTalk             Boolean      @default(false)
-  canApplyYourselfParts     Boolean      @default(false)
-
-  createdAt                 DateTime     @default(now())
-  updatedAt                 DateTime     @updatedAt
-
-  organization              Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
-  family                    Family?      @relation(fields: [familyId], references: [id], onDelete: SetNull)
-
-  assignmentParticipants    AssignmentParticipant[]
-
-  @@index([organizationId, lastName, firstName])
-  @@index([familyId])
-}
-
-model Meeting {
-  id              String        @id @default(cuid())
-  organizationId  String
-  type            MeetingType
-  meetingDate     DateTime
-  weekKey         String
-  title           String?
-  notes           String?
-  createdAt       DateTime      @default(now())
-  updatedAt       DateTime      @updatedAt
-
-  organization    Organization  @relation(fields: [organizationId], references: [id], onDelete: Cascade)
-  parts           MeetingPart[]
-
-  @@unique([organizationId, type, meetingDate])
-  @@index([organizationId, weekKey])
-}
-
-model MeetingPart {
-  id                String            @id @default(cuid())
-  meetingId         String
-  section           MeetingSection
-  type              MeetingPartType
-  title             String?
-  sequence          Int
-  isTalkFormat      Boolean?
-  notes             String?
-  createdAt         DateTime          @default(now())
-  updatedAt         DateTime          @updatedAt
-
-  meeting           Meeting           @relation(fields: [meetingId], references: [id], onDelete: Cascade)
-  assignments       Assignment[]
-
-  @@index([meetingId, section, sequence])
-}
-
-model Assignment {
-  id                String                  @id @default(cuid())
-  meetingPartId     String
-  label             String?
-  sequence          Int                     @default(0)
-  notes             String?
-  createdAt         DateTime                @default(now())
-  updatedAt         DateTime                @updatedAt
-
-  meetingPart       MeetingPart             @relation(fields: [meetingPartId], references: [id], onDelete: Cascade)
-  participants      AssignmentParticipant[]
-
-  @@index([meetingPartId, sequence])
-}
-
-model AssignmentParticipant {
-  id             String             @id @default(cuid())
-  assignmentId   String
-  personId       String
-  roleType       AssignmentRoleType
-  createdAt      DateTime           @default(now())
-
-  assignment     Assignment         @relation(fields: [assignmentId], references: [id], onDelete: Cascade)
-  person         Person             @relation(fields: [personId], references: [id], onDelete: Restrict)
-
-  @@unique([assignmentId, roleType, personId])
-  @@index([personId])
+  @@index([organizationId, name])
 }

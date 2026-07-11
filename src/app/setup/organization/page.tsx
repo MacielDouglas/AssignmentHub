@@ -2,11 +2,11 @@ import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { CreateOrganizationForm } from "@/features/organization/presentation/create-organization-form";
 import { auth } from "@/lib/auth";
+import { db } from "@/lib/db";
 
-type SessionWithRole = {
+type SessionData = {
 	user?: {
 		id: string;
-		role?: "USER" | "SUPER_ADMIN" | "admin" | "user";
 		name?: string | null;
 	} | null;
 };
@@ -14,16 +14,18 @@ type SessionWithRole = {
 export default async function SetupOrganizationPage() {
 	const session = (await auth.api.getSession({
 		headers: await headers(),
-	})) as SessionWithRole | null;
+	})) as SessionData | null;
 
 	if (!session?.user) {
 		redirect("/");
 	}
 
-	console.log(session.user.role);
+	const currentUser = await db.user.findUnique({
+		where: { id: session.user.id },
+		select: { systemRole: true },
+	});
 
-	const isSuperUser =
-		session.user.role === "SUPER_ADMIN" || session.user.role === "admin";
+	const isSuperUser = currentUser?.systemRole === "SUPER_ADMIN";
 
 	if (!isSuperUser) {
 		redirect("/welcome");

@@ -4,10 +4,9 @@ import { redirect } from "next/navigation";
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
 
-type SessionWithRole = {
+type SessionData = {
 	user?: {
 		id: string;
-		role?: "USER" | "SUPER_ADMIN" | "admin" | "user";
 	} | null;
 	session?: {
 		activeOrganizationId?: string | null;
@@ -17,15 +16,18 @@ type SessionWithRole = {
 export default async function AppEntryPage() {
 	const session = (await auth.api.getSession({
 		headers: await headers(),
-	})) as SessionWithRole | null;
+	})) as SessionData | null;
 
 	if (!session?.user) {
 		redirect("/");
 	}
 
-	const platformRole = session.user.role;
-	const isSuperUser =
-		platformRole === "SUPER_ADMIN" || platformRole === "admin";
+	const currentUser = await db.user.findUnique({
+		where: { id: session.user.id },
+		select: { systemRole: true },
+	});
+
+	const isSuperUser = currentUser?.systemRole === "SUPER_ADMIN";
 
 	const activeOrganizationId = session.session?.activeOrganizationId ?? null;
 
@@ -40,7 +42,7 @@ export default async function AppEntryPage() {
 		}
 	}
 
-	const memberships = await db.organizationMember.findMany({
+	const memberships = await db.organizationMembership.findMany({
 		where: {
 			userId: session.user.id,
 		},

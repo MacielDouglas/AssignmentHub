@@ -2,11 +2,13 @@
 	"name": "assignmenthub",
 	"version": "0.1.0",
 	"private": true,
+
 	"scripts": {
 		"dev": "next dev",
 		"build": "next build",
 		"start": "next start",
-		"lint": "next lint"
+		"lint": "next lint",
+		"db:seed": "prisma db seed"
 	},
 	"dependencies": {
 		"@base-ui/react": "^1.6.0",

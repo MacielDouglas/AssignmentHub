@@ -19,7 +19,7 @@ export default async function SelectOrganizationPage() {
 		redirect("/");
 	}
 
-	const memberships = await db.organizationMember.findMany({
+	const memberships = await db.organizationMembership.findMany({
 		where: {
 			userId: session.user.id,
 		},

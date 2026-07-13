@@ -1,62 +1,70 @@
-import { HiOutlineSquares2X2 } from "react-icons/hi2";
-import { OrgNavLinks } from "./org-nav-links";
+"use client";
+
+import { Building2, ChevronRight } from "lucide-react";
+import Link from "next/link";
+import { usePathname } from "next/navigation";
+
+import { getOrgNavItems } from "@/components/org/org-nav-items";
 
 type OrgSidebarProps = {
 	currentSlug: string;
 	organizationName: string;
 };
 
-const navItems = [
-	{
-		href: "",
-		label: "Visão geral",
-		iconName: "dashboard",
-	},
-	{
-		href: "/tasks",
-		label: "Tarefas",
-		iconName: "tasks",
-	},
-	{
-		href: "/meetings",
-		label: "Reuniões",
-		iconName: "meetings",
-	},
-	{
-		href: "/assignments",
-		label: "Designações",
-		iconName: "assignments",
-	},
-	{
-		href: "/people",
-		label: "Pessoas",
-		iconName: "people",
-	},
-] as const;
-
 export function OrgSidebar({ currentSlug, organizationName }: OrgSidebarProps) {
+	const pathname = usePathname();
+	const items = getOrgNavItems(currentSlug);
+
 	return (
-		<aside className="hidden border-r border-border bg-card lg:flex lg:flex-col">
-			<div className="border-b border-border px-6 py-5">
-				<div className="flex items-center gap-3">
-					<div className="flex h-11 w-11 items-center justify-center rounded-none bg-linear-to-br from-blue-600 to-violet-600 text-white shadow-sm">
-						<HiOutlineSquares2X2 className="h-5 w-5" aria-hidden="true" />
-					</div>
+		<aside className="hidden border-r bg-background/80 lg:sticky lg:top-0 lg:block lg:h-screen">
+			<div className="flex h-full flex-col">
+				<div className="border-b p-5">
+					<Link
+						href={`/org/${currentSlug}`}
+						className="flex items-center gap-3 rounded-md"
+					>
+						<div className="flex h-10 w-10 items-center justify-center rounded-xl border bg-muted">
+							<Building2 className="h-5 w-5" />
+						</div>
 
-					<div className="min-w-0">
-						<p className="truncate text-sm font-semibold text-foreground">
-							AssignmentHub
-						</p>
-						<p className="truncate text-xs text-muted-foreground">
-							{organizationName}
-						</p>
-					</div>
+						<div className="min-w-0">
+							<p className="text-xs text-muted-foreground">Organização</p>
+							<p className="truncate font-medium">{organizationName}</p>
+						</div>
+					</Link>
 				</div>
-			</div>
 
-			<nav className="flex-1 px-4 py-4" aria-label="Navegação da organização">
-				<OrgNavLinks currentSlug={currentSlug} items={[...navItems]} />
-			</nav>
+				<nav
+					className="flex-1 space-y-1 p-3"
+					aria-label="Menu lateral da organização"
+				>
+					{items.map((item) => {
+						const Icon = item.icon;
+						const isActive = item.exact
+							? pathname === item.href
+							: pathname === item.href || pathname.startsWith(`${item.href}/`);
+
+						return (
+							<Link
+								key={item.href}
+								href={item.href}
+								className={`flex items-center justify-between rounded-lg px-3 py-2.5 text-sm transition-colors ${
+									isActive
+										? "bg-foreground text-background"
+										: "text-muted-foreground hover:bg-muted hover:text-foreground"
+								}`}
+							>
+								<span className="flex items-center gap-3">
+									<Icon className="h-4 w-4" />
+									<span>{item.label}</span>
+								</span>
+
+								<ChevronRight className="h-4 w-4 opacity-70" />
+							</Link>
+						);
+					})}
+				</nav>
+			</div>
 		</aside>
 	);
 }

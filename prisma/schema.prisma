@@ -24,17 +24,17 @@ enum Sex {
 }
 
 model User {
-  id            String                  @id
+  id            String                   @id
   name          String
-  email         String                  @unique
+  email         String                   @unique
   emailVerified Boolean
   image         String?
-  systemRole    SystemRole              @default(USER)
-  personId      String?                 @unique
-  createdAt     DateTime                @default(now())
-  updatedAt     DateTime                @updatedAt
+  systemRole    SystemRole               @default(USER)
+  personId      String?                  @unique
+  createdAt     DateTime                 @default(now())
+  updatedAt     DateTime                 @updatedAt
 
-  person        Person?                 @relation(fields: [personId], references: [id], onDelete: Restrict)
+  person        Person?                  @relation(fields: [personId], references: [id], onDelete: Restrict)
   sessions      Session[]
   accounts      Account[]
   memberships   OrganizationMembership[]
@@ -43,22 +43,22 @@ model User {
 }
 
 model Session {
-  id        String   @id
-  expiresAt DateTime
-  token     String   @unique
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  ipAddress String?
-  userAgent String?
-  userId    String
+  id         String   @id
+  expiresAt  DateTime
+  token      String   @unique
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  ipAddress  String?
+  userAgent  String?
+  userId     String
 
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@map("session")
 }
 
 model Account {
-  id                     String    @id
+  id                     String   @id
   accountId              String
   providerId             String
   userId                 String
@@ -69,10 +69,10 @@ model Account {
   refreshTokenExpiresAt  DateTime?
   scope                  String?
   password               String?
-  createdAt              DateTime  @default(now())
-  updatedAt              DateTime  @updatedAt
+  createdAt              DateTime @default(now())
+  updatedAt              DateTime @updatedAt
 
-  user                   User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user                   User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])
   @@index([providerId])
@@ -92,16 +92,17 @@ model Verification {
 }
 
 model Organization {
-  id               String                  @id @default(uuid())
+  id               String                   @id @default(uuid())
   name             String
-  slug             String                  @unique
-  createdAt        DateTime                @default(now())
-  updatedAt        DateTime                @updatedAt
+  slug             String                   @unique
+  createdAt        DateTime                 @default(now())
+  updatedAt        DateTime                 @updatedAt
 
   memberships      OrganizationMembership[]
   people           Person[]
   families         Family[]
   subOrganizations SubOrganization[]
+  groups           Group[]
 
   @@index([slug])
 }
@@ -178,64 +179,97 @@ model Family {
   @@index([headId])
 }
 
+model Group {
+  id               String       @id @default(uuid())
+  organizationId   String
+  name             String
+  slug             String
+  superintendentId String
+  assistantId      String
+  createdAt        DateTime     @default(now())
+  updatedAt        DateTime     @updatedAt
+
+  organization     Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  superintendent   Person       @relation("GroupSuperintendent", fields: [superintendentId], references: [id], onDelete: Restrict)
+  assistant        Person       @relation("GroupAssistant", fields: [assistantId], references: [id], onDelete: Restrict)
+  members          Person[]     @relation("GroupMembers")
+
+  @@unique([organizationId, name])
+  @@unique([organizationId, slug])
+  @@index([organizationId])
+  @@index([organizationId, name])
+  @@index([organizationId, slug])
+  @@index([superintendentId])
+  @@index([assistantId])
+}
+
 model Person {
-  id                      String             @id @default(uuid())
-  organizationId          String?
-  familyId                String?
-  name                    String
-  sex                     Sex                @default(MALE)
-  isActive                Boolean            @default(true)
-  isStudent               Boolean            @default(true)
+  id                        String             @id @default(uuid())
+  organizationId            String?
+  familyId                  String?
+  groupId                   String?
+  name                      String
+  sex                       Sex                @default(MALE)
+  isActive                  Boolean            @default(true)
+  isStudent                 Boolean            @default(true)
+  isMarried                 Boolean            @default(false)
 
-  baptized                Boolean            @default(false)
-  young                   Boolean            @default(true)
-  initiatingConversations Boolean            @default(false)
-  cultivatingInterest     Boolean            @default(false)
-  makingDisciples         Boolean            @default(false)
-  explainingBeliefs       Boolean            @default(false)
-  cleaning                Boolean            @default(true)
-  privilegePrayer         Boolean            @default(false)
+  baptized                  Boolean            @default(false)
+  young                     Boolean            @default(true)
+  initiatingConversations   Boolean            @default(false)
+  cultivatingInterest       Boolean            @default(false)
+  makingDisciples           Boolean            @default(false)
+  explainingBeliefs         Boolean            @default(false)
+  cleaning                  Boolean            @default(true)
+  privilegePrayer           Boolean            @default(false)
 
-  bibleReading            Boolean            @default(false)
-  roamingMic              Boolean            @default(false)
-  sound                   Boolean            @default(false)
-  video                   Boolean            @default(false)
-  stage                   Boolean            @default(false)
+  bibleReading              Boolean            @default(false)
+  roamingMic                Boolean            @default(false)
+  sound                     Boolean            @default(false)
+  video                     Boolean            @default(false)
+  stage                     Boolean            @default(false)
 
-  bibleStudyReader        Boolean            @default(false)
-  watchtowerReader        Boolean            @default(false)
-  attendant               Boolean            @default(false)
+  bibleStudyReader          Boolean            @default(false)
+  watchtowerReader          Boolean            @default(false)
+  attendant                 Boolean            @default(false)
 
-  createdAt               DateTime           @default(now())
-  updatedAt               DateTime           @updatedAt
-  outlines                Outline[]
+  createdAt                 DateTime           @default(now())
+  updatedAt                 DateTime           @updatedAt
+  outlines                  Outline[]
 
-  organization            Organization?      @relation(fields: [organizationId], references: [id], onDelete: Cascade)
-  family                  Family?            @relation("FamilyMembers", fields: [familyId], references: [id], onDelete: SetNull)
-  headedFamily            Family?            @relation("FamilyHead")
-  user                    User?
-  servicePrivilege        ServicePrivilege?
+  organization              Organization?      @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  family                    Family?            @relation("FamilyMembers", fields: [familyId], references: [id], onDelete: SetNull)
+  headedFamily              Family?            @relation("FamilyHead")
+  user                      User?
+  servicePrivilege          ServicePrivilege?
+
+  group                     Group?             @relation("GroupMembers", fields: [groupId], references: [id], onDelete: SetNull)
+  superintendentOfGroups    Group[]            @relation("GroupSuperintendent")
+  assistantOfGroups         Group[]            @relation("GroupAssistant")
 
   @@index([organizationId, name])
   @@index([familyId])
+  @@index([groupId])
   @@index([organizationId, familyId])
+  @@index([organizationId, groupId])
 }
 
 model ServicePrivilege {
-  id                         String    @id @default(uuid())
-  personId                   String    @unique
+  id                           String    @id @default(uuid())
+  personId                     String    @unique
 
-  elder                      Boolean   @default(false)
-  publicTalk                 Boolean   @default(false)
-  lifeAndMinistryChairman    Boolean   @default(false)
-  weekendChairman            Boolean   @default(false)
-  ourChristianLifeAssignment Boolean   @default(false)
-  localNeeds                 Boolean   @default(false)
-  bibleStudyConductor        Boolean   @default(false)
-  watchtowerConductor        Boolean   @default(false)
+  elder                        Boolean   @default(false)
+  publicTalk                   Boolean   @default(false)
+  lifeAndMinistryChairman      Boolean   @default(false)
+  weekendChairman              Boolean   @default(false)
+  ourChristianLifeAssignment   Boolean   @default(false)
+  localNeeds                   Boolean   @default(false)
+  bibleStudyConductor          Boolean   @default(false)
+  watchtowerConductor          Boolean   @default(false)
 
-  createdAt                  DateTime  @default(now())
-  updatedAt                  DateTime  @updatedAt
+  createdAt                    DateTime  @default(now())
+  updatedAt                    DateTime  @updatedAt
 
-  person                     Person    @relation(fields: [personId], references: [id], onDelete: Cascade)
+  person                       Person    @relation(fields: [personId], references: [id], onDelete: Cascade)
 }

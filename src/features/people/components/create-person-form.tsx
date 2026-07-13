@@ -1,4 +1,3 @@
-// src/features/people/components/create-person-form.tsx
 "use client";
 
 import { useActionState } from "react";

@@ -23,56 +23,78 @@ enum Sex {
   FEMALE
 }
 
+enum CleaningType {
+  MEETING
+  WEEKLY
+  GENERAL
+}
+
+enum CleaningAssignmentMode {
+  GROUP
+  FAMILY
+  PERSON
+}
+
+enum Weekday {
+  MONDAY
+  TUESDAY
+  WEDNESDAY
+  THURSDAY
+  FRIDAY
+  SATURDAY
+  SUNDAY
+}
+
 model User {
-  id            String                   @id
+  id            String     @id
   name          String
-  email         String                   @unique
+  email         String     @unique
   emailVerified Boolean
   image         String?
-  systemRole    SystemRole               @default(USER)
-  personId      String?                  @unique
-  createdAt     DateTime                 @default(now())
-  updatedAt     DateTime                 @updatedAt
+  systemRole    SystemRole @default(USER)
+  personId      String?    @unique
+  createdAt     DateTime   @default(now())
+  updatedAt     DateTime   @updatedAt
 
-  person        Person?                  @relation(fields: [personId], references: [id], onDelete: Restrict)
-  sessions      Session[]
-  accounts      Account[]
-  memberships   OrganizationMembership[]
+  person      Person?                  @relation(fields: [personId], references: [id], onDelete: Restrict)
+  sessions    Session[]
+  accounts    Account[]
+  memberships OrganizationMembership[]
 
   @@map("user")
 }
 
 model Session {
-  id         String   @id
-  expiresAt  DateTime
-  token      String   @unique
-  createdAt  DateTime @default(now())
-  updatedAt  DateTime @updatedAt
-  ipAddress  String?
-  userAgent  String?
-  userId     String
+  id        String   @id
+  expiresAt DateTime
+  token     String   @unique
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  ipAddress String?
+  userAgent String?
+  userId    String
 
-  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@map("session")
 }
 
 model Account {
-  id                     String   @id
-  accountId              String
-  providerId             String
-  userId                 String
-  accessToken            String?
-  refreshToken           String?
-  idToken                String?
-  accessTokenExpiresAt   DateTime?
-  refreshTokenExpiresAt  DateTime?
-  scope                  String?
-  password               String?
-  createdAt              DateTime @default(now())
-  updatedAt              DateTime @updatedAt
+  id                    String    @id
+  accountId             String
+  providerId            String
+  userId                String
+  accessToken           String?
+  refreshToken          String?
+  idToken               String?
+  accessTokenExpiresAt  DateTime?
+  refreshTokenExpiresAt DateTime?
+  scope                 String?
+  password              String?
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime  @updatedAt
 
-  user                   User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])
   @@index([providerId])
@@ -92,87 +114,90 @@ model Verification {
 }
 
 model Organization {
-  id               String                   @id @default(uuid())
-  name             String
-  slug             String                   @unique
-  createdAt        DateTime                 @default(now())
-  updatedAt        DateTime                 @updatedAt
+  id        String   @id @default(uuid())
+  name      String
+  slug      String   @unique
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   memberships      OrganizationMembership[]
   people           Person[]
   families         Family[]
-  subOrganizations SubOrganization[]
   groups           Group[]
+  subOrganizations SubOrganization[]
+  cleaningSettings OrganizationCleaningSettings?
 
   @@index([slug])
 }
 
 model OrganizationMembership {
-  id             String            @id @default(uuid())
+  id             String           @id @default(uuid())
   organizationId String
-  userId         String            @unique
-  role           OrganizationRole  @default(MEMBER)
-  createdAt      DateTime          @default(now())
-  updatedAt      DateTime          @updatedAt
+  userId         String           @unique
+  role           OrganizationRole @default(MEMBER)
+  createdAt      DateTime         @default(now())
+  updatedAt      DateTime         @updatedAt
 
-  organization   Organization      @relation(fields: [organizationId], references: [id], onDelete: Cascade)
-  user           User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  user         User         @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([organizationId, userId])
   @@index([organizationId, role])
+  @@index([userId])
 }
 
 model Outline {
-  id         String      @id @default(uuid())
-  number     Int         @unique
-  name       String      @unique
-  createdAt  DateTime    @default(now())
-  updatedAt  DateTime    @updatedAt
+  id        String   @id @default(uuid())
+  number    Int      @unique
+  name      String   @unique
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
-  subPeople  SubPerson[]
-  person     Person[]
+  subPeople SubPerson[]
+  person    Person[]
 }
 
 model SubOrganization {
-  id             String       @id @default(uuid())
+  id             String   @id @default(uuid())
   organizationId String
   name           String
-  createdAt      DateTime     @default(now())
-  updatedAt      DateTime     @updatedAt
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
 
-  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
-  people         SubPerson[]
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  people       SubPerson[]
 
   @@unique([organizationId, name])
   @@index([organizationId])
 }
 
 model SubPerson {
-  id                String          @id @default(uuid())
+  id                String   @id @default(uuid())
   subOrganizationId String
   name              String
-  sex               Sex             @default(MALE)
-  isActive          Boolean         @default(true)
-  createdAt         DateTime        @default(now())
-  updatedAt         DateTime        @updatedAt
+  sex               Sex      @default(MALE)
+  isActive          Boolean  @default(true)
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
 
-  subOrganization   SubOrganization @relation(fields: [subOrganizationId], references: [id], onDelete: Cascade)
-  outlines          Outline[]
+  subOrganization SubOrganization @relation(fields: [subOrganizationId], references: [id], onDelete: Cascade)
+  outlines        Outline[]
 
   @@index([subOrganizationId, name])
 }
 
 model Family {
-  id             String       @id @default(uuid())
+  id             String   @id @default(uuid())
   organizationId String
   name           String
-  headId         String       @unique
-  createdAt      DateTime     @default(now())
-  updatedAt      DateTime     @updatedAt
+  headId         String   @unique
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
 
-  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
-  head           Person       @relation("FamilyHead", fields: [headId], references: [id], onDelete: Restrict)
-  members        Person[]     @relation("FamilyMembers")
+  organization        Organization         @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  head                Person               @relation("FamilyHead", fields: [headId], references: [id], onDelete: Restrict)
+  members             Person[]             @relation("FamilyMembers")
+  cleaningTypeConfigs CleaningTypeConfig[] @relation("CleaningConfigFamily")
 
   @@unique([organizationId, name])
   @@index([organizationId])
@@ -180,20 +205,20 @@ model Family {
 }
 
 model Group {
-  id               String       @id @default(uuid())
+  id               String   @id @default(uuid())
   organizationId   String
   name             String
   slug             String
   superintendentId String
   assistantId      String
-  createdAt        DateTime     @default(now())
-  updatedAt        DateTime     @updatedAt
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
 
-  organization     Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
-
-  superintendent   Person       @relation("GroupSuperintendent", fields: [superintendentId], references: [id], onDelete: Restrict)
-  assistant        Person       @relation("GroupAssistant", fields: [assistantId], references: [id], onDelete: Restrict)
-  members          Person[]     @relation("GroupMembers")
+  organization        Organization         @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  superintendent      Person               @relation("GroupSuperintendent", fields: [superintendentId], references: [id], onDelete: Restrict)
+  assistant           Person               @relation("GroupAssistant", fields: [assistantId], references: [id], onDelete: Restrict)
+  members             Person[]             @relation("GroupMembers")
+  cleaningTypeConfigs CleaningTypeConfig[] @relation("CleaningConfigGroup")
 
   @@unique([organizationId, name])
   @@unique([organizationId, slug])
@@ -205,48 +230,49 @@ model Group {
 }
 
 model Person {
-  id                        String             @id @default(uuid())
-  organizationId            String?
-  familyId                  String?
-  groupId                   String?
-  name                      String
-  sex                       Sex                @default(MALE)
-  isActive                  Boolean            @default(true)
-  isStudent                 Boolean            @default(true)
-  isMarried                 Boolean            @default(false)
+  id             String  @id @default(uuid())
+  organizationId String?
+  familyId       String?
+  groupId        String?
+  name           String
+  sex            Sex     @default(MALE)
+  isActive       Boolean @default(true)
+  isStudent      Boolean @default(true)
+  isMarried      Boolean @default(false)
 
-  baptized                  Boolean            @default(false)
-  young                     Boolean            @default(true)
-  initiatingConversations   Boolean            @default(false)
-  cultivatingInterest       Boolean            @default(false)
-  makingDisciples           Boolean            @default(false)
-  explainingBeliefs         Boolean            @default(false)
-  cleaning                  Boolean            @default(true)
-  privilegePrayer           Boolean            @default(false)
+  baptized                Boolean @default(false)
+  young                   Boolean @default(true)
+  initiatingConversations Boolean @default(false)
+  cultivatingInterest     Boolean @default(false)
+  makingDisciples         Boolean @default(false)
+  explainingBeliefs       Boolean @default(false)
+  cleaning                Boolean @default(true)
+  privilegePrayer         Boolean @default(false)
 
-  bibleReading              Boolean            @default(false)
-  roamingMic                Boolean            @default(false)
-  sound                     Boolean            @default(false)
-  video                     Boolean            @default(false)
-  stage                     Boolean            @default(false)
+  bibleReading Boolean @default(false)
+  roamingMic   Boolean @default(false)
+  sound        Boolean @default(false)
+  video        Boolean @default(false)
+  stage        Boolean @default(false)
 
-  bibleStudyReader          Boolean            @default(false)
-  watchtowerReader          Boolean            @default(false)
-  attendant                 Boolean            @default(false)
+  bibleStudyReader Boolean @default(false)
+  watchtowerReader Boolean @default(false)
+  attendant        Boolean @default(false)
 
-  createdAt                 DateTime           @default(now())
-  updatedAt                 DateTime           @updatedAt
-  outlines                  Outline[]
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  outlines  Outline[]
 
-  organization              Organization?      @relation(fields: [organizationId], references: [id], onDelete: Cascade)
-  family                    Family?            @relation("FamilyMembers", fields: [familyId], references: [id], onDelete: SetNull)
-  headedFamily              Family?            @relation("FamilyHead")
-  user                      User?
-  servicePrivilege          ServicePrivilege?
+  organization     Organization?     @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  family           Family?           @relation("FamilyMembers", fields: [familyId], references: [id], onDelete: SetNull)
+  headedFamily     Family?           @relation("FamilyHead")
+  user             User?
+  servicePrivilege ServicePrivilege?
 
-  group                     Group?             @relation("GroupMembers", fields: [groupId], references: [id], onDelete: SetNull)
-  superintendentOfGroups    Group[]            @relation("GroupSuperintendent")
-  assistantOfGroups         Group[]            @relation("GroupAssistant")
+  group                  Group?               @relation("GroupMembers", fields: [groupId], references: [id], onDelete: SetNull)
+  superintendentOfGroups Group[]              @relation("GroupSuperintendent")
+  assistantOfGroups      Group[]              @relation("GroupAssistant")
+  cleaningTypeConfigs    CleaningTypeConfig[] @relation("CleaningConfigPerson")
 
   @@index([organizationId, name])
   @@index([familyId])
@@ -256,20 +282,111 @@ model Person {
 }
 
 model ServicePrivilege {
-  id                           String    @id @default(uuid())
-  personId                     String    @unique
+  id       String @id @default(uuid())
+  personId String @unique
 
-  elder                        Boolean   @default(false)
-  publicTalk                   Boolean   @default(false)
-  lifeAndMinistryChairman      Boolean   @default(false)
-  weekendChairman              Boolean   @default(false)
-  ourChristianLifeAssignment   Boolean   @default(false)
-  localNeeds                   Boolean   @default(false)
-  bibleStudyConductor          Boolean   @default(false)
-  watchtowerConductor          Boolean   @default(false)
+  elder                      Boolean @default(false)
+  publicTalk                 Boolean @default(false)
+  lifeAndMinistryChairman    Boolean @default(false)
+  weekendChairman            Boolean @default(false)
+  ourChristianLifeAssignment Boolean @default(false)
+  localNeeds                 Boolean @default(false)
+  bibleStudyConductor        Boolean @default(false)
+  watchtowerConductor        Boolean @default(false)
 
-  createdAt                    DateTime  @default(now())
-  updatedAt                    DateTime  @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
-  person                       Person    @relation(fields: [personId], references: [id], onDelete: Cascade)
+  person Person @relation(fields: [personId], references: [id], onDelete: Cascade)
+}
+
+model OrganizationCleaningSettings {
+  id                 String   @id @default(uuid())
+  organizationId     String   @unique
+  cleaningPerMeeting Boolean  @default(false)
+  weeklyCleaning     Boolean  @default(false)
+  generalCleaning    Boolean  @default(false)
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+
+  organization Organization         @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  configs      CleaningTypeConfig[]
+
+  @@index([organizationId])
+}
+
+model CleaningTypeConfig {
+  id             String                  @id @default(uuid())
+  settingsId     String
+  type           CleaningType
+  enabled        Boolean                 @default(false)
+  assignmentMode CleaningAssignmentMode?
+  notes          String?
+
+  groupId  String?
+  familyId String?
+  personId String?
+
+  timesPerWeek Int?
+  timesPerYear Int?
+  intervalDays Int?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  settings OrganizationCleaningSettings @relation(fields: [settingsId], references: [id], onDelete: Cascade)
+  sectors  CleaningSector[]
+  weekdays CleaningWeekday[]
+  dates    CleaningDate[]
+
+  group  Group?  @relation("CleaningConfigGroup", fields: [groupId], references: [id], onDelete: SetNull)
+  family Family? @relation("CleaningConfigFamily", fields: [familyId], references: [id], onDelete: SetNull)
+  person Person? @relation("CleaningConfigPerson", fields: [personId], references: [id], onDelete: SetNull)
+
+  @@unique([settingsId, type])
+  @@index([settingsId, type])
+  @@index([groupId])
+  @@index([familyId])
+  @@index([personId])
+}
+
+model CleaningWeekday {
+  id                   String  @id @default(uuid())
+  cleaningTypeConfigId String
+  weekday              Weekday
+  sortOrder            Int     @default(0)
+
+  cleaningTypeConfig CleaningTypeConfig @relation(fields: [cleaningTypeConfigId], references: [id], onDelete: Cascade)
+
+  @@unique([cleaningTypeConfigId, weekday])
+  @@index([cleaningTypeConfigId, sortOrder])
+}
+
+model CleaningDate {
+  id                   String   @id @default(uuid())
+  cleaningTypeConfigId String
+  date                 DateTime
+  label                String?
+  createdAt            DateTime @default(now())
+
+  cleaningTypeConfig CleaningTypeConfig @relation(fields: [cleaningTypeConfigId], references: [id], onDelete: Cascade)
+
+  @@index([cleaningTypeConfigId, date])
+}
+
+model CleaningSector {
+  id                   String   @id @default(uuid())
+  cleaningTypeConfigId String
+  name                 String
+  description          String?
+  peopleRequired       Int?
+  sortOrder            Int      @default(0)
+  isActive             Boolean  @default(true)
+  createdAt            DateTime @default(now())
+  updatedAt            DateTime @updatedAt
+
+  cleaningTypeConfig CleaningTypeConfig @relation(fields: [cleaningTypeConfigId], references: [id], onDelete: Cascade)
+
+  @@index([cleaningTypeConfigId, sortOrder])
+  @@index([cleaningTypeConfigId, isActive])
 }

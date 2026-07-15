@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { headers } from "next/headers";
 import { notFound } from "next/navigation";
+
 import { SettingsPageContent } from "@/features/organization-settings/presentation/settings-page-content";
 import { getOrganizationSettingsDataQuery } from "@/features/organization-settings/queries/get-organization-settings-data.query";
 import { auth } from "@/lib/auth";

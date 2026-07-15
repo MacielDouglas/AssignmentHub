@@ -33,6 +33,28 @@ export async function getOrganizationSettingsDataQuery({
 							generalCleaning: true,
 						},
 					},
+					schedules: {
+						where: {
+							type: {
+								not: "FIELD_SERVICE_MEETING",
+							},
+						},
+						select: {
+							id: true,
+							type: true,
+							isActive: true,
+							occurrences: {
+								select: {
+									id: true,
+								},
+							},
+							weeklyRules: {
+								select: {
+									id: true,
+								},
+							},
+						},
+					},
 				},
 			},
 		},

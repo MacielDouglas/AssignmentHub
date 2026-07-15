@@ -1,6 +1,7 @@
 import {
 	BrushCleaning,
 	Building2,
+	CalendarDays,
 	ChevronRight,
 	Settings2,
 	Shield,
@@ -21,26 +22,46 @@ import {
 	CardHeader,
 	CardTitle,
 } from "@/components/ui/card";
+import type { getOrganizationSettingsDataQuery } from "../queries/get-organization-settings-data.query";
+
+type SettingsPageContentData = NonNullable<
+	Awaited<ReturnType<typeof getOrganizationSettingsDataQuery>>
+>;
+
+type ScheduleItem =
+	SettingsPageContentData["organization"]["schedules"][number];
+
+type VisibleScheduleType = Exclude<
+	ScheduleItem["type"],
+	"FIELD_SERVICE_MEETING"
+>;
+
+type VisibleScheduleItem = Omit<ScheduleItem, "type"> & {
+	type: VisibleScheduleType;
+};
 
 type SettingsPageContentProps = {
-	data: {
-		role: "OWNER" | "ADMIN" | "MEMBER";
-		canManageOrganization: boolean;
-		organization: {
-			id: string;
-			name: string;
-			slug: string;
-			createdAt: Date;
-			updatedAt: Date;
-			cleaningSettings: {
-				id: string;
-				cleaningPerMeeting: boolean;
-				weeklyCleaning: boolean;
-				generalCleaning: boolean;
-			} | null;
-		};
-	};
+	data: SettingsPageContentData;
 };
+
+const SCHEDULE_TYPE_LABEL: Record<VisibleScheduleType, string> = {
+	MEETINGS: "Reuniões",
+	SPECIAL_MEETING: "Reunião especial",
+	TRAVELING_OVERSEER_VISIT: "Visita do viajante",
+	CELEBRATION: "Celebração",
+	SPECIAL_TALK: "Discurso especial",
+	CIRCUIT_ASSEMBLY_TRAVELING_OVERSEER: "Assembleia com viajante",
+	CIRCUIT_ASSEMBLY_BRANCH_REPRESENTATIVE: "Assembleia com representante",
+	CONVENTION: "Congresso",
+	WEEKLY_CLEANING: "Limpeza semanal",
+	GENERAL_CLEANING: "Limpeza geral",
+};
+
+function isVisibleScheduleItem(
+	item: ScheduleItem,
+): item is VisibleScheduleItem {
+	return item.type !== "FIELD_SERVICE_MEETING";
+}
 
 export function SettingsPageContent({ data }: SettingsPageContentProps) {
 	const cleaningSettings = data.organization.cleaningSettings;
@@ -54,6 +75,25 @@ export function SettingsPageContent({ data }: SettingsPageContentProps) {
 				.filter(Boolean)
 				.join(", ")
 		: "Nenhuma configuração criada";
+
+	const visibleSchedules = data.organization.schedules.filter(
+		isVisibleScheduleItem,
+	);
+
+	const configuredSchedules = visibleSchedules.filter(
+		(item) =>
+			item.isActive ||
+			item.weeklyRules.length > 0 ||
+			item.occurrences.length > 0,
+	);
+
+	const datesSummary =
+		configuredSchedules.length > 0
+			? configuredSchedules
+					.slice(0, 3)
+					.map((item) => SCHEDULE_TYPE_LABEL[item.type])
+					.join(", ")
+			: "Nenhuma configuração criada";
 
 	return (
 		<div className="space-y-6">
@@ -134,40 +174,87 @@ export function SettingsPageContent({ data }: SettingsPageContentProps) {
 					</p>
 				</div>
 
-				<Card className="overflow-hidden">
-					<CardContent className="p-0">
-						<Link
-							href={`/org/${data.organization.slug}/settings/cleaning`}
-							className="flex h-full flex-col gap-4 p-4 transition-colors hover:bg-muted/40 sm:p-5"
-						>
-							<div className="flex items-start gap-3">
-								<div className="flex size-10 items-center justify-center rounded-xl border bg-muted">
-									<BrushCleaning className="size-4" />
-								</div>
-
-								<div className="min-w-0 flex-1 space-y-2">
-									<div className="flex flex-wrap items-center justify-between gap-2">
-										<h3 className="font-medium">Limpeza</h3>
-										<Badge variant={cleaningSettings ? "secondary" : "outline"}>
-											{cleaningSettings ? "Configurado" : "Pendente"}
-										</Badge>
+				<div className="grid gap-4 md:grid-cols-2">
+					<Card className="overflow-hidden">
+						<CardContent className="p-0">
+							<Link
+								href={`/org/${data.organization.slug}/settings/cleaning`}
+								className="flex h-full flex-col gap-4 p-4 transition-colors hover:bg-muted/40 sm:p-5"
+							>
+								<div className="flex items-start gap-3">
+									<div className="flex size-10 items-center justify-center rounded-xl border bg-muted">
+										<BrushCleaning className="size-4" />
 									</div>
 
-									<p className="text-sm text-muted-foreground">
-										Configure limpeza por reunião, limpeza semanal e limpeza
-										geral.
-									</p>
+									<div className="min-w-0 flex-1 space-y-2">
+										<div className="flex flex-wrap items-center justify-between gap-2">
+											<h3 className="font-medium">Limpeza</h3>
+											<Badge
+												variant={cleaningSettings ? "secondary" : "outline"}
+											>
+												{cleaningSettings ? "Configurado" : "Pendente"}
+											</Badge>
+										</div>
 
-									<p className="text-xs text-muted-foreground">
-										{cleaningSummary}
-									</p>
+										<p className="text-sm text-muted-foreground">
+											Configure limpeza por reunião, limpeza semanal e limpeza
+											geral.
+										</p>
+
+										<p className="text-xs text-muted-foreground">
+											{cleaningSummary}
+										</p>
+									</div>
+
+									<ChevronRight className="mt-1 hidden size-4 shrink-0 text-muted-foreground sm:block" />
 								</div>
+							</Link>
+						</CardContent>
+					</Card>
 
-								<ChevronRight className="mt-1 hidden size-4 shrink-0 text-muted-foreground sm:block" />
-							</div>
-						</Link>
-					</CardContent>
-				</Card>
+					<Card className="overflow-hidden">
+						<CardContent className="p-0">
+							<Link
+								href={`/org/${data.organization.slug}/settings/data`}
+								className="flex h-full flex-col gap-4 p-4 transition-colors hover:bg-muted/40 sm:p-5"
+							>
+								<div className="flex items-start gap-3">
+									<div className="flex size-10 items-center justify-center rounded-xl border bg-muted">
+										<CalendarDays className="size-4" />
+									</div>
+
+									<div className="min-w-0 flex-1 space-y-2">
+										<div className="flex flex-wrap items-center justify-between gap-2">
+											<h3 className="font-medium">Datas</h3>
+											<Badge
+												variant={
+													configuredSchedules.length > 0
+														? "secondary"
+														: "outline"
+												}
+											>
+												{configuredSchedules.length > 0
+													? "Configurado"
+													: "Pendente"}
+											</Badge>
+										</div>
+
+										<p className="text-sm text-muted-foreground">
+											Configure reuniões, limpezas e eventos especiais da
+											organização.
+										</p>
+
+										<p className="text-xs text-muted-foreground">
+											{datesSummary}
+										</p>
+									</div>
+
+									<ChevronRight className="mt-1 hidden size-4 shrink-0 text-muted-foreground sm:block" />
+								</div>
+							</Link>
+						</CardContent>
+					</Card>
+				</div>
 			</section>
 		</div>
 	);

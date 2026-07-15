@@ -46,14 +46,17 @@ enum Weekday {
 }
 
 enum OrganizationScheduleType {
-  MIDWEEK_MEETING
-  WEEKEND_MEETING
-  CELEBRATION
-  CIRCUIT_ASSEMBLY_TRAVELING_OVERSEER
-  CIRCUIT_ASSEMBLY_BRANCH_REPRESENTATIVE
+  MEETINGS
   SPECIAL_MEETING
   TRAVELING_OVERSEER_VISIT
+  CELEBRATION
+  SPECIAL_TALK
+  CIRCUIT_ASSEMBLY_TRAVELING_OVERSEER
+  CIRCUIT_ASSEMBLY_BRANCH_REPRESENTATIVE
   FIELD_SERVICE_MEETING
+  CONVENTION
+  WEEKLY_CLEANING
+  GENERAL_CLEANING
 }
 
 enum OrganizationScheduleMode {
@@ -283,12 +286,11 @@ model Person {
   updatedAt DateTime  @updatedAt
   outlines  Outline[]
 
-  organization     Organization?     @relation(fields: [organizationId], references: [id], onDelete: Cascade)
-  family           Family?           @relation("FamilyMembers", fields: [familyId], references: [id], onDelete: SetNull)
-  headedFamily     Family?           @relation("FamilyHead")
-  user             User?
-  servicePrivilege ServicePrivilege?
-
+  organization           Organization?                    @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  family                 Family?                          @relation("FamilyMembers", fields: [familyId], references: [id], onDelete: SetNull)
+  headedFamily           Family?                          @relation("FamilyHead")
+  user                   User?
+  servicePrivilege       ServicePrivilege?
   group                  Group?                           @relation("GroupMembers", fields: [groupId], references: [id], onDelete: SetNull)
   superintendentOfGroups Group[]                          @relation("GroupSuperintendent")
   assistantOfGroups      Group[]                          @relation("GroupAssistant")
@@ -431,6 +433,8 @@ model OrganizationSchedule {
   @@index([organizationId, type])
   @@index([organizationId, isActive])
   @@index([organizationId, effectiveFrom])
+  @@index([organizationId, effectiveUntil])
+  @@index([organizationId, type, effectiveFrom])
 }
 
 model OrganizationScheduleWeeklyRule {
@@ -454,6 +458,7 @@ model OrganizationScheduleOccurrence {
   startDate              DateTime
   endDate                DateTime?
   time                   String?
+  isAllDay               Boolean   @default(false)
   leaderPersonId         String?
   location               String?
   notes                  String?
@@ -465,5 +470,6 @@ model OrganizationScheduleOccurrence {
   leaderPerson         Person?              @relation("ScheduleLeaderPerson", fields: [leaderPersonId], references: [id], onDelete: SetNull)
 
   @@index([organizationScheduleId, startDate])
+  @@index([organizationScheduleId, endDate])
   @@index([leaderPersonId])
 }

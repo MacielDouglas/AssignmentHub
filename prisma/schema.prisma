@@ -45,6 +45,25 @@ enum Weekday {
   SUNDAY
 }
 
+enum OrganizationScheduleType {
+  MIDWEEK_MEETING
+  WEEKEND_MEETING
+  CELEBRATION
+  CIRCUIT_ASSEMBLY_TRAVELING_OVERSEER
+  CIRCUIT_ASSEMBLY_BRANCH_REPRESENTATIVE
+  SPECIAL_MEETING
+  TRAVELING_OVERSEER_VISIT
+  FIELD_SERVICE_MEETING
+}
+
+enum OrganizationScheduleMode {
+  WEEKLY_RECURRING
+  SINGLE_DATETIME
+  MULTIPLE_DATES
+  DATE_RANGE
+  MULTIPLE_DATETIME
+}
+
 model User {
   id            String     @id
   name          String
@@ -126,6 +145,7 @@ model Organization {
   groups           Group[]
   subOrganizations SubOrganization[]
   cleaningSettings OrganizationCleaningSettings?
+  schedules        OrganizationSchedule[]
 
   @@index([slug])
 }
@@ -269,10 +289,11 @@ model Person {
   user             User?
   servicePrivilege ServicePrivilege?
 
-  group                  Group?               @relation("GroupMembers", fields: [groupId], references: [id], onDelete: SetNull)
-  superintendentOfGroups Group[]              @relation("GroupSuperintendent")
-  assistantOfGroups      Group[]              @relation("GroupAssistant")
-  cleaningTypeConfigs    CleaningTypeConfig[] @relation("CleaningConfigPerson")
+  group                  Group?                           @relation("GroupMembers", fields: [groupId], references: [id], onDelete: SetNull)
+  superintendentOfGroups Group[]                          @relation("GroupSuperintendent")
+  assistantOfGroups      Group[]                          @relation("GroupAssistant")
+  cleaningTypeConfigs    CleaningTypeConfig[]             @relation("CleaningConfigPerson")
+  scheduleOccurrences    OrganizationScheduleOccurrence[] @relation("ScheduleLeaderPerson")
 
   @@index([organizationId, name])
   @@index([familyId])
@@ -328,8 +349,6 @@ model CleaningTypeConfig {
   personId String?
 
   timesPerWeek Int?
-  timesPerYear Int?
-  intervalDays Int?
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -380,6 +399,7 @@ model CleaningSector {
   name                 String
   description          String?
   peopleRequired       Int?
+  allowYoung           Boolean  @default(true)
   sortOrder            Int      @default(0)
   isActive             Boolean  @default(true)
   createdAt            DateTime @default(now())
@@ -389,4 +409,61 @@ model CleaningSector {
 
   @@index([cleaningTypeConfigId, sortOrder])
   @@index([cleaningTypeConfigId, isActive])
+}
+
+model OrganizationSchedule {
+  id             String                   @id @default(uuid())
+  organizationId String
+  type           OrganizationScheduleType
+  mode           OrganizationScheduleMode
+  title          String
+  description    String?
+  isActive       Boolean                  @default(true)
+  effectiveFrom  DateTime?
+  effectiveUntil DateTime?
+  createdAt      DateTime                 @default(now())
+  updatedAt      DateTime                 @updatedAt
+
+  organization Organization                     @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  weeklyRules  OrganizationScheduleWeeklyRule[]
+  occurrences  OrganizationScheduleOccurrence[]
+
+  @@index([organizationId, type])
+  @@index([organizationId, isActive])
+  @@index([organizationId, effectiveFrom])
+}
+
+model OrganizationScheduleWeeklyRule {
+  id                     String   @id @default(uuid())
+  organizationScheduleId String
+  weekday                Weekday
+  time                   String
+  sortOrder              Int      @default(0)
+  createdAt              DateTime @default(now())
+  updatedAt              DateTime @updatedAt
+
+  organizationSchedule OrganizationSchedule @relation(fields: [organizationScheduleId], references: [id], onDelete: Cascade)
+
+  @@unique([organizationScheduleId, weekday, time])
+  @@index([organizationScheduleId, sortOrder])
+}
+
+model OrganizationScheduleOccurrence {
+  id                     String    @id @default(uuid())
+  organizationScheduleId String
+  startDate              DateTime
+  endDate                DateTime?
+  time                   String?
+  leaderPersonId         String?
+  location               String?
+  notes                  String?
+  sortOrder              Int       @default(0)
+  createdAt              DateTime  @default(now())
+  updatedAt              DateTime  @updatedAt
+
+  organizationSchedule OrganizationSchedule @relation(fields: [organizationScheduleId], references: [id], onDelete: Cascade)
+  leaderPerson         Person?              @relation("ScheduleLeaderPerson", fields: [leaderPersonId], references: [id], onDelete: SetNull)
+
+  @@index([organizationScheduleId, startDate])
+  @@index([leaderPersonId])
 }

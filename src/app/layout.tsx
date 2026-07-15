@@ -3,7 +3,7 @@ import { Inter } from "next/font/google";
 import "./globals.css";
 import { cn } from "@/lib/utils";
 
-const inter = Inter({subsets:['latin'],variable:'--font-sans'});
+const inter = Inter({ subsets: ["latin"], variable: "--font-sans" });
 
 export const metadata: Metadata = {
 	title: "AssignmentHub",
@@ -17,7 +17,12 @@ export default function RootLayout({
 	children: React.ReactNode;
 }>) {
 	return (
-		<html lang="pt-BR" suppressHydrationWarning className={cn("font-sans", inter.variable)}>
+		<html
+			lang="pt-BR"
+			suppressHydrationWarning
+			className={cn("font-sans", inter.variable)}
+			data-scroll-behavior="smooth"
+		>
 			<body className={`${inter.variable} font-sans`}>{children}</body>
 		</html>
 	);

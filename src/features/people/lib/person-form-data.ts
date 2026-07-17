@@ -49,6 +49,11 @@ export function parsePersonFormData(formData: FormData) {
 
 		elder: getBoolean(formData, "elder"),
 		publicTalk: getBoolean(formData, "publicTalk"),
+		spiritualGems: getBoolean(formData, "spiritualGems"),
+		treasuresFromGodsWordTalk: getBoolean(
+			formData,
+			"treasuresFromGodsWordTalk",
+		),
 		lifeAndMinistryChairman: getBoolean(formData, "lifeAndMinistryChairman"),
 		weekendChairman: getBoolean(formData, "weekendChairman"),
 		ourChristianLifeAssignment: getBoolean(

@@ -44,6 +44,8 @@ export type ManagedPersonInput = {
 
 	elder: boolean;
 	publicTalk: boolean;
+	spiritualGems: boolean;
+	treasuresFromGodsWordTalk: boolean;
 	lifeAndMinistryChairman: boolean;
 	weekendChairman: boolean;
 	ourChristianLifeAssignment: boolean;
@@ -116,6 +118,10 @@ function normalizePersonInput(
 
 		elder: isMaleAndBaptized ? input.elder : false,
 		publicTalk: isMaleAndBaptized ? input.publicTalk : false,
+		spiritualGems: isMaleAndBaptized ? input.spiritualGems : false,
+		treasuresFromGodsWordTalk: isMaleAndBaptized
+			? input.treasuresFromGodsWordTalk
+			: false,
 		lifeAndMinistryChairman: isMaleAndBaptized
 			? input.lifeAndMinistryChairman
 			: false,
@@ -319,6 +325,8 @@ function buildServicePrivilegeData(input: NormalizedManagedPersonInput) {
 	return {
 		elder: input.elder,
 		publicTalk: input.publicTalk,
+		spiritualGems: input.spiritualGems,
+		treasuresFromGodsWordTalk: input.treasuresFromGodsWordTalk,
 		lifeAndMinistryChairman: input.lifeAndMinistryChairman,
 		weekendChairman: input.weekendChairman,
 		ourChristianLifeAssignment: input.ourChristianLifeAssignment,

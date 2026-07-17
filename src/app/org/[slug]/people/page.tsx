@@ -139,6 +139,8 @@ export default async function PeoplePage({ params }: PeoplePageProps) {
 								select: {
 									elder: true,
 									publicTalk: true,
+									spiritualGems: true,
+									treasuresFromGodsWordTalk: true,
 									lifeAndMinistryChairman: true,
 									weekendChairman: true,
 									ourChristianLifeAssignment: true,
@@ -193,9 +195,9 @@ export default async function PeoplePage({ params }: PeoplePageProps) {
 	const femalePeople = organization.people.filter(
 		(person) => person.sex === "FEMALE",
 	).length;
-	// const sservicePeople = organization.people.filter(
-	// 	(person) => person.servicePrivilege. ,
-	// ).length;
+	const servicePeople = organization.people.filter(
+		(person) => person.servicePrivilege?.spiritualGems,
+	).length;
 
 	return (
 		<main className="space-y-6">
@@ -237,8 +239,8 @@ export default async function PeoplePage({ params }: PeoplePageProps) {
 							<p className="mt-2 text-2xl font-semibold">{femalePeople}</p>
 						</article>
 						<article className="rounded-[24px] bg-white/10 p-4 backdrop-blur">
-							<p className="text-xs text-white/70">Mulheres</p>
-							<p className="mt-2 text-2xl font-semibold">{femalePeople}</p>
+							<p className="text-xs text-white/70">Privilégios de Serviço</p>
+							<p className="mt-2 text-2xl font-semibold">{servicePeople}</p>
 						</article>
 					</div>
 				</div>
@@ -353,6 +355,16 @@ export default async function PeoplePage({ params }: PeoplePageProps) {
 											<div className="flex flex-wrap gap-2">
 												{person.servicePrivilege?.elder ? (
 													<Badge label="Ancião" tone="violet" />
+												) : null}
+												{person.servicePrivilege?.spiritualGems ? (
+													<Badge label="Jóias espirituais" tone="violet" />
+												) : null}
+
+												{person.servicePrivilege?.treasuresFromGodsWordTalk ? (
+													<Badge
+														label="Discurso Tesouros da Palavra de Deus"
+														tone="violet"
+													/>
 												) : null}
 												{person.servicePrivilege?.publicTalk ? (
 													<Badge label="Discurso público" tone="violet" />

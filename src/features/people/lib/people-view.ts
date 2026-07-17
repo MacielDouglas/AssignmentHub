@@ -30,6 +30,8 @@ export type PersonListItem = {
 	servicePrivilege: {
 		elder: boolean;
 		publicTalk: boolean;
+		spiritualGems: boolean;
+		treasuresFromGodsWordTalk: boolean;
 		lifeAndMinistryChairman: boolean;
 		weekendChairman: boolean;
 		ourChristianLifeAssignment: boolean;

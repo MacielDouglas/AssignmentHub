@@ -211,6 +211,12 @@ export default function PersonFormContent({
 	const [publicTalk, setPublicTalk] = useState(
 		person?.servicePrivilege?.publicTalk ?? false,
 	);
+	const [spiritualGems, setSpiritualGems] = useState(
+		person?.servicePrivilege?.spiritualGems ?? false,
+	);
+	const [treasuresFromGodsWordTalk, setTreasuresFromGodsWordTalk] = useState(
+		person?.servicePrivilege?.treasuresFromGodsWordTalk ?? false,
+	);
 	const [lifeAndMinistryChairman, setLifeAndMinistryChairman] = useState(
 		person?.servicePrivilege?.lifeAndMinistryChairman ?? false,
 	);
@@ -249,6 +255,8 @@ export default function PersonFormContent({
 		setPrivilegePrayer(false);
 		setElder(false);
 		setPublicTalk(false);
+		setSpiritualGems(false);
+		setTreasuresFromGodsWordTalk(false);
 		setLifeAndMinistryChairman(false);
 		setWeekendChairman(false);
 		setOurChristianLifeAssignment(false);
@@ -264,6 +272,8 @@ export default function PersonFormContent({
 		setPrivilegePrayer(false);
 		setElder(false);
 		setPublicTalk(false);
+		setSpiritualGems(false);
+		setTreasuresFromGodsWordTalk(false);
 		setLifeAndMinistryChairman(false);
 		setWeekendChairman(false);
 		setOurChristianLifeAssignment(false);
@@ -330,6 +340,11 @@ export default function PersonFormContent({
 			<HiddenBoolean name="attendant" value={attendant} />
 			<HiddenBoolean name="elder" value={elder} />
 			<HiddenBoolean name="publicTalk" value={publicTalk} />
+			<HiddenBoolean name="spiritualGems" value={spiritualGems} />
+			<HiddenBoolean
+				name="treasuresFromGodsWordTalk"
+				value={treasuresFromGodsWordTalk}
+			/>
 			<HiddenBoolean
 				name="lifeAndMinistryChairman"
 				value={lifeAndMinistryChairman}
@@ -629,6 +644,18 @@ export default function PersonFormContent({
 										label="Ancião"
 										checked={elder}
 										onCheckedChange={setElder}
+									/>
+									<SwitchField
+										name="treasuresFromGodsWordTalk "
+										label="Discurso Tesouros da Palavra de Deus"
+										checked={treasuresFromGodsWordTalk}
+										onCheckedChange={setTreasuresFromGodsWordTalk}
+									/>
+									<SwitchField
+										name="spiritualGems "
+										label="Joias espirituais"
+										checked={spiritualGems}
+										onCheckedChange={setSpiritualGems}
 									/>
 									<SwitchField
 										name="publicTalk"

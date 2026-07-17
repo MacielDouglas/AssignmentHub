@@ -1,20 +1,65 @@
 import { z } from "zod";
 
+const maleOnlyFields = [
+	"bibleReading",
+	"roamingMic",
+	"sound",
+	"video",
+	"stage",
+	"bibleStudyReader",
+	"watchtowerReader",
+	"attendant",
+	"privilegePrayer",
+	"elder",
+	"publicTalk",
+	"lifeAndMinistryChairman",
+	"weekendChairman",
+	"ourChristianLifeAssignment",
+	"localNeeds",
+	"bibleStudyConductor",
+	"watchtowerConductor",
+] as const;
+
+const maleBaptizedOnlyFields = [
+	"bibleStudyReader",
+	"watchtowerReader",
+	"attendant",
+	"privilegePrayer",
+	"elder",
+	"publicTalk",
+	"lifeAndMinistryChairman",
+	"weekendChairman",
+	"ourChristianLifeAssignment",
+	"localNeeds",
+	"bibleStudyConductor",
+	"watchtowerConductor",
+] as const;
+
 export const personFormSchema = z
 	.object({
 		slug: z.string().min(1, "Organização inválida."),
 		personId: z.string().uuid().optional(),
-		name: z.string().trim().min(2, "Informe o nome."),
+
+		name: z
+			.string()
+			.trim()
+			.min(2, "Informe o nome.")
+			.max(120, "Nome muito longo."),
 		sex: z.enum(["MALE", "FEMALE"]),
 		isActive: z.boolean(),
 		isStudent: z.boolean(),
 
 		isFamilyHead: z.boolean(),
-		familyName: z.string().trim().optional(),
+		familyName: z.string().trim().max(120).optional(),
 		familyId: z.string().uuid().optional(),
+
+		headRemovalAction: z.enum(["REASSIGN", "DISSOLVE"]).optional(),
+		newHeadPersonId: z.string().uuid().optional(),
 
 		baptized: z.boolean(),
 		young: z.boolean(),
+		isMarried: z.boolean(),
+
 		initiatingConversations: z.boolean(),
 		cultivatingInterest: z.boolean(),
 		makingDisciples: z.boolean(),
@@ -27,7 +72,6 @@ export const personFormSchema = z
 		sound: z.boolean(),
 		video: z.boolean(),
 		stage: z.boolean(),
-
 		bibleStudyReader: z.boolean(),
 		watchtowerReader: z.boolean(),
 		attendant: z.boolean(),
@@ -56,8 +100,7 @@ export const personFormSchema = z
 			ctx.addIssue({
 				code: "custom",
 				path: ["familyName"],
-				message:
-					"Nome da família só pode ser informado quando a pessoa for chefe.",
+				message: "Nome da família só pode ser informado para chefe.",
 			});
 		}
 
@@ -65,9 +108,57 @@ export const personFormSchema = z
 			ctx.addIssue({
 				code: "custom",
 				path: ["familyId"],
-				message: "Chefe de família não deve selecionar uma família existente.",
+				message: "Chefe de família não pode escolher uma família existente.",
 			});
+		}
+
+		if (!data.isFamilyHead && !data.familyId && data.isMarried) {
+			ctx.addIssue({
+				code: "custom",
+				path: ["familyId"],
+				message: "Pessoa casada precisa pertencer a uma família.",
+			});
+		}
+
+		if (data.young && data.isMarried) {
+			ctx.addIssue({
+				code: "custom",
+				path: ["isMarried"],
+				message: "Jovem não pode permanecer casado.",
+			});
+		}
+
+		if (data.headRemovalAction === "REASSIGN" && !data.newHeadPersonId) {
+			ctx.addIssue({
+				code: "custom",
+				path: ["newHeadPersonId"],
+				message: "Selecione o novo chefe da família.",
+			});
+		}
+
+		if (data.sex === "FEMALE") {
+			for (const field of maleOnlyFields) {
+				if (data[field]) {
+					ctx.addIssue({
+						code: "custom",
+						path: [field],
+						message: "Campo permitido apenas para homens.",
+					});
+				}
+			}
+		}
+
+		if (data.sex === "MALE" && !data.baptized) {
+			for (const field of maleBaptizedOnlyFields) {
+				if (data[field]) {
+					ctx.addIssue({
+						code: "custom",
+						path: [field],
+						message: "Campo permitido apenas para homem batizado.",
+					});
+				}
+			}
 		}
 	});
 
-export type PersonFormInput = z.infer<typeof personFormSchema>;
+export type PersonFormValues = z.infer<typeof personFormSchema>;

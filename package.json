@@ -6,7 +6,8 @@
 		"dev": "next dev",
 		"build": "next build",
 		"start": "next start",
-		"lint": "next lint",
+		"lint": "biome check",
+		"format": "biome format --write",
 		"db:seed": "prisma db seed"
 	},
 	"dependencies": {
@@ -17,6 +18,7 @@
 		"better-auth": "^1.6.23",
 		"class-variance-authority": "^0.7.1",
 		"clsx": "^2.1.1",
+		"cmdk": "^1.1.1",
 		"date-fns": "^4.4.0",
 		"lucide-react": "^1.24.0",
 		"next": "16.2.10",

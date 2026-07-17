@@ -1,6 +1,7 @@
 "use client";
 
 import { useActionState, useMemo, useState } from "react";
+
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
@@ -47,6 +48,7 @@ export function CleaningSettingsForm({ initialState }: Props) {
 	function resetTypeToSuggestedDefault(type: "MEETING" | "WEEKLY" | "GENERAL") {
 		setFormState((current) => {
 			const nextConfig = structuredClone(suggestedDefaults[type]);
+
 			const next = {
 				...current,
 				configs: {

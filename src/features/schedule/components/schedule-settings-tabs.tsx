@@ -26,7 +26,9 @@ export function ScheduleSettingsTabs({
 	const meetings = items.find((item) => item.type === "MEETINGS");
 	const specialMeeting = items.find((item) => item.type === "SPECIAL_MEETING");
 	const weeklyCleaning = items.find((item) => item.type === "WEEKLY_CLEANING");
-	const generalCleaning = items.find((item) => item.type === "GENERAL_CLEANING");
+	const generalCleaning = items.find(
+		(item) => item.type === "GENERAL_CLEANING",
+	);
 
 	if (!meetings || !specialMeeting || !weeklyCleaning || !generalCleaning) {
 		return null;

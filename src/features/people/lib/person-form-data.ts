@@ -8,9 +8,8 @@ const getOptionalString = (formData: FormData, key: string) => {
 	return value.length > 0 ? value : undefined;
 };
 
-const getBoolean = (formData: FormData, key: string) => {
-	return getString(formData, key) === "true";
-};
+const getBoolean = (formData: FormData, key: string) =>
+	getString(formData, key) === "true";
 
 export function parsePersonFormData(formData: FormData) {
 	return {
@@ -25,8 +24,13 @@ export function parsePersonFormData(formData: FormData) {
 		familyName: getOptionalString(formData, "familyName"),
 		familyId: getOptionalString(formData, "familyId"),
 
+		headRemovalAction: getOptionalString(formData, "headRemovalAction"),
+		newHeadPersonId: getOptionalString(formData, "newHeadPersonId"),
+
 		baptized: getBoolean(formData, "baptized"),
 		young: getBoolean(formData, "young"),
+		isMarried: getBoolean(formData, "isMarried"),
+
 		initiatingConversations: getBoolean(formData, "initiatingConversations"),
 		cultivatingInterest: getBoolean(formData, "cultivatingInterest"),
 		makingDisciples: getBoolean(formData, "makingDisciples"),
@@ -39,7 +43,6 @@ export function parsePersonFormData(formData: FormData) {
 		sound: getBoolean(formData, "sound"),
 		video: getBoolean(formData, "video"),
 		stage: getBoolean(formData, "stage"),
-
 		bibleStudyReader: getBoolean(formData, "bibleStudyReader"),
 		watchtowerReader: getBoolean(formData, "watchtowerReader"),
 		attendant: getBoolean(formData, "attendant"),

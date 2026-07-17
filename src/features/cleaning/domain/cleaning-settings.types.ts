@@ -13,6 +13,7 @@ export type SectorItem = {
 	allowYoung: boolean;
 	sortOrder: number;
 	isActive: boolean;
+	targetSex?: string;
 };
 
 export type TypeFormState = {

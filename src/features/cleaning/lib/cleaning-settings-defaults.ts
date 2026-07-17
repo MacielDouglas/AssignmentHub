@@ -37,14 +37,24 @@ export function createSuggestedConfig(type: CleaningType): TypeFormState {
 					isActive: true,
 				}),
 				createSector(type, 1, {
-					name: "Banheiros",
+					name: "Banheiro masculino",
 					description:
 						"Limpe o vaso sanitário, o mictório e a parede ao redor com desinfetante. Recolha o lixo. Passe um pano com desinfetante no chão.",
 					peopleRequired: "1",
 					allowYoung: true,
+					targetSex: "MALE",
 					isActive: true,
 				}),
 				createSector(type, 2, {
+					name: "Banheiro feminino",
+					description:
+						"Limpe o vaso sanitário e a parede ao redor com desinfetante. Recolha o lixo. Passe um pano com desinfetante no chão.",
+					peopleRequired: "1",
+					allowYoung: true,
+					targetSex: "FEMALE",
+					isActive: true,
+				}),
+				createSector(type, 3, {
 					name: "Abastecimento",
 					description:
 						"Abasteça os dispensers de papel higiênico, papel toalha, porta-copos, saboneteira e álcool em gel, se necessário.",
@@ -52,7 +62,7 @@ export function createSuggestedConfig(type: CleaningType): TypeFormState {
 					allowYoung: true,
 					isActive: true,
 				}),
-				createSector(type, 3, {
+				createSector(type, 4, {
 					name: "Lixo",
 					description: "Recolha e descarte o lixo.",
 					peopleRequired: "1",

@@ -46,8 +46,9 @@ export function CleaningSettingsTypePanel({
 	const formKey =
 		type === "MEETING" ? "meeting" : type === "WEEKLY" ? "weekly" : "general";
 
-	const parsedTimesPerWeek =
-		value.timesPerWeek.trim() === "" ? null : Number(value.timesPerWeek);
+	const parsedTimesPerWeek = value.timesPerWeek.trim()
+		? Number(value.timesPerWeek)
+		: null;
 
 	return (
 		<section className="space-y-6 rounded-2xl border p-4 md:p-6">
@@ -78,6 +79,7 @@ export function CleaningSettingsTypePanel({
 					<Label htmlFor={`${namePrefix}-assignment-mode`}>
 						Modo de designação
 					</Label>
+
 					<Select
 						value={value.assignmentMode ?? ASSIGNMENT_MODE_EMPTY}
 						onValueChange={(next) =>
@@ -100,11 +102,13 @@ export function CleaningSettingsTypePanel({
 							<SelectItem value="PERSON">Pessoa</SelectItem>
 						</SelectContent>
 					</Select>
+
 					<input
 						type="hidden"
 						name={`${namePrefix}.assignmentMode`}
 						value={value.assignmentMode ?? ""}
 					/>
+
 					<CleaningSettingsErrorText
 						errors={errors}
 						field={`${formKey}.assignmentMode`}

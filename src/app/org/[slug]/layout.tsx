@@ -5,7 +5,6 @@ import { AppBreadcrumbs } from "@/components/app-breadcrumbs";
 import { OrgHeader } from "@/components/org/org-header";
 import { OrgMobileDrawer } from "@/components/org/org-mobile-drawer";
 import { OrgSidebar } from "@/components/org/org-sidebar";
-// import { Breadcrumb } from "@/components/ui/breadcrumb";
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
 
@@ -115,11 +114,6 @@ export default async function OrganizationLayout({
 								labelMap={breadcrumbLabels}
 								hrefLabelMap={breadcrumbHrefLabels}
 							/>
-
-							{/* <Breadcrumb
-								labelMap={breadcrumbLabels}
-								hrefLabelMap={breadcrumbHrefLabels}
-							/> */}
 
 							<main>{children}</main>
 						</div>

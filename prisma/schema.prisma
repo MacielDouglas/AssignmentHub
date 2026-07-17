@@ -35,6 +35,16 @@ enum CleaningAssignmentMode {
   PERSON
 }
 
+enum CleaningAssignmentListStatus {
+  DRAFT
+  SAVED
+}
+
+enum CleaningSectorTargetSex {
+  MALE
+  FEMALE
+}
+
 enum Weekday {
   MONDAY
   TUESDAY
@@ -149,6 +159,7 @@ model Organization {
   subOrganizations SubOrganization[]
   cleaningSettings OrganizationCleaningSettings?
   schedules        OrganizationSchedule[]
+  cleaningLists    CleaningAssignmentList[]
 
   @@index([slug])
 }
@@ -217,10 +228,11 @@ model Family {
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
 
-  organization        Organization         @relation(fields: [organizationId], references: [id], onDelete: Cascade)
-  head                Person               @relation("FamilyHead", fields: [headId], references: [id], onDelete: Restrict)
-  members             Person[]             @relation("FamilyMembers")
-  cleaningTypeConfigs CleaningTypeConfig[] @relation("CleaningConfigFamily")
+  organization        Organization                         @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  head                Person                               @relation("FamilyHead", fields: [headId], references: [id], onDelete: Restrict)
+  members             Person[]                             @relation("FamilyMembers")
+  cleaningTypeConfigs CleaningTypeConfig[]                 @relation("CleaningConfigFamily")
+  cleaningAssignments CleaningAssignmentSectorAssignment[]
 
   @@unique([organizationId, name])
   @@index([organizationId])
@@ -237,11 +249,12 @@ model Group {
   createdAt        DateTime @default(now())
   updatedAt        DateTime @updatedAt
 
-  organization        Organization         @relation(fields: [organizationId], references: [id], onDelete: Cascade)
-  superintendent      Person               @relation("GroupSuperintendent", fields: [superintendentId], references: [id], onDelete: Restrict)
-  assistant           Person               @relation("GroupAssistant", fields: [assistantId], references: [id], onDelete: Restrict)
-  members             Person[]             @relation("GroupMembers")
-  cleaningTypeConfigs CleaningTypeConfig[] @relation("CleaningConfigGroup")
+  organization        Organization                         @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  superintendent      Person                               @relation("GroupSuperintendent", fields: [superintendentId], references: [id], onDelete: Restrict)
+  assistant           Person                               @relation("GroupAssistant", fields: [assistantId], references: [id], onDelete: Restrict)
+  members             Person[]                             @relation("GroupMembers")
+  cleaningTypeConfigs CleaningTypeConfig[]                 @relation("CleaningConfigGroup")
+  cleaningAssignments CleaningAssignmentSectorAssignment[]
 
   @@unique([organizationId, name])
   @@unique([organizationId, slug])
@@ -257,6 +270,7 @@ model Person {
   organizationId String?
   familyId       String?
   groupId        String?
+  spouseId       String? @unique
   name           String
   sex            Sex     @default(MALE)
   isActive       Boolean @default(true)
@@ -272,12 +286,11 @@ model Person {
   cleaning                Boolean @default(true)
   privilegePrayer         Boolean @default(false)
 
-  bibleReading Boolean @default(false)
-  roamingMic   Boolean @default(false)
-  sound        Boolean @default(false)
-  video        Boolean @default(false)
-  stage        Boolean @default(false)
-
+  bibleReading     Boolean @default(false)
+  roamingMic       Boolean @default(false)
+  sound            Boolean @default(false)
+  video            Boolean @default(false)
+  stage            Boolean @default(false)
   bibleStudyReader Boolean @default(false)
   watchtowerReader Boolean @default(false)
   attendant        Boolean @default(false)
@@ -286,30 +299,36 @@ model Person {
   updatedAt DateTime  @updatedAt
   outlines  Outline[]
 
-  organization           Organization?                    @relation(fields: [organizationId], references: [id], onDelete: Cascade)
-  family                 Family?                          @relation("FamilyMembers", fields: [familyId], references: [id], onDelete: SetNull)
-  headedFamily           Family?                          @relation("FamilyHead")
+  organization           Organization?                        @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  family                 Family?                              @relation("FamilyMembers", fields: [familyId], references: [id], onDelete: SetNull)
+  headedFamily           Family?                              @relation("FamilyHead")
   user                   User?
   servicePrivilege       ServicePrivilege?
-  group                  Group?                           @relation("GroupMembers", fields: [groupId], references: [id], onDelete: SetNull)
-  superintendentOfGroups Group[]                          @relation("GroupSuperintendent")
-  assistantOfGroups      Group[]                          @relation("GroupAssistant")
-  cleaningTypeConfigs    CleaningTypeConfig[]             @relation("CleaningConfigPerson")
-  scheduleOccurrences    OrganizationScheduleOccurrence[] @relation("ScheduleLeaderPerson")
+  group                  Group?                               @relation("GroupMembers", fields: [groupId], references: [id], onDelete: SetNull)
+  superintendentOfGroups Group[]                              @relation("GroupSuperintendent")
+  assistantOfGroups      Group[]                              @relation("GroupAssistant")
+  cleaningTypeConfigs    CleaningTypeConfig[]                 @relation("CleaningConfigPerson")
+  scheduleOccurrences    OrganizationScheduleOccurrence[]     @relation("ScheduleLeaderPerson")
+  cleaningAssignments    CleaningAssignmentSectorAssignment[]
+
+  spouse    Person? @relation("PersonSpouse", fields: [spouseId], references: [id], onDelete: SetNull)
+  marriedTo Person? @relation("PersonSpouse")
 
   @@index([organizationId, name])
   @@index([familyId])
   @@index([groupId])
   @@index([organizationId, familyId])
   @@index([organizationId, groupId])
+  @@index([spouseId])
 }
 
 model ServicePrivilege {
-  id       String @id @default(uuid())
-  personId String @unique
-
+  id                         String  @id @default(uuid())
+  personId                   String  @unique
   elder                      Boolean @default(false)
   publicTalk                 Boolean @default(false)
+  spiritualGems              Boolean @default(false)
+  treasuresFromGodsWordTalk  Boolean @default(false)
   lifeAndMinistryChairman    Boolean @default(false)
   weekendChairman            Boolean @default(false)
   ourChristianLifeAssignment Boolean @default(false)
@@ -396,21 +415,24 @@ model CleaningDate {
 }
 
 model CleaningSector {
-  id                   String   @id @default(uuid())
+  id                   String                   @id @default(uuid())
   cleaningTypeConfigId String
   name                 String
   description          String?
   peopleRequired       Int?
-  allowYoung           Boolean  @default(true)
-  sortOrder            Int      @default(0)
-  isActive             Boolean  @default(true)
-  createdAt            DateTime @default(now())
-  updatedAt            DateTime @updatedAt
+  allowYoung           Boolean                  @default(true)
+  targetSex            CleaningSectorTargetSex?
+  sortOrder            Int                      @default(0)
+  isActive             Boolean                  @default(true)
+  createdAt            DateTime                 @default(now())
+  updatedAt            DateTime                 @updatedAt
 
-  cleaningTypeConfig CleaningTypeConfig @relation(fields: [cleaningTypeConfigId], references: [id], onDelete: Cascade)
+  cleaningTypeConfig CleaningTypeConfig                   @relation(fields: [cleaningTypeConfigId], references: [id], onDelete: Cascade)
+  assignments        CleaningAssignmentSectorAssignment[]
 
   @@index([cleaningTypeConfigId, sortOrder])
   @@index([cleaningTypeConfigId, isActive])
+  @@index([cleaningTypeConfigId, targetSex])
 }
 
 model OrganizationSchedule {
@@ -472,4 +494,61 @@ model OrganizationScheduleOccurrence {
   @@index([organizationScheduleId, startDate])
   @@index([organizationScheduleId, endDate])
   @@index([leaderPersonId])
+}
+
+model CleaningAssignmentList {
+  id             String                       @id @default(uuid())
+  organizationId String
+  cleaningType   CleaningType
+  periodFrom     DateTime
+  periodTo       DateTime
+  status         CleaningAssignmentListStatus @default(DRAFT)
+  createdAt      DateTime                     @default(now())
+  updatedAt      DateTime                     @updatedAt
+
+  organization Organization             @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  dates        CleaningAssignmentDate[]
+
+  @@index([organizationId, cleaningType, periodFrom])
+  @@index([organizationId, periodFrom, periodTo])
+  @@index([organizationId, status, createdAt])
+}
+
+model CleaningAssignmentDate {
+  id        String   @id @default(uuid())
+  listId    String
+  date      DateTime
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  list        CleaningAssignmentList               @relation(fields: [listId], references: [id], onDelete: Cascade)
+  assignments CleaningAssignmentSectorAssignment[]
+
+  @@unique([listId, date])
+  @@index([listId, date])
+  @@index([date])
+}
+
+model CleaningAssignmentSectorAssignment {
+  id               String   @id @default(uuid())
+  assignmentDateId String
+  sectorId         String
+  personId         String
+  familyId         String?
+  groupId          String?
+  position         Int      @default(0)
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  assignmentDate CleaningAssignmentDate @relation(fields: [assignmentDateId], references: [id], onDelete: Cascade)
+  sector         CleaningSector         @relation(fields: [sectorId], references: [id], onDelete: Restrict)
+  person         Person                 @relation(fields: [personId], references: [id], onDelete: Restrict)
+  family         Family?                @relation(fields: [familyId], references: [id], onDelete: SetNull)
+  group          Group?                 @relation(fields: [groupId], references: [id], onDelete: SetNull)
+
+  @@index([assignmentDateId, sectorId])
+  @@index([personId])
+  @@index([familyId])
+  @@index([groupId])
+  @@index([sectorId, position])
 }

@@ -2,14 +2,6 @@ import type { Metadata } from "next";
 import { headers } from "next/headers";
 import { notFound } from "next/navigation";
 
-import {
-	Breadcrumb,
-	BreadcrumbItem,
-	BreadcrumbLink,
-	BreadcrumbList,
-	BreadcrumbPage,
-	BreadcrumbSeparator,
-} from "@/components/ui/breadcrumb";
 import { ScheduleSettingsForm } from "@/features/schedule/components/schedule-settings-form";
 import { mapScheduleSettingsFormInitialState } from "@/features/schedule/lib/map-schedule-settings-form-initial-state";
 import { getScheduleSettingsQuery } from "@/features/schedule/queries/get-schedule-settings.query";
@@ -59,20 +51,6 @@ export default async function OrganizationScheduleSettingsPage({
 
 	return (
 		<div className="space-y-6">
-			<Breadcrumb>
-				<BreadcrumbList>
-					<BreadcrumbItem>
-						<BreadcrumbLink href={`/org/${data.organization.slug}/settings`}>
-							Configurações
-						</BreadcrumbLink>
-					</BreadcrumbItem>
-					<BreadcrumbSeparator />
-					<BreadcrumbItem>
-						<BreadcrumbPage>Datas</BreadcrumbPage>
-					</BreadcrumbItem>
-				</BreadcrumbList>
-			</Breadcrumb>
-
 			<ScheduleSettingsForm key={formKey} initialState={initialState} />
 		</div>
 	);

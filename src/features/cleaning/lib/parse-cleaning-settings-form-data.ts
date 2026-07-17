@@ -20,11 +20,11 @@ function parseString(value: FormDataEntryValue | null) {
 
 function parseOptionalString(value: FormDataEntryValue | null) {
 	const parsed = parseString(value);
-	return parsed === "" ? undefined : parsed;
+	return parsed ? parsed : undefined;
 }
 
 function parseNullableNumber(value: FormDataEntryValue | null) {
-	if (typeof value !== "string" || value.trim() === "") {
+	if (typeof value !== "string" || !value.trim()) {
 		return null;
 	}
 
@@ -83,7 +83,6 @@ export function parseCleaningSettingsFormData(
 ): SaveCleaningSettingsInput {
 	const organizationId = parseString(formData.get("organizationId"));
 	const settingsId = parseOptionalString(formData.get("settingsId"));
-
 	const cleaningPerMeeting = parseBoolean(formData.get("cleaningPerMeeting"));
 	const weeklyCleaning = parseBoolean(formData.get("weeklyCleaning"));
 	const generalCleaning = parseBoolean(formData.get("generalCleaning"));
@@ -128,6 +127,7 @@ export function parseCleaningSettingsFormData(
 		}
 
 		const weekdayMatch = field.match(/^weekdays\.(\d+)$/);
+
 		if (weekdayMatch) {
 			const value = parseString(rawValue);
 			if (value) {
@@ -137,18 +137,23 @@ export function parseCleaningSettingsFormData(
 		}
 
 		const dateMatch = field.match(/^dates\.(\d+)$/);
+
 		if (dateMatch) {
 			const value = parseString(rawValue);
+
 			if (value) {
 				const date = new Date(value);
+
 				if (!Number.isNaN(date.getTime())) {
 					config.dates.push(date);
 				}
 			}
+
 			continue;
 		}
 
 		const sectorMatch = field.match(/^sectors\.(\d+)\.(.+)$/);
+
 		if (!sectorMatch) {
 			continue;
 		}
@@ -196,6 +201,7 @@ export function parseCleaningSettingsFormData(
 		const config = ensureConfig(configMap, type);
 
 		const uniqueWeekdays = [...new Set(config.weekdays)];
+
 		const uniqueDates = [
 			...new Map(
 				config.dates
@@ -208,7 +214,7 @@ export function parseCleaningSettingsFormData(
 			.filter((sector): sector is RawSector => Boolean(sector))
 			.map((sector, index) => ({
 				...sector,
-				id: sector.id || undefined,
+				id: sector.id ?? undefined,
 				description: sector.description ?? "",
 				sortOrder: index,
 			}));
@@ -219,7 +225,7 @@ export function parseCleaningSettingsFormData(
 			dates: uniqueDates,
 			sectors,
 		};
-	}) as SaveCleaningSettingsInput["configs"];
+	});
 
 	return {
 		organizationId,

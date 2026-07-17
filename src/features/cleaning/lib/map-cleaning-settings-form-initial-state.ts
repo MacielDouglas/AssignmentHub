@@ -1,5 +1,6 @@
 import type {
 	CleaningSettingsFormConfigMap,
+	// CleaningSettingsFormState,
 	SectorItem,
 	TypeFormState,
 } from "../domain/cleaning-settings.types";
@@ -51,16 +52,6 @@ type QueryResult = {
 	};
 } | null;
 
-export type CleaningSettingsFormState = {
-	organizationId: string;
-	settingsId?: string;
-	cleaningPerMeeting: boolean;
-	weeklyCleaning: boolean;
-	generalCleaning: boolean;
-	configs: CleaningSettingsFormConfigMap;
-	defaults: CleaningSettingsFormConfigMap;
-};
-
 function createClientKey(type: CleaningType, sortOrder: number, id?: string) {
 	return id ? `${type}-${id}` : `${type}-new-${sortOrder}`;
 }
@@ -83,30 +74,37 @@ function mapSector(
 		name: sector.name,
 		description: sector.description ?? "",
 		peopleRequired:
-			sector.peopleRequired === null ? "" : String(sector.peopleRequired),
+			sector.peopleRequired !== null ? String(sector.peopleRequired) : "",
 		allowYoung: sector.allowYoung,
 		sortOrder: sector.sortOrder,
 		isActive: sector.isActive,
 	};
 }
 
+function cloneConfig(config: TypeFormState): TypeFormState {
+	return {
+		...config,
+		weekdays: [...config.weekdays],
+		dates: [...config.dates],
+		sectors: config.sectors.map((sector) => ({ ...sector })),
+	};
+}
+
 function mergeConfig(
 	base: TypeFormState,
-	incoming: QueryResult extends null
-		? never
-		: NonNullable<
-				NonNullable<QueryResult>["organization"]["cleaningSettings"]
-			>["configs"][number],
+	incoming: NonNullable<
+		NonNullable<QueryResult>["organization"]["cleaningSettings"]
+	>["configs"][number],
 ): TypeFormState {
 	return {
-		...base,
+		...cloneConfig(base),
 		id: incoming.id,
 		type: incoming.type,
 		enabled: incoming.enabled,
-		assignmentMode: incoming.assignmentMode ?? base.assignmentMode,
+		assignmentMode: incoming.assignmentMode,
 		notes: incoming.notes ?? "",
 		timesPerWeek:
-			incoming.timesPerWeek === null ? "" : String(incoming.timesPerWeek),
+			incoming.timesPerWeek !== null ? String(incoming.timesPerWeek) : "",
 		weekdays: incoming.weekdays
 			.slice()
 			.sort((a, b) => a.sortOrder - b.sortOrder)
@@ -130,9 +128,9 @@ export function mapCleaningSettingsFormInitialState(
 	const settings = membership?.organization.cleaningSettings ?? null;
 
 	const configs: CleaningSettingsFormConfigMap = {
-		MEETING: { ...defaults.MEETING, sectors: [...defaults.MEETING.sectors] },
-		WEEKLY: { ...defaults.WEEKLY, sectors: [...defaults.WEEKLY.sectors] },
-		GENERAL: { ...defaults.GENERAL, sectors: [...defaults.GENERAL.sectors] },
+		MEETING: cloneConfig(defaults.MEETING),
+		WEEKLY: cloneConfig(defaults.WEEKLY),
+		GENERAL: cloneConfig(defaults.GENERAL),
 	};
 
 	if (settings) {

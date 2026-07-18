@@ -1,35 +1,49 @@
 "use client";
 
+import { Save } from "lucide-react";
+
+import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
-import type { ScheduleItemFormState } from "../domain/schedule-settings.types";
+import type { ScheduleItemFormState, ScheduleLeaderOption } from "../domain/schedule-settings.types";
 import { ScheduleOccurrencesEditor } from "./schedule-occurrences-editor";
 
 type Props = {
 	weeklyCleaning: ScheduleItemFormState;
 	generalCleaning: ScheduleItemFormState;
+	pending: boolean;
+	onSubmitSection: () => void;
 	onWeeklyCleaningChange: (value: ScheduleItemFormState) => void;
 	onGeneralCleaningChange: (value: ScheduleItemFormState) => void;
+	leaders: ScheduleLeaderOption[];
 };
 
 function CleaningSection({
-	index,
 	item,
+	pending,
+	onSubmitSection,
 	onChange,
+	leaders,
 }: {
-	index: number;
 	item: ScheduleItemFormState;
+	pending: boolean;
+	onSubmitSection: () => void;
 	onChange: (value: ScheduleItemFormState) => void;
+	leaders: ScheduleLeaderOption[];
 }) {
 	return (
-		<section className="space-y-6 rounded-2xl border p-4 md:p-6">
+		<section className="space-y-5 rounded-3xl border border-border/60 bg-background p-4 shadow-sm sm:p-6">
 			<div className="space-y-1">
-				<h3 className="text-base font-semibold">{item.title}</h3>
-				<p className="text-sm text-muted-foreground">{item.description}</p>
+				<h3 className="text-lg font-semibold tracking-tight text-foreground">
+					{item.title}
+				</h3>
+				<p className="text-sm leading-6 text-muted-foreground">
+					{item.description}
+				</p>
 			</div>
 
-			<div className="flex items-center justify-between rounded-xl border p-3">
+			<div className="flex items-center justify-between rounded-2xl border border-border/60 bg-muted/20 p-4">
 				<div className="space-y-1">
-					<p className="text-sm font-medium">Ativa</p>
+					<p className="text-sm font-medium text-foreground">Ativar seção</p>
 					<p className="text-xs text-muted-foreground">
 						Habilita esta configuração de limpeza.
 					</p>
@@ -46,25 +60,11 @@ function CleaningSection({
 				/>
 			</div>
 
-			<input type="hidden" name={`items.${index}.id`} value={item.id ?? ""} />
-			<input type="hidden" name={`items.${index}.type`} value={item.type} />
-			<input type="hidden" name={`items.${index}.mode`} value={item.mode} />
-			<input type="hidden" name={`items.${index}.title`} value={item.title} />
-			<input
-				type="hidden"
-				name={`items.${index}.description`}
-				value={item.description}
-			/>
-			<input
-				type="hidden"
-				name={`items.${index}.isActive`}
-				value={String(item.isActive)}
-			/>
-
 			<ScheduleOccurrencesEditor
-				namePrefix={`items.${index}`}
 				type={item.type}
 				value={item.occurrences}
+				leaders={leaders}
+				disabled={!item.isActive}
 				onChange={(occurrences) =>
 					onChange({
 						...item,
@@ -75,6 +75,18 @@ function CleaningSection({
 					})
 				}
 			/>
+
+			<div className="flex justify-end">
+				<Button
+					type="button"
+					onClick={onSubmitSection}
+					disabled={pending}
+					className="rounded-2xl bg-[#2563EB] hover:bg-[#1D4ED8]"
+				>
+					<Save className="mr-2 size-4" />
+					{pending ? "Salvando..." : "Salvar alterações"}
+				</Button>
+			</div>
 		</section>
 	);
 }
@@ -82,20 +94,27 @@ function CleaningSection({
 export function ScheduleCleaningTab({
 	weeklyCleaning,
 	generalCleaning,
+	pending,
+	onSubmitSection,
 	onWeeklyCleaningChange,
 	onGeneralCleaningChange,
+	leaders,
 }: Props) {
 	return (
-		<div className="space-y-6">
+		<div className="space-y-4">
 			<CleaningSection
-				index={3}
 				item={weeklyCleaning}
+				pending={pending}
+				onSubmitSection={onSubmitSection}
 				onChange={onWeeklyCleaningChange}
+				leaders={leaders}
 			/>
 			<CleaningSection
-				index={4}
 				item={generalCleaning}
+				pending={pending}
+				onSubmitSection={onSubmitSection}
 				onChange={onGeneralCleaningChange}
+				leaders={leaders}
 			/>
 		</div>
 	);

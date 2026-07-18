@@ -1,5 +1,7 @@
 "use client";
 
+import { AlertCircle } from "lucide-react";
+
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
@@ -22,15 +24,27 @@ const WEEKDAY_OPTIONS: Array<{ value: ScheduleWeekday; label: string }> = [
 	{ value: "SUNDAY", label: "Domingo" },
 ];
 
+const TIME_REGEX = /^([01]\d|2[0-3]):([0-5]\d)$/;
+
+function validateWeekday(value: string): string | null {
+	if (!value) return "Selecione um dia da semana";
+	if (!WEEKDAY_OPTIONS.some((o) => o.value === value)) return "Dia da semana inválido";
+	return null;
+}
+
+function validateTime(value: string): string | null {
+	if (!value) return "Informe o horário";
+	if (!TIME_REGEX.test(value)) return "Horário inválido (formato HH:MM)";
+	return null;
+}
+
 type Props = {
-	namePrefix: string;
 	value: WeeklyRuleFormState[];
 	disabled?: boolean;
 	onChange: (value: WeeklyRuleFormState[]) => void;
 };
 
 export function ScheduleWeeklyRulesEditor({
-	namePrefix,
 	value,
 	disabled,
 	onChange,
@@ -38,24 +52,29 @@ export function ScheduleWeeklyRulesEditor({
 	function updateRule(index: number, next: Partial<WeeklyRuleFormState>) {
 		onChange(
 			value.map((rule, currentIndex) =>
-				currentIndex === index ? { ...rule, ...next } : rule,
+				currentIndex === index
+					? {
+							...rule,
+							...next,
+						}
+					: rule,
 			),
 		);
 	}
 
 	return (
-		<div className="grid gap-4 md:grid-cols-2">
+		<div className="grid gap-4 lg:grid-cols-2">
 			{value.map((rule, index) => (
 				<section
-					key={rule.sortOrder}
-					className="space-y-3 rounded-2xl border p-4"
+					key={rule.id ?? `weekly-rule-${index}`}
+					className="space-y-4 rounded-2xl border border-border/60 bg-card p-4"
 				>
 					<div className="space-y-1">
-						<h4 className="text-sm font-semibold">
-							Reunião {index === 0 ? "1" : "2"}
+						<h4 className="text-sm font-semibold text-foreground">
+							Reunião {index + 1}
 						</h4>
 						<p className="text-xs text-muted-foreground">
-							Defina dia da semana e horário.
+							Defina o dia da semana e o horário.
 						</p>
 					</div>
 
@@ -64,15 +83,14 @@ export function ScheduleWeeklyRulesEditor({
 						<Select
 							value={rule.weekday}
 							onValueChange={(weekday) =>
-								updateRule(index, {
-									weekday: weekday as ScheduleWeekday,
-								})
+								updateRule(index, { weekday: weekday as ScheduleWeekday })
 							}
 							disabled={disabled}
 						>
-							<SelectTrigger>
+							<SelectTrigger className="rounded-2xl">
 								<SelectValue placeholder="Selecione" />
 							</SelectTrigger>
+
 							<SelectContent>
 								{WEEKDAY_OPTIONS.map((option) => (
 									<SelectItem key={option.value} value={option.value}>
@@ -81,45 +99,32 @@ export function ScheduleWeeklyRulesEditor({
 								))}
 							</SelectContent>
 						</Select>
+						{validateWeekday(rule.weekday) && !disabled ? (
+							<p className="flex items-center gap-1 text-xs text-amber-600 dark:text-amber-400" role="alert">
+								<AlertCircle className="size-3" />
+								{validateWeekday(rule.weekday)}
+							</p>
+						) : null}
 					</div>
 
 					<div className="space-y-2">
-						<Label htmlFor={`${namePrefix}.weeklyRules.${index}.time`}>
-							Horário
-						</Label>
+						<Label htmlFor={`weekly-rule-time-${index}`}>Horário</Label>
 						<Input
-							id={`${namePrefix}.weeklyRules.${index}.time`}
+							id={`weekly-rule-time-${index}`}
 							type="time"
 							value={rule.time}
 							onChange={(event) =>
-								updateRule(index, {
-									time: event.target.value,
-								})
+								updateRule(index, { time: event.target.value })
 							}
 							disabled={disabled}
 						/>
+						{validateTime(rule.time) && !disabled ? (
+							<p className="flex items-center gap-1 text-xs text-amber-600 dark:text-amber-400" role="alert">
+								<AlertCircle className="size-3" />
+								{validateTime(rule.time)}
+							</p>
+						) : null}
 					</div>
-
-					<input
-						type="hidden"
-						name={`${namePrefix}.weeklyRules.${index}.id`}
-						value={rule.id ?? ""}
-					/>
-					<input
-						type="hidden"
-						name={`${namePrefix}.weeklyRules.${index}.weekday`}
-						value={rule.weekday}
-					/>
-					<input
-						type="hidden"
-						name={`${namePrefix}.weeklyRules.${index}.time`}
-						value={rule.time}
-					/>
-					<input
-						type="hidden"
-						name={`${namePrefix}.weeklyRules.${index}.sortOrder`}
-						value={String(index)}
-					/>
 				</section>
 			))}
 		</div>

@@ -23,7 +23,12 @@ export async function generateMetadata({
 
 	if (!session?.user) {
 		return {
-			title: "Configurações",
+			title: "Configurações | AssignmentHub",
+			description: "Gerencie os módulos e preferências da organização.",
+			robots: {
+				index: false,
+				follow: false,
+			},
 		};
 	}
 
@@ -34,13 +39,51 @@ export async function generateMetadata({
 
 	if (!data) {
 		return {
-			title: "Configurações",
+			title: "Configurações | AssignmentHub",
+			description: "Gerencie os módulos e preferências da organização.",
+			robots: {
+				index: false,
+				follow: false,
+			},
 		};
 	}
 
+	const title = `${data.organization.name} | Configurações | AssignmentHub`;
+	const description = `Gerencie agenda, limpeza, permissões e preferências da organização ${data.organization.name} no AssignmentHub.`;
+
 	return {
-		title: `${data.organization.name} | Configurações`,
-		description: `Configurações da organização ${data.organization.name}.`,
+		metadataBase: new URL("https://assignmenthub.app"),
+		title,
+		description,
+		keywords: [
+			"AssignmentHub",
+			"configurações da organização",
+			"agenda da congregação",
+			"limpeza",
+			"eventos especiais",
+			data.organization.name,
+			data.organization.slug,
+		],
+		alternates: {
+			canonical: `/org/${data.organization.slug}/settings`,
+		},
+		openGraph: {
+			title,
+			description,
+			url: `/org/${data.organization.slug}/settings`,
+			siteName: "AssignmentHub",
+			type: "website",
+			locale: "pt_BR",
+		},
+		twitter: {
+			card: "summary_large_image",
+			title,
+			description,
+		},
+		robots: {
+			index: false,
+			follow: false,
+		},
 	};
 }
 

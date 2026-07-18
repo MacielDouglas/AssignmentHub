@@ -26,6 +26,15 @@ export async function saveScheduleSettingsAction(
 		};
 	}
 
+	// Validar slug da organização (vem do hidden input no form)
+	const slug = formData.get("organizationSlug");
+	if (typeof slug !== "string" || !slug.trim()) {
+		return {
+			...initialSaveScheduleSettingsState,
+			message: "Slug da organização inválido.",
+		};
+	}
+
 	const payload = parseScheduleSettingsFormData(formData);
 	const parsed = saveScheduleSettingsSchema.safeParse(payload);
 
@@ -37,6 +46,7 @@ export async function saveScheduleSettingsAction(
 		};
 	}
 
+	// Verificar se o slug corresponde ao organizationId
 	const membership = await db.organizationMembership.findFirst({
 		where: {
 			userId: session.user.id,
@@ -56,6 +66,14 @@ export async function saveScheduleSettingsAction(
 		return {
 			...initialSaveScheduleSettingsState,
 			message: "Organização não encontrada.",
+		};
+	}
+
+	// Validação de segurança: slug do payload deve corresponder ao slug da organização no banco
+	if (membership.organization.slug !== slug.trim()) {
+		return {
+			...initialSaveScheduleSettingsState,
+			message: "Organização inválida.",
 		};
 	}
 
@@ -85,6 +103,7 @@ export async function saveScheduleSettingsAction(
 
 		revalidatePath(`/org/${membership.organization.slug}/settings`);
 		revalidatePath(`/org/${membership.organization.slug}/settings/data`);
+		revalidatePath(`/org/${membership.organization.slug}/settings/agenda`);
 
 		return {
 			success: true,

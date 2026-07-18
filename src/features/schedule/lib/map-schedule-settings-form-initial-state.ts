@@ -19,7 +19,12 @@ function toDateInput(value: Date | null | undefined) {
 }
 
 function toTimeInput(value: string | null | undefined) {
-	return value ?? "";
+	if (!value) return "";
+	const parts = value.split(":");
+	if (parts.length >= 2) {
+		return `${parts[0].padStart(2, "0")}:${parts[1].padStart(2, "0")}`;
+	}
+	return value;
 }
 
 function createClientKey(prefix: string, id?: string, index?: number) {
@@ -70,6 +75,11 @@ function mapOccurrence(
 	};
 }
 
+function getEffectiveFromYear(value: Date | null | undefined) {
+	if (!value) return null;
+	return new Date(value).getUTCFullYear();
+}
+
 export function mapScheduleSettingsFormInitialState(
 	membership: QueryResult,
 ): ScheduleSettingsFormState {
@@ -82,41 +92,109 @@ export function mapScheduleSettingsFormInitialState(
 			name: person.name,
 		})) ?? [];
 
-	const allowedTypes = new Set(defaults.map((item) => item.type));
+	const items: ScheduleItemFormState[] = [];
 
-	const itemMap = new Map<
-		ScheduleItemFormState["type"],
-		ScheduleItemFormState
-	>();
-
-	for (const item of defaults) {
-		itemMap.set(item.type, structuredClone(item));
-	}
-
-	for (const item of membership?.organization.schedules ?? []) {
-		if (!allowedTypes.has(item.type)) {
+	for (const defaultItem of defaults) {
+		if (defaultItem.type === "MEETINGS") {
 			continue;
 		}
+		items.push(structuredClone(defaultItem));
+	}
 
-		itemMap.set(item.type, {
-			id: item.id,
-			clientKey: createClientKey("schedule", item.id),
-			type: item.type,
-			mode: item.mode,
-			title: item.title,
-			description: item.description ?? "",
-			isActive: item.isActive,
-			weeklyRules: item.weeklyRules.map(mapWeeklyRule),
-			occurrences: item.occurrences.map((occurrence) =>
-				mapOccurrence(item.type, occurrence),
+	const schedules = membership?.organization.schedules ?? [];
+
+	const currentMeeting = schedules.find(
+		(item) => item.type === "MEETINGS" && !item.effectiveFrom,
+	);
+
+	const nextYearMeeting = schedules.find(
+		(item) => item.type === "MEETINGS" && Boolean(item.effectiveFrom),
+	);
+
+	if (currentMeeting) {
+		items.unshift({
+			id: currentMeeting.id,
+			clientKey: createClientKey("schedule", currentMeeting.id),
+			type: currentMeeting.type,
+			variant: "DEFAULT",
+			effectiveFromYear: null,
+			mode: currentMeeting.mode,
+			title: currentMeeting.title,
+			description: currentMeeting.description ?? "",
+			isActive: currentMeeting.isActive,
+			weeklyRules: currentMeeting.weeklyRules.map(mapWeeklyRule),
+			occurrences: currentMeeting.occurrences.map((occurrence) =>
+				mapOccurrence(currentMeeting.type, occurrence),
 			),
 		});
+	} else {
+		const defaultCurrentMeeting = defaults.find(
+			(item) => item.type === "MEETINGS" && item.variant === "DEFAULT",
+		);
+
+		if (defaultCurrentMeeting) {
+			items.unshift(structuredClone(defaultCurrentMeeting));
+		}
+	}
+
+	if (nextYearMeeting) {
+		items.splice(1, 0, {
+			id: nextYearMeeting.id,
+			clientKey: createClientKey("schedule", nextYearMeeting.id),
+			type: nextYearMeeting.type,
+			variant: "NEXT_YEAR",
+			effectiveFromYear: getEffectiveFromYear(nextYearMeeting.effectiveFrom),
+			mode: nextYearMeeting.mode,
+			title: nextYearMeeting.title,
+			description: nextYearMeeting.description ?? "",
+			isActive: nextYearMeeting.isActive,
+			weeklyRules: nextYearMeeting.weeklyRules.map(mapWeeklyRule),
+			occurrences: nextYearMeeting.occurrences.map((occurrence) =>
+				mapOccurrence(nextYearMeeting.type, occurrence),
+			),
+		});
+	}
+
+	for (const schedule of schedules) {
+		if (schedule.type === "MEETINGS") continue;
+
+		const defaultItem = defaults.find(
+			(item) => item.type === schedule.type && item.variant === "DEFAULT",
+		);
+
+		if (!defaultItem) continue;
+
+		const index = items.findIndex(
+			(item) => item.type === schedule.type && item.variant === "DEFAULT",
+		);
+
+		const mapped: ScheduleItemFormState = {
+			id: schedule.id,
+			clientKey: createClientKey("schedule", schedule.id),
+			type: schedule.type,
+			variant: "DEFAULT",
+			effectiveFromYear: getEffectiveFromYear(schedule.effectiveFrom),
+			mode: schedule.mode,
+			title: schedule.title,
+			description: schedule.description ?? "",
+			isActive: schedule.isActive,
+			weeklyRules: schedule.weeklyRules.map(mapWeeklyRule),
+			occurrences: schedule.occurrences.map((occurrence) =>
+				mapOccurrence(schedule.type, occurrence),
+			),
+		};
+
+		if (index >= 0) {
+			items[index] = mapped;
+		} else {
+			items.push(mapped);
+		}
 	}
 
 	return {
 		organizationId,
 		leaders,
-		items: Array.from(itemMap.values()),
+		items,
 		defaults,
 	};
 }

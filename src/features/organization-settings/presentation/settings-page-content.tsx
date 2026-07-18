@@ -1,10 +1,13 @@
+import type { VariantProps } from "class-variance-authority";
 import {
+	ArrowUpRight,
 	BrushCleaning,
 	Building2,
 	CalendarDays,
 	ChevronRight,
 	Settings2,
 	Shield,
+	Sparkles,
 } from "lucide-react";
 import Link from "next/link";
 
@@ -36,6 +39,8 @@ type VisibleScheduleType = Exclude<
 	"FIELD_SERVICE_MEETING"
 >;
 
+type BadgeVariant = VariantProps<typeof Badge>["variant"];
+
 type VisibleScheduleItem = Omit<ScheduleItem, "type"> & {
 	type: VisibleScheduleType;
 };
@@ -61,6 +66,17 @@ function isVisibleScheduleItem(
 	item: ScheduleItem,
 ): item is VisibleScheduleItem {
 	return item.type !== "FIELD_SERVICE_MEETING";
+}
+
+function getRoleLabel(role: SettingsPageContentData["role"]) {
+	switch (role) {
+		case "OWNER":
+			return "Proprietário";
+		case "ADMIN":
+			return "Administrador";
+		default:
+			return "Membro";
+	}
 }
 
 export function SettingsPageContent({ data }: SettingsPageContentProps) {
@@ -95,8 +111,42 @@ export function SettingsPageContent({ data }: SettingsPageContentProps) {
 					.join(", ")
 			: "Nenhuma configuração criada";
 
+	const modules: Array<{
+		title: string;
+		href: string;
+		icon: typeof BrushCleaning;
+		status: string;
+		statusVariant: BadgeVariant;
+		description: string;
+		summary: string;
+		accent: string;
+	}> = [
+		{
+			title: "Limpeza",
+			href: `/org/${data.organization.slug}/settings/cleaning`,
+			icon: BrushCleaning,
+			status: cleaningSettings ? "Configurado" : "Pendente",
+			statusVariant: cleaningSettings ? "secondary" : "outline",
+			description:
+				"Configure limpeza por reunião, limpeza semanal e limpeza geral.",
+			summary: cleaningSummary,
+			accent: "from-[#2563EB]/20 via-[#2563EB]/10 to-transparent",
+		},
+		{
+			title: "Agenda",
+			href: `/org/${data.organization.slug}/settings/agenda`,
+			icon: CalendarDays,
+			status: configuredSchedules.length > 0 ? "Configurado" : "Pendente",
+			statusVariant: configuredSchedules.length > 0 ? "secondary" : "outline",
+			description:
+				"Configure reuniões, eventos especiais, congressos e visitas.",
+			summary: datesSummary,
+			accent: "from-[#7C3AED]/20 via-[#7C3AED]/10 to-transparent",
+		},
+	];
+
 	return (
-		<div className="space-y-6">
+		<main className="space-y-6">
 			<Breadcrumb>
 				<BreadcrumbList>
 					<BreadcrumbItem>
@@ -105,157 +155,228 @@ export function SettingsPageContent({ data }: SettingsPageContentProps) {
 				</BreadcrumbList>
 			</Breadcrumb>
 
-			<section aria-labelledby="settings-heading" className="space-y-4">
-				<Card>
-					<CardHeader className="space-y-4">
-						<div className="flex items-start gap-3">
-							<div className="flex size-11 items-center justify-center rounded-xl border bg-muted">
-								<Settings2 className="size-5" />
+			<section
+				aria-labelledby="settings-heading"
+				className="overflow-hidden rounded-[28px] border border-white/10 bg-[linear-gradient(135deg,rgba(37,99,235,0.14)_0%,rgba(124,58,237,0.14)_55%,rgba(255,255,255,0.02)_100%)] shadow-[0_10px_30px_rgba(15,23,42,0.08)]"
+			>
+				<div className="relative p-5 sm:p-6 lg:p-8">
+					<div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(37,99,235,0.18),transparent_34%),radial-gradient(circle_at_bottom_right,rgba(124,58,237,0.16),transparent_28%)]" />
+					<div className="relative space-y-6">
+						<div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+							<div className="flex items-start gap-4">
+								<div className="flex size-14 shrink-0 items-center justify-center rounded-2xl border border-white/20 bg-white/70 shadow-sm backdrop-blur dark:bg-white/10">
+									<Settings2 className="size-6 text-[#2563EB]" />
+								</div>
+
+								<div className="min-w-0 space-y-2">
+									<div className="flex flex-wrap items-center gap-2">
+										<Badge className="border-0 bg-[#2563EB]/10 text-[#2563EB] hover:bg-[#2563EB]/10">
+											Painel central
+										</Badge>
+										<Badge className="border-0 bg-[#7C3AED]/10 text-[#7C3AED] hover:bg-[#7C3AED]/10">
+											Profissional
+										</Badge>
+									</div>
+
+									<h1
+										id="settings-heading"
+										className="text-2xl font-semibold tracking-tight sm:text-3xl"
+									>
+										Configurações da organização
+									</h1>
+
+									<p className="max-w-2xl text-sm leading-6 text-muted-foreground sm:text-base">
+										Um painel elegante para centralizar agenda, limpeza e
+										preferências da organização com clareza, segurança e ritmo
+										visual consistente.
+									</p>
+								</div>
 							</div>
 
-							<div className="min-w-0 space-y-2">
-								<CardTitle id="settings-heading" className="text-xl">
-									Configurações da organização
-								</CardTitle>
-								<CardDescription className="max-w-2xl">
-									Gerencie os módulos e preferências da organização de forma
-									centralizada.
-								</CardDescription>
+							<div className="rounded-2xl border border-white/20 bg-white/70 px-4 py-3 text-left shadow-sm backdrop-blur dark:bg-white/5">
+								<p className="text-xs font-medium uppercase tracking-[0.16em] text-muted-foreground">
+									Permissão atual
+								</p>
+								<p className="mt-1 text-sm font-semibold">
+									{getRoleLabel(data.role)}
+								</p>
 							</div>
 						</div>
-					</CardHeader>
-				</Card>
+
+						<div className="grid gap-3 sm:grid-cols-3">
+							<div className="rounded-2xl border border-white/20 bg-white/70 p-4 shadow-sm backdrop-blur dark:bg-white/5">
+								<p className="text-xs uppercase tracking-[0.14em] text-muted-foreground">
+									Organização
+								</p>
+								<p className="mt-2 text-base font-semibold">
+									{data.organization.name}
+								</p>
+								<p className="mt-1 text-sm text-muted-foreground">
+									Slug: {data.organization.slug}
+								</p>
+							</div>
+
+							<div className="rounded-2xl border border-white/20 bg-white/70 p-4 shadow-sm backdrop-blur dark:bg-white/5">
+								<p className="text-xs uppercase tracking-[0.14em] text-muted-foreground">
+									Módulos ativos
+								</p>
+								<p className="mt-2 text-base font-semibold">
+									{[
+										cleaningSettings ? "Limpeza" : null,
+										configuredSchedules.length > 0 ? "Agenda" : null,
+									]
+										.filter(Boolean)
+										.join(" • ") || "Nenhum módulo configurado"}
+								</p>
+								<p className="mt-1 text-sm text-muted-foreground">
+									Visão rápida do estado atual.
+								</p>
+							</div>
+
+							<div className="rounded-2xl border border-white/20 bg-white/70 p-4 shadow-sm backdrop-blur dark:bg-white/5">
+								<p className="text-xs uppercase tracking-[0.14em] text-muted-foreground">
+									Configurações concluídas
+								</p>
+								<p className="mt-2 text-base font-semibold">
+									{data.stats.configuredSchedules} de{" "}
+									{data.stats.totalSchedules} itens de agenda
+								</p>
+								<p className="mt-1 text-sm text-muted-foreground">
+									Evolução consolidada dos cadastros.
+								</p>
+							</div>
+						</div>
+					</div>
+				</div>
 			</section>
 
 			<section
 				aria-labelledby="organization-overview-heading"
-				className="grid gap-4 md:grid-cols-2"
+				className="grid gap-4 xl:grid-cols-2"
 			>
 				<h2 id="organization-overview-heading" className="sr-only">
 					Visão geral da organização
 				</h2>
 
-				<Card>
-					<CardHeader>
-						<CardDescription>Nome da organização</CardDescription>
-						<CardTitle className="text-lg">{data.organization.name}</CardTitle>
+				<Card className="rounded-[28px] border-border/60 bg-card/95 shadow-sm">
+					<CardHeader className="space-y-3">
+						<CardDescription className="flex items-center gap-2 text-xs uppercase tracking-[0.14em]">
+							<Building2 className="size-4" />
+							Organização
+						</CardDescription>
+						<CardTitle className="text-xl">{data.organization.name}</CardTitle>
 					</CardHeader>
-					<CardContent className="flex items-center gap-2 text-sm text-muted-foreground">
-						<Building2 className="size-4" />
-						<span>Slug: {data.organization.slug}</span>
+					<CardContent className="space-y-2 text-sm text-muted-foreground">
+						<p>Slug público: {data.organization.slug}</p>
+						<p>
+							Painel central para gerenciar módulos e preferências internas.
+						</p>
 					</CardContent>
 				</Card>
 
-				<Card>
-					<CardHeader>
-						<CardDescription className="flex items-center gap-2">
+				<Card className="rounded-[28px] border-border/60 bg-card/95 shadow-sm">
+					<CardHeader className="space-y-3">
+						<CardDescription className="flex items-center gap-2 text-xs uppercase tracking-[0.14em]">
 							<Shield className="size-4" />
-							Permissão atual
+							Acesso e governança
 						</CardDescription>
-						<CardTitle className="text-lg">{data.role}</CardTitle>
+						<CardTitle className="text-xl">{getRoleLabel(data.role)}</CardTitle>
 					</CardHeader>
-					<CardContent>
-						<p className="text-sm text-muted-foreground">
+					<CardContent className="space-y-2 text-sm text-muted-foreground">
+						<p>
 							{data.canManageOrganization
-								? "Você pode gerenciar esta organização."
-								: "Você possui acesso somente leitura."}
+								? "Você pode alterar configurações estruturais desta organização."
+								: "Você possui acesso somente leitura para acompanhamento."}
+						</p>
+						<p>
+							O painel mantém a organização centralizada e mais previsível para
+							operação.
 						</p>
 					</CardContent>
 				</Card>
 			</section>
 
-			<section aria-labelledby="modules-heading" className="space-y-3">
+			<section aria-labelledby="modules-heading" className="space-y-4">
 				<div className="space-y-1">
-					<h2 id="modules-heading" className="text-base font-semibold">
+					<h2
+						id="modules-heading"
+						className="text-lg font-semibold tracking-tight"
+					>
 						Módulos
 					</h2>
 					<p className="text-sm text-muted-foreground">
-						Acesse as configurações específicas de cada módulo.
+						Acesse as configurações específicas de cada módulo com navegação
+						clara e direta.
 					</p>
 				</div>
 
-				<div className="grid gap-4 md:grid-cols-2">
-					<Card className="overflow-hidden">
-						<CardContent className="p-0">
-							<Link
-								href={`/org/${data.organization.slug}/settings/cleaning`}
-								className="flex h-full flex-col gap-4 p-4 transition-colors hover:bg-muted/40 sm:p-5"
+				<div className="grid gap-4 xl:grid-cols-2">
+					{modules.map((module) => {
+						const Icon = module.icon;
+
+						return (
+							<Card
+								key={module.title}
+								className="group overflow-hidden rounded-[28px] border-border/60 bg-card/95 shadow-sm transition-all duration-300 hover:-translate-y-0.5 hover:shadow-[0_18px_40px_rgba(15,23,42,0.10)]"
 							>
-								<div className="flex items-start gap-3">
-									<div className="flex size-10 items-center justify-center rounded-xl border bg-muted">
-										<BrushCleaning className="size-4" />
-									</div>
+								<CardContent className="p-0">
+									<Link
+										href={module.href}
+										className="relative flex h-full flex-col overflow-hidden p-5 sm:p-6"
+									>
+										<div
+											className={`pointer-events-none absolute inset-x-0 top-0 h-28 bg-linear-to-br ${module.accent}`}
+										/>
 
-									<div className="min-w-0 flex-1 space-y-2">
-										<div className="flex flex-wrap items-center justify-between gap-2">
-											<h3 className="font-medium">Limpeza</h3>
-											<Badge
-												variant={cleaningSettings ? "secondary" : "outline"}
-											>
-												{cleaningSettings ? "Configurado" : "Pendente"}
-											</Badge>
+										<div className="relative flex h-full flex-col gap-5">
+											<div className="flex items-start gap-4">
+												<div className="flex size-12 shrink-0 items-center justify-center rounded-2xl border border-white/20 bg-white/80 shadow-sm backdrop-blur dark:bg-white/10">
+													<Icon className="size-5 text-[#2563EB]" />
+												</div>
+
+												<div className="min-w-0 flex-1 space-y-3">
+													<div className="flex flex-wrap items-center justify-between gap-2">
+														<h3 className="text-lg font-semibold tracking-tight">
+															{module.title}
+														</h3>
+
+														<Badge variant={module.statusVariant}>
+															{module.status}
+														</Badge>
+													</div>
+
+													<p className="text-sm leading-6 text-muted-foreground">
+														{module.description}
+													</p>
+												</div>
+											</div>
+
+											<div className="rounded-2xl border border-border/60 bg-background/80 p-4">
+												<p className="flex items-center gap-2 text-xs font-medium uppercase tracking-[0.14em] text-muted-foreground">
+													<Sparkles className="size-3.5" />
+													Resumo atual
+												</p>
+												<p className="mt-2 text-sm text-foreground">
+													{module.summary}
+												</p>
+											</div>
+
+											<div className="mt-auto flex items-center justify-between pt-1 text-sm font-medium">
+												<span className="inline-flex items-center gap-2 text-[#2563EB]">
+													Abrir módulo
+													<ArrowUpRight className="size-4" />
+												</span>
+
+												<ChevronRight className="size-4 text-muted-foreground transition-transform duration-300 group-hover:translate-x-1" />
+											</div>
 										</div>
-
-										<p className="text-sm text-muted-foreground">
-											Configure limpeza por reunião, limpeza semanal e limpeza
-											geral.
-										</p>
-
-										<p className="text-xs text-muted-foreground">
-											{cleaningSummary}
-										</p>
-									</div>
-
-									<ChevronRight className="mt-1 hidden size-4 shrink-0 text-muted-foreground sm:block" />
-								</div>
-							</Link>
-						</CardContent>
-					</Card>
-
-					<Card className="overflow-hidden">
-						<CardContent className="p-0">
-							<Link
-								href={`/org/${data.organization.slug}/settings/data`}
-								className="flex h-full flex-col gap-4 p-4 transition-colors hover:bg-muted/40 sm:p-5"
-							>
-								<div className="flex items-start gap-3">
-									<div className="flex size-10 items-center justify-center rounded-xl border bg-muted">
-										<CalendarDays className="size-4" />
-									</div>
-
-									<div className="min-w-0 flex-1 space-y-2">
-										<div className="flex flex-wrap items-center justify-between gap-2">
-											<h3 className="font-medium">Datas</h3>
-											<Badge
-												variant={
-													configuredSchedules.length > 0
-														? "secondary"
-														: "outline"
-												}
-											>
-												{configuredSchedules.length > 0
-													? "Configurado"
-													: "Pendente"}
-											</Badge>
-										</div>
-
-										<p className="text-sm text-muted-foreground">
-											Configure reuniões, limpezas e eventos especiais da
-											organização.
-										</p>
-
-										<p className="text-xs text-muted-foreground">
-											{datesSummary}
-										</p>
-									</div>
-
-									<ChevronRight className="mt-1 hidden size-4 shrink-0 text-muted-foreground sm:block" />
-								</div>
-							</Link>
-						</CardContent>
-					</Card>
+									</Link>
+								</CardContent>
+							</Card>
+						);
+					})}
 				</div>
 			</section>
-		</div>
+		</main>
 	);
 }

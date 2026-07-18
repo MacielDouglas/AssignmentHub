@@ -3,6 +3,18 @@
 import { db } from "@/lib/db";
 import type { SaveScheduleSettingsInput } from "../schemas/save-schedule-settings.schema";
 
+function buildEffectiveFrom(item: SaveScheduleSettingsInput["items"][number]) {
+	if (
+		item.type === "MEETINGS" &&
+		item.variant === "NEXT_YEAR" &&
+		item.effectiveFromYear
+	) {
+		return new Date(`${item.effectiveFromYear}-01-01T00:00:00.000Z`);
+	}
+
+	return null;
+}
+
 export async function saveScheduleSettingsUseCase(
 	input: SaveScheduleSettingsInput,
 ): Promise<void> {
@@ -38,6 +50,8 @@ export async function saveScheduleSettingsUseCase(
 		}
 
 		for (const item of input.items) {
+			const effectiveFrom = buildEffectiveFrom(item);
+
 			const schedule = item.id
 				? await tx.organizationSchedule.update({
 						where: { id: item.id },
@@ -47,7 +61,7 @@ export async function saveScheduleSettingsUseCase(
 							title: item.title,
 							description: item.description,
 							isActive: item.isActive,
-							effectiveFrom: null,
+							effectiveFrom,
 							effectiveUntil: null,
 						},
 						select: { id: true },
@@ -60,7 +74,7 @@ export async function saveScheduleSettingsUseCase(
 							title: item.title,
 							description: item.description,
 							isActive: item.isActive,
-							effectiveFrom: null,
+							effectiveFrom,
 							effectiveUntil: null,
 						},
 						select: { id: true },
@@ -89,9 +103,14 @@ export async function saveScheduleSettingsUseCase(
 				},
 			});
 
-			if (item.occurrences.length > 0) {
+			const validOccurrences = item.occurrences.filter(
+				(occurrence): occurrence is typeof occurrence & { startDate: Date } =>
+					occurrence.startDate !== null,
+			);
+
+			if (validOccurrences.length > 0) {
 				await tx.organizationScheduleOccurrence.createMany({
-					data: item.occurrences.map((occurrence, index) => ({
+					data: validOccurrences.map((occurrence, index) => ({
 						organizationScheduleId: schedule.id,
 						startDate: occurrence.startDate,
 						endDate: occurrence.endDate,

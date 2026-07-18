@@ -1,4 +1,3 @@
-// src/app/org/[slug]/people/page.tsx
 import { headers } from "next/headers";
 import { notFound } from "next/navigation";
 import {

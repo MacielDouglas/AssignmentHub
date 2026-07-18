@@ -71,5 +71,15 @@ export async function getOrganizationSettingsDataQuery({
 		role: membership.role,
 		canManageOrganization,
 		organization: membership.organization,
+		stats: {
+			configuredSchedules: membership.organization.schedules.filter(
+				(item) =>
+					item.isActive ||
+					item.weeklyRules.length > 0 ||
+					item.occurrences.length > 0,
+			).length,
+			totalSchedules: membership.organization.schedules.length,
+			hasCleaningSettings: Boolean(membership.organization.cleaningSettings),
+		},
 	};
 }

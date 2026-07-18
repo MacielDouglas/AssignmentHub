@@ -1,6 +1,7 @@
 import type {
 	ScheduleMode,
 	ScheduleType,
+	ScheduleVariant,
 	ScheduleWeekday,
 } from "../schemas/save-schedule-settings.schema";
 
@@ -29,6 +30,8 @@ export type ScheduleItemFormState = {
 	id?: string;
 	clientKey: string;
 	type: ScheduleType;
+	variant: ScheduleVariant;
+	effectiveFromYear: number | null;
 	mode: ScheduleMode;
 	title: string;
 	description: string;

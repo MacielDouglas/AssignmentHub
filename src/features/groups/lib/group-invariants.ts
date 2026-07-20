@@ -25,15 +25,12 @@ export function assertEligibleGroupRolePerson(
 	if (!person) {
 		throw new Error(`${label} não encontrado.`);
 	}
-
 	if (person.sex !== "MALE") {
 		throw new Error(`${label} deve ser do sexo masculino.`);
 	}
-
 	if (person.young) {
 		throw new Error(`${label} deve ser adulto.`);
 	}
-
 	if (!person.baptized) {
 		throw new Error(`${label} deve ser batizado.`);
 	}
@@ -53,17 +50,23 @@ export function ensureRolesIncludedInMembers(params: {
 	assistantId: string;
 	memberIds: string[];
 }) {
-	const memberIdsSet = new Set(params.memberIds);
-
-	if (!memberIdsSet.has(params.superintendentId)) {
+	const set = new Set(params.memberIds);
+	if (!set.has(params.superintendentId)) {
 		throw new Error("O superintendente deve pertencer ao grupo.");
 	}
-
-	if (!memberIdsSet.has(params.assistantId)) {
+	if (!set.has(params.assistantId)) {
 		throw new Error("O ajudante deve pertencer ao grupo.");
 	}
 }
 
 export function uniqueIds(values: string[]) {
 	return [...new Set(values)];
+}
+
+export function isEligibleGroupRolePerson(person: {
+	sex: "MALE" | "FEMALE";
+	young: boolean;
+	baptized: boolean;
+}) {
+	return person.sex === "MALE" && !person.young && person.baptized;
 }

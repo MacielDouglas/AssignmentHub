@@ -1,86 +1,76 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { headers } from "next/headers";
-
 import type { GroupActionState } from "@/features/groups/actions/group-action-state";
-import { auth } from "@/lib/auth";
+import { requireGroupManager } from "@/features/groups/actions/group-auth";
+import { parseDeleteGroupFormData } from "@/features/groups/actions/group-schema";
 import { db } from "@/lib/db";
 
-const initialState: GroupActionState = {
-	success: false,
-	message: "",
-};
-
 export async function deleteGroupAction(
-	_prevState: GroupActionState = initialState,
+	_prevState: GroupActionState,
 	formData: FormData,
 ): Promise<GroupActionState> {
-	const session = await auth.api.getSession({
-		headers: await headers(),
-	});
+	void _prevState;
 
-	if (!session?.user) {
-		return {
-			success: false,
-			message: "Sessão inválida.",
-		};
+	const parsed = parseDeleteGroupFormData(formData);
+
+	if (!parsed.success) {
+		return { success: false, message: "Dados inválidos para exclusão." };
 	}
 
-	const groupId = String(formData.get("groupId") ?? "").trim();
-	const organizationId = String(formData.get("organizationId") ?? "").trim();
-	const organizationSlug = String(
-		formData.get("organizationSlug") ?? "",
-	).trim();
-
-	if (!groupId || !organizationId || !organizationSlug) {
-		return {
-			success: false,
-			message: "Dados inválidos para exclusão.",
-		};
+	const authz = await requireGroupManager(parsed.data.organizationSlug);
+	if (!authz.ok) {
+		return { success: false, message: authz.message };
 	}
 
-	const membership = await db.organizationMembership.findFirst({
-		where: {
-			userId: session.user.id,
-			organizationId,
-		},
-		select: {
-			role: true,
-		},
-	});
-
-	if (!membership) {
-		return {
-			success: false,
-			message: "Você não pertence a esta organização.",
-		};
-	}
-
-	const canManageGroups =
-		membership.role === "OWNER" || membership.role === "ADMIN";
-
-	if (!canManageGroups) {
-		return {
-			success: false,
-			message: "Você não tem permissão para excluir grupos.",
-		};
-	}
+	const { organization } = authz;
+	const { groupId } = parsed.data;
 
 	const group = await db.group.findFirst({
 		where: {
 			id: groupId,
-			organizationId,
+			organizationId: organization.id,
 		},
 		select: {
 			id: true,
+			name: true,
+			_count: {
+				select: {
+					cleaningTypeConfigs: true,
+					cleaningAssignments: true,
+				},
+			},
 		},
 	});
 
 	if (!group) {
+		return { success: false, message: "Grupo não encontrado." };
+	}
+
+	const dependencies: NonNullable<GroupActionState["dependencies"]> = [];
+
+	if (group._count.cleaningTypeConfigs > 0) {
+		dependencies.push({
+			kind: "cleaning_config",
+			label: "Configurações de limpeza vinculadas a este grupo",
+			count: group._count.cleaningTypeConfigs,
+		});
+	}
+
+	if (group._count.cleaningAssignments > 0) {
+		dependencies.push({
+			kind: "cleaning_assignment",
+			label: "Designações de limpeza que referenciam este grupo",
+			count: group._count.cleaningAssignments,
+		});
+	}
+
+	if (dependencies.length > 0) {
 		return {
 			success: false,
-			message: "Grupo não encontrado.",
+			message:
+				"Não é possível excluir este grupo enquanto houver dependências. Remova ou altere os vínculos listados e tente novamente.",
+			dependencies,
 		};
 	}
 
@@ -88,31 +78,22 @@ export async function deleteGroupAction(
 		await db.$transaction(async (tx) => {
 			await tx.person.updateMany({
 				where: {
-					organizationId,
+					organizationId: organization.id,
 					groupId,
 				},
-				data: {
-					groupId: null,
-				},
+				data: { groupId: null },
 			});
 
 			await tx.group.delete({
-				where: {
-					id: groupId,
-				},
+				where: { id: groupId },
 			});
 		});
 
-		revalidatePath(`/org/${organizationSlug}/groups`);
+		revalidatePath(`/org/${organization.slug}/groups`);
+		revalidatePath(`/org/${organization.slug}/people`);
 
-		return {
-			success: true,
-			message: "Grupo excluído com sucesso.",
-		};
+		return { success: true, message: "Grupo excluído com sucesso." };
 	} catch {
-		return {
-			success: false,
-			message: "Não foi possível excluir o grupo.",
-		};
+		return { success: false, message: "Não foi possível excluir o grupo." };
 	}
 }

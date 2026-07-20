@@ -1,113 +1,94 @@
-import type { Metadata } from "next";
 import { headers } from "next/headers";
 import { notFound } from "next/navigation";
 
-import { SettingsPageContent } from "@/features/organization-settings/presentation/settings-page-content";
-import { getOrganizationSettingsDataQuery } from "@/features/organization-settings/queries/get-organization-settings-data.query";
+import { SettingsShell } from "@/features/settings/components/settings-shell";
+import { loadWeeklyMeetingsView } from "@/features/settings/lib/meeting-schedule";
+import {
+	SPECIAL_EVENT_META,
+	SPECIAL_EVENT_TYPES,
+} from "@/features/settings/lib/special-event-meta";
+import { formatDateInput } from "@/features/settings/lib/year-bounds";
 import { auth } from "@/lib/auth";
+import { db } from "@/lib/db";
 
-type OrganizationSettingsPageProps = {
-	params: Promise<{
-		slug: string;
-	}>;
+type PageProps = {
+	params: Promise<{ slug: string }>;
+	searchParams: Promise<{ tab?: string }>;
 };
 
-export async function generateMetadata({
+export default async function SettingsPage({
 	params,
-}: OrganizationSettingsPageProps): Promise<Metadata> {
+	searchParams,
+}: PageProps) {
 	const { slug } = await params;
+	const { tab } = await searchParams;
 
 	const session = await auth.api.getSession({
 		headers: await headers(),
 	});
+	if (!session?.user) notFound();
 
-	if (!session?.user) {
-		return {
-			title: "Configurações | AssignmentHub",
-			description: "Gerencie os módulos e preferências da organização.",
-			robots: {
-				index: false,
-				follow: false,
+	const membership = await db.organizationMembership.findFirst({
+		where: {
+			userId: session.user.id,
+			organization: { slug },
+		},
+		select: {
+			role: true,
+			organization: {
+				select: { id: true, slug: true, name: true },
 			},
-		};
-	}
-
-	const data = await getOrganizationSettingsDataQuery({
-		slug,
-		userId: session.user.id,
+		},
 	});
 
-	if (!data) {
-		return {
-			title: "Configurações | AssignmentHub",
-			description: "Gerencie os módulos e preferências da organização.",
-			robots: {
-				index: false,
-				follow: false,
+	if (!membership) notFound();
+
+	const canEdit = membership.role === "OWNER" || membership.role === "ADMIN";
+
+	const weekly = await loadWeeklyMeetingsView(membership.organization.id);
+
+	const specialSchedules = await db.organizationSchedule.findMany({
+		where: {
+			organizationId: membership.organization.id,
+			type: { in: [...SPECIAL_EVENT_TYPES] },
+		},
+		include: {
+			occurrences: {
+				orderBy: { startDate: "asc" },
 			},
-		};
-	}
-
-	const title = `${data.organization.name} | Configurações | AssignmentHub`;
-	const description = `Gerencie agenda, limpeza, permissões e preferências da organização ${data.organization.name} no AssignmentHub.`;
-
-	return {
-		metadataBase: new URL("https://assignmenthub.app"),
-		title,
-		description,
-		keywords: [
-			"AssignmentHub",
-			"configurações da organização",
-			"agenda da congregação",
-			"limpeza",
-			"eventos especiais",
-			data.organization.name,
-			data.organization.slug,
-		],
-		alternates: {
-			canonical: `/org/${data.organization.slug}/settings`,
 		},
-		openGraph: {
-			title,
-			description,
-			url: `/org/${data.organization.slug}/settings`,
-			siteName: "AssignmentHub",
-			type: "website",
-			locale: "pt_BR",
-		},
-		twitter: {
-			card: "summary_large_image",
-			title,
-			description,
-		},
-		robots: {
-			index: false,
-			follow: false,
-		},
-	};
-}
-
-export default async function OrganizationSettingsPage({
-	params,
-}: OrganizationSettingsPageProps) {
-	const { slug } = await params;
-
-	const session = await auth.api.getSession({
-		headers: await headers(),
 	});
 
-	if (!session?.user) {
-		notFound();
-	}
+	const specialEvents = specialSchedules.flatMap((schedule) =>
+		schedule.occurrences.map((occ) => ({
+			id: occ.id,
+			type: schedule.type as (typeof SPECIAL_EVENT_TYPES)[number],
+			typeLabel:
+				SPECIAL_EVENT_META[
+					schedule.type as (typeof SPECIAL_EVENT_TYPES)[number]
+				]?.label ?? schedule.title,
+			startDate: formatDateInput(occ.startDate),
+			endDate: occ.endDate ? formatDateInput(occ.endDate) : null,
+			time: occ.time,
+			location: occ.location,
+			notes: occ.notes,
+			isAllDay: occ.isAllDay,
+		})),
+	);
 
-	const data = await getOrganizationSettingsDataQuery({
-		slug,
-		userId: session.user.id,
-	});
+	const activeTab =
+		tab === "cleaning" || tab === "assignments" || tab === "meetings"
+			? tab
+			: "meetings";
 
-	if (!data) {
-		notFound();
-	}
-
-	return <SettingsPageContent data={data} />;
+	return (
+		<SettingsShell
+			organizationSlug={membership.organization.slug}
+			organizationName={membership.organization.name}
+			canEdit={canEdit}
+			activeTab={activeTab}
+			weekly={weekly}
+			specialEvents={specialEvents}
+		/>
+	);
 }

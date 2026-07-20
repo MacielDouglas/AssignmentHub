@@ -1,37 +1,23 @@
+// src/features/cleaning-list/lib/cleaning-list.selects.ts
+import type { Prisma } from "@/generated/prisma/client";
+
 export const cleaningConfigSelect = {
 	id: true,
 	type: true,
 	enabled: true,
 	assignmentMode: true,
 	notes: true,
-	timesPerWeek: true,
 	weekdays: {
-		orderBy: {
-			sortOrder: "asc" as const,
-		},
-		select: {
-			id: true,
-			weekday: true,
-			sortOrder: true,
-		},
+		orderBy: { sortOrder: "asc" },
+		select: { id: true, weekday: true, sortOrder: true },
 	},
 	dates: {
-		orderBy: {
-			date: "asc" as const,
-		},
-		select: {
-			id: true,
-			date: true,
-			label: true,
-		},
+		orderBy: { date: "asc" },
+		select: { id: true, date: true, label: true },
 	},
 	sectors: {
-		where: {
-			isActive: true,
-		},
-		orderBy: {
-			sortOrder: "asc" as const,
-		},
+		where: { isActive: true },
+		orderBy: { sortOrder: "asc" },
 		select: {
 			id: true,
 			name: true,
@@ -43,7 +29,7 @@ export const cleaningConfigSelect = {
 			isActive: true,
 		},
 	},
-};
+} satisfies Prisma.CleaningTypeConfigSelect;
 
 export const cleaningPersonSelect = {
 	id: true,
@@ -55,40 +41,20 @@ export const cleaningPersonSelect = {
 	isMarried: true,
 	familyId: true,
 	groupId: true,
-	family: {
-		select: {
-			id: true,
-			name: true,
-		},
-	},
-	group: {
-		select: {
-			id: true,
-			name: true,
-		},
-	},
-};
+	family: { select: { id: true, name: true } },
+	group: { select: { id: true, name: true } },
+} satisfies Prisma.PersonSelect;
 
-export const cleaningScheduleSelect = {
+export const cleaningMeetingScheduleSelect = {
 	type: true,
 	mode: true,
+	isActive: true,
+	effectiveFrom: true,
 	weeklyRules: {
-		orderBy: {
-			sortOrder: "asc" as const,
-		},
-		select: {
-			weekday: true,
-		},
+		orderBy: { sortOrder: "asc" },
+		select: { weekday: true, time: true, sortOrder: true },
 	},
-	occurrences: {
-		orderBy: {
-			startDate: "asc" as const,
-		},
-		select: {
-			startDate: true,
-		},
-	},
-};
+} satisfies Prisma.OrganizationScheduleSelect;
 
 export const cleaningSavedListSelect = {
 	id: true,
@@ -98,47 +64,23 @@ export const cleaningSavedListSelect = {
 	status: true,
 	createdAt: true,
 	dates: {
-		orderBy: {
-			date: "asc" as const,
-		},
+		orderBy: { date: "asc" },
 		select: {
 			id: true,
 			date: true,
 			assignments: {
-				orderBy: [
-					{ sector: { sortOrder: "asc" as const } },
-					{ position: "asc" as const },
-				],
+				orderBy: [{ sector: { sortOrder: "asc" } }, { position: "asc" }],
 				select: {
 					id: true,
 					position: true,
 					sector: {
-						select: {
-							id: true,
-							name: true,
-							sortOrder: true,
-						},
+						select: { id: true, name: true, sortOrder: true },
 					},
-					person: {
-						select: {
-							id: true,
-							name: true,
-						},
-					},
-					family: {
-						select: {
-							id: true,
-							name: true,
-						},
-					},
-					group: {
-						select: {
-							id: true,
-							name: true,
-						},
-					},
+					person: { select: { id: true, name: true } },
+					family: { select: { id: true, name: true } },
+					group: { select: { id: true, name: true } },
 				},
 			},
 		},
 	},
-};
+} satisfies Prisma.CleaningAssignmentListSelect;

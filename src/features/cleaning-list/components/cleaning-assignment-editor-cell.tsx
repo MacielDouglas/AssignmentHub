@@ -1,3 +1,4 @@
+// src/features/cleaning-list/components/cleaning-assignment-editor-cell.tsx
 "use client";
 
 import type {
@@ -24,7 +25,6 @@ export function CleaningAssignmentEditorCell({
 			if (cell.assigned.some((assigned) => assigned.personId === person.id)) {
 				return true;
 			}
-
 			return !usedPersonIds.includes(person.id);
 		})
 		.map((person) => ({
@@ -36,15 +36,12 @@ export function CleaningAssignmentEditorCell({
 		<PersonMultiSelect
 			options={options}
 			value={cell.assigned.map((item) => item.personId)}
+			max={cell.required}
 			onChange={(personIds) => {
 				const assigned = personIds
 					.map((personId, position) => {
 						const person = allPeople.find((entry) => entry.id === personId);
-
-						if (!person) {
-							return null;
-						}
-
+						if (!person) return null;
 						return {
 							personId: person.id,
 							personName: person.name,
@@ -59,10 +56,7 @@ export function CleaningAssignmentEditorCell({
 						(value): value is NonNullable<typeof value> => value !== null,
 					);
 
-				onChange({
-					...cell,
-					assigned,
-				});
+				onChange({ ...cell, assigned });
 			}}
 		/>
 	);

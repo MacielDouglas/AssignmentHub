@@ -1,3 +1,4 @@
+// src/features/cleaning-list/actions/generate-cleaning-list.action.ts
 "use server";
 
 import { headers } from "next/headers";
@@ -15,8 +16,8 @@ import {
 } from "../lib/cleaning-list.mappers";
 import {
 	cleaningConfigSelect,
+	cleaningMeetingScheduleSelect,
 	cleaningPersonSelect,
-	cleaningScheduleSelect,
 } from "../lib/cleaning-list.selects";
 import { getCleaningRotationMap } from "../lib/get-cleaning-rotation-map";
 import { parseGenerateCleaningListFormData } from "../lib/parse-generate-cleaning-list-form-data";
@@ -33,13 +34,10 @@ type WeekdayKey =
 	| "SATURDAY";
 
 export async function generateCleaningListAction(
-	_prevState: GenerateCleaningListState,
+	_prev: GenerateCleaningListState,
 	formData: FormData,
 ): Promise<GenerateCleaningListState> {
-	const session = await auth.api.getSession({
-		headers: await headers(),
-	});
-
+	const session = await auth.api.getSession({ headers: await headers() });
 	if (!session?.user) {
 		return {
 			...initialGenerateCleaningListState,
@@ -80,27 +78,18 @@ export async function generateCleaningListAction(
 						},
 					},
 					people: {
-						where: {
-							isActive: true,
-							cleaning: true,
-						},
-						orderBy: {
-							name: "asc",
-						},
+						where: { isActive: true, cleaning: true },
+						orderBy: { name: "asc" },
 						select: cleaningPersonSelect,
 					},
 					schedules: {
-						where: {
-							isActive: true,
-						},
-						select: cleaningScheduleSelect,
+						where: { type: "MEETINGS", isActive: true },
+						select: cleaningMeetingScheduleSelect,
 					},
 				},
 			},
 		},
 	});
-
-	console.log("Membros: ", membership?.organization.people);
 
 	if (!membership) {
 		return {
@@ -109,9 +98,7 @@ export async function generateCleaningListAction(
 		};
 	}
 
-	const canManage = membership.role === "OWNER" || membership.role === "ADMIN";
-
-	if (!canManage) {
+	if (membership.role !== "OWNER" && membership.role !== "ADMIN") {
 		return {
 			...initialGenerateCleaningListState,
 			message: "Você não tem permissão para gerar listas.",
@@ -119,7 +106,6 @@ export async function generateCleaningListAction(
 	}
 
 	const rawConfig = membership.organization.cleaningSettings?.configs[0];
-
 	if (!rawConfig) {
 		return {
 			...initialGenerateCleaningListState,
@@ -128,7 +114,6 @@ export async function generateCleaningListAction(
 	}
 
 	const config = normalizeCleaningConfig(rawConfig);
-
 	if (config.sectors.length === 0) {
 		return {
 			...initialGenerateCleaningListState,
@@ -136,44 +121,29 @@ export async function generateCleaningListAction(
 		};
 	}
 
-	const scheduleType =
-		parsed.data.cleaningType === "MEETING"
-			? "MEETINGS"
-			: parsed.data.cleaningType === "WEEKLY"
-				? "WEEKLYCLEANING"
-				: "GENERALCLEANING";
-
-	const relevantSchedules = membership.organization.schedules.filter(
-		(schedule) => schedule.type === scheduleType,
-	);
-
-	const occurrenceDates = relevantSchedules.flatMap((schedule) =>
-		schedule.occurrences.map((occurrence) => occurrence.startDate),
-	);
-
-	const scheduleWeekdays = Array.from(
+	// MEETING: só weekly rules das reuniões (1 e 2)
+	const meetingWeekdays = Array.from(
 		new Set(
-			relevantSchedules.flatMap((schedule) =>
+			membership.organization.schedules.flatMap((schedule) =>
 				schedule.weeklyRules.map((rule) => rule.weekday as WeekdayKey),
 			),
 		),
 	);
 
-	const resolvedDates = resolveCleaningDates({
+	const resolved = resolveCleaningDates({
 		cleaningType: parsed.data.cleaningType,
 		periodFrom: parsed.data.periodFrom,
 		periodTo: parsed.data.periodTo,
 		config,
-		occurrenceDates,
-		scheduleWeekdays,
+		meetingWeekdays,
 	});
 
-	if (resolvedDates.dates.length === 0) {
+	if (resolved.dates.length === 0) {
 		return {
 			...initialGenerateCleaningListState,
 			message:
-				resolvedDates.reason ??
-				"Nenhuma data de limpeza foi encontrada para o período selecionado.",
+				resolved.reason ??
+				"Nenhuma data de limpeza foi encontrada para o período.",
 		};
 	}
 
@@ -190,7 +160,7 @@ export async function generateCleaningListAction(
 		cleaningType: parsed.data.cleaningType,
 		periodFrom: parsed.data.periodFrom,
 		periodTo: parsed.data.periodTo,
-		dates: resolvedDates.dates,
+		dates: resolved.dates,
 		config,
 		people,
 		rotationMap,

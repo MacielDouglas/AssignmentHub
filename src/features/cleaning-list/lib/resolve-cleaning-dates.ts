@@ -1,3 +1,4 @@
+// src/features/cleaning-list/lib/resolve-cleaning-dates.ts
 import type { CleaningType } from "@/generated/prisma/enums";
 import type { CleaningTypeConfigView } from "../domain/cleaning-list.types";
 
@@ -15,18 +16,13 @@ type Input = {
 	periodFrom: Date;
 	periodTo: Date;
 	config: CleaningTypeConfigView;
-	occurrenceDates: Date[];
-	scheduleWeekdays: WeekdayKey[];
+	/** Apenas MEETING: weekdays das reuniões 1 e 2 */
+	meetingWeekdays: WeekdayKey[];
 };
 
 type Output = {
 	dates: Date[];
-	source:
-		| "occurrences"
-		| "weekly-rules"
-		| "config-dates"
-		| "config-weekdays"
-		| "meeting-config-weekdays";
+	source: "meeting-weekly-rules" | "config-weekdays" | "config-dates";
 	reason: string | null;
 };
 
@@ -52,22 +48,17 @@ function endOfDay(date: Date) {
 	return next;
 }
 
-function buildDatesFromWeekdays(
-	from: Date,
-	to: Date,
-	weekdays: WeekdayKey[],
-): Date[] {
-	if (weekdays.length === 0) return [];
+function buildDatesFromWeekdays(from: Date, to: Date, weekdays: WeekdayKey[]) {
+	if (weekdays.length === 0) return [] as Date[];
 
-	const allowedDays = new Set(weekdays.map((weekday) => weekdayMap[weekday]));
+	const allowed = new Set(weekdays.map((d) => weekdayMap[d]));
 	const result: Date[] = [];
 	const cursor = new Date(from);
 
 	while (cursor <= to) {
-		if (allowedDays.has(cursor.getDay())) {
+		if (allowed.has(cursor.getDay())) {
 			result.push(new Date(cursor));
 		}
-
 		cursor.setDate(cursor.getDate() + 1);
 	}
 
@@ -76,12 +67,10 @@ function buildDatesFromWeekdays(
 
 function uniqueDates(dates: Date[]) {
 	const map = new Map<string, Date>();
-
 	for (const date of dates) {
 		const normalized = startOfDay(date);
 		map.set(normalized.toISOString(), normalized);
 	}
-
 	return Array.from(map.values()).sort((a, b) => a.getTime() - b.getTime());
 }
 
@@ -90,79 +79,58 @@ export function resolveCleaningDates({
 	periodFrom,
 	periodTo,
 	config,
-	occurrenceDates,
-	scheduleWeekdays,
+	meetingWeekdays,
 }: Input): Output {
 	const from = startOfDay(periodFrom);
 	const to = endOfDay(periodTo);
 
 	if (cleaningType === "MEETING") {
-		const filteredOccurrences =
-			occurrenceDates.length > 0
-				? occurrenceDates.filter((date) => {
-						const normalized = new Date(date);
-						return normalized >= from && normalized <= to;
-					})
-				: [];
-
-		if (filteredOccurrences.length > 0) {
-			return {
-				dates: uniqueDates(filteredOccurrences),
-				source: "occurrences",
-				reason: null,
-			};
-		}
-
-		const weeklyRuleDates = buildDatesFromWeekdays(from, to, scheduleWeekdays);
-
-		if (weeklyRuleDates.length > 0) {
-			return {
-				dates: uniqueDates(weeklyRuleDates),
-				source: "weekly-rules",
-				reason: null,
-			};
-		}
-
-		const configWeekdays = config.weekdays
-			.map((item) => item.weekday as WeekdayKey)
-			.filter((weekday) => weekday in weekdayMap);
-
-		const fallbackDates = buildDatesFromWeekdays(from, to, configWeekdays);
+		const dates = uniqueDates(
+			buildDatesFromWeekdays(from, to, meetingWeekdays),
+		);
 
 		return {
-			dates: uniqueDates(fallbackDates),
-			source: "meeting-config-weekdays",
+			dates,
+			source: "meeting-weekly-rules",
 			reason:
-				fallbackDates.length === 0
-					? "Nenhuma ocorrência de reunião, regra semanal ou dia configurado para limpeza por reunião foi encontrado no período."
+				dates.length === 0
+					? "Nenhuma data de reunião (reunião 1/2) encontrada no período. Configure a agenda de reuniões."
 					: null,
 		};
 	}
 
 	if (cleaningType === "GENERAL") {
-		const dates = config.dates
-			.map((item) => new Date(item.date))
-			.filter((date) => date >= from && date <= to);
+		const dates = uniqueDates(
+			config.dates
+				.map((item) => new Date(item.date))
+				.filter((date) => date >= from && date <= to),
+		);
 
 		return {
-			dates: uniqueDates(dates),
+			dates,
 			source: "config-dates",
 			reason:
 				dates.length === 0
-					? "Nenhuma data configurada para limpeza geral foi encontrada no período."
+					? "Nenhuma data de limpeza geral configurada no período."
 					: null,
 		};
 	}
 
-	const weekdays = config.weekdays.map((item) => item.weekday as WeekdayKey);
-	const dates = buildDatesFromWeekdays(from, to, weekdays);
+	// WEEKLY: 0 ou 1 weekday nas settings
+	const weekdays = config.weekdays
+		.map((item) => item.weekday as WeekdayKey)
+		.filter((weekday) => weekday in weekdayMap);
+
+	const dates = uniqueDates(buildDatesFromWeekdays(from, to, weekdays));
 
 	return {
-		dates: uniqueDates(dates),
+		dates,
 		source: "config-weekdays",
 		reason:
 			dates.length === 0
-				? "Nenhum dia da semana configurado para limpeza semanal foi encontrado no período."
+				? weekdays.length === 0
+					? "Limpeza semanal sem dia da semana configurado."
+					: "Nenhuma ocorrência do dia semanal no período."
 				: null,
 	};
 }

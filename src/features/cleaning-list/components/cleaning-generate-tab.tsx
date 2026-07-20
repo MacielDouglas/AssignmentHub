@@ -1,11 +1,13 @@
+// src/features/cleaning-list/components/cleaning-generate-tab.tsx
 "use client";
 
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { Sparkles, Wand2 } from "lucide-react";
+import { Shield, Sparkles, Wand2 } from "lucide-react";
 import { useActionState, useMemo, useState } from "react";
 import type { DateRange } from "react-day-picker";
 
+import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import {
 	Select,
@@ -16,8 +18,10 @@ import {
 } from "@/components/ui/select";
 import { generateCleaningListAction } from "../actions/generate-cleaning-list.action";
 import { saveCleaningListAction } from "../actions/save-cleaning-list.action";
-import type { CleaningGeneratedAssignmentRow } from "../domain/cleaning-list.types";
-import { initialSaveCleaningListState } from "../domain/cleaning-list.types";
+import {
+	type CleaningGeneratedAssignmentRow,
+	initialSaveCleaningListState,
+} from "../domain/cleaning-list.types";
 import { initialGenerateCleaningListState } from "../domain/generate-cleaning-list.types";
 import {
 	mapOrganizationPeopleToCandidates,
@@ -27,9 +31,13 @@ import type { CleaningPageData } from "../queries/get-cleaning-page-data.query";
 import { CleaningAssignmentTable } from "./cleaning-assignment-table";
 import { CleaningRangeCalendar } from "./cleaning-range-calendar";
 
-type Props = {
-	data: CleaningPageData;
-};
+type Props = { data: CleaningPageData };
+
+const TYPE_LABEL = {
+	MEETING: "Por reunião",
+	WEEKLY: "Semanal",
+	GENERAL: "Geral",
+} as const;
 
 export function CleaningGenerateTab({ data }: Props) {
 	const [range, setRange] = useState<DateRange | undefined>();
@@ -44,7 +52,6 @@ export function CleaningGenerateTab({ data }: Props) {
 		generateCleaningListAction,
 		initialGenerateCleaningListState,
 	);
-
 	const [saveState, saveAction, savePending] = useActionState(
 		saveCleaningListAction,
 		initialSaveCleaningListState,
@@ -60,28 +67,29 @@ export function CleaningGenerateTab({ data }: Props) {
 		[data.organization.people],
 	);
 
-	const generatedResultRows = generateState.result?.rows ?? [];
+	const enabledTypes = useMemo(() => {
+		const configs = data.organization.cleaningSettings?.configs ?? [];
+		return {
+			MEETING: configs.some((c) => c.type === "MEETING" && c.enabled),
+			WEEKLY: configs.some((c) => c.type === "WEEKLY" && c.enabled),
+			GENERAL: configs.some((c) => c.type === "GENERAL" && c.enabled),
+		};
+	}, [data.organization.cleaningSettings?.configs]);
 
-	const effectiveRows =
-		editedRows.length > 0 ? editedRows : generatedResultRows;
-
-	function handleRowsChange(rows: CleaningGeneratedAssignmentRow[]) {
-		setEditedRows(rows);
-	}
-
-	function handleTypeChange(value: string) {
-		setCleaningType(value as "MEETING" | "WEEKLY" | "GENERAL");
-		setEditedRows([]);
-	}
-
-	function handleRangeChange(value: DateRange | undefined) {
-		setRange(value);
-		setEditedRows([]);
-	}
+	const generatedRows = generateState.result?.rows ?? [];
+	const effectiveRows = editedRows.length > 0 ? editedRows : generatedRows;
+	const canManage = data.canManage;
 
 	return (
 		<div className="space-y-6">
-			<div className="grid gap-6 xl:grid-cols-[340px_1fr]">
+			{!canManage ? (
+				<div className="flex items-start gap-3 rounded-2xl border border-amber-200/80 bg-amber-50 px-4 py-3 text-sm text-amber-950 dark:border-amber-900/40 dark:bg-amber-950/30 dark:text-amber-100">
+					<Shield className="mt-0.5 size-4 shrink-0" />
+					<p>Modo leitura. Apenas proprietário e administrador geram/salvam.</p>
+				</div>
+			) : null}
+
+			<div className="grid gap-6 xl:grid-cols-[minmax(0,340px)_1fr]">
 				<form action={generateAction} className="space-y-5">
 					<input
 						type="hidden"
@@ -100,19 +108,17 @@ export function CleaningGenerateTab({ data }: Props) {
 						value={range?.to?.toISOString() ?? ""}
 					/>
 
-					<div className="rounded-3xl border bg-card p-5 shadow-sm">
+					<div className="rounded-3xl border border-border/60 bg-card p-5 shadow-sm">
 						<div className="mb-5 flex items-start gap-3">
-							<div className="rounded-2xl bg-primary/10 p-2 text-primary">
+							<div className="rounded-2xl bg-[#2563EB]/10 p-2 text-[#2563EB]">
 								<Wand2 className="size-5" />
 							</div>
-
 							<div className="space-y-1">
 								<h3 className="text-base font-semibold">
 									Designação automática
 								</h3>
 								<p className="text-sm text-muted-foreground">
-									Gere a tabela com base no tipo de limpeza, período e histórico
-									de rotação.
+									Baseada no tipo, período e histórico de rotação.
 								</p>
 							</div>
 						</div>
@@ -120,42 +126,62 @@ export function CleaningGenerateTab({ data }: Props) {
 						<div className="space-y-4">
 							<div className="space-y-2">
 								<Label>Tipo de limpeza</Label>
-								<Select value={cleaningType} onValueChange={handleTypeChange}>
-									<SelectTrigger className="w-full rounded-2xl">
+								<Select
+									value={cleaningType}
+									disabled={!canManage}
+									onValueChange={(value) => {
+										setCleaningType(value as typeof cleaningType);
+										setEditedRows([]);
+									}}
+								>
+									<SelectTrigger className="h-11 w-full rounded-2xl">
 										<SelectValue placeholder="Selecione o tipo" />
 									</SelectTrigger>
 									<SelectContent>
-										<SelectItem value="MEETING">Por reunião</SelectItem>
-										<SelectItem value="WEEKLY">Semanal</SelectItem>
-										<SelectItem value="GENERAL">Geral</SelectItem>
+										{(
+											Object.keys(TYPE_LABEL) as Array<keyof typeof TYPE_LABEL>
+										).map((type) => (
+											<SelectItem
+												key={type}
+												value={type}
+												disabled={!enabledTypes[type]}
+											>
+												{TYPE_LABEL[type]}
+												{!enabledTypes[type] ? " (inativo)" : ""}
+											</SelectItem>
+										))}
 									</SelectContent>
 								</Select>
 							</div>
 
 							<div className="rounded-2xl bg-muted/50 p-4 text-sm text-muted-foreground">
-								{range?.from && range?.to ? (
-									<>
-										Período selecionado:{" "}
-										{format(range.from, "dd/MM/yyyy", { locale: ptBR })} até{" "}
-										{format(range.to, "dd/MM/yyyy", { locale: ptBR })}
-									</>
-								) : (
-									<>Selecione o período no calendário.</>
-								)}
+								{range?.from && range?.to
+									? `Período: ${format(range.from, "dd/MM/yyyy", { locale: ptBR })} → ${format(range.to, "dd/MM/yyyy", { locale: ptBR })}`
+									: "Selecione o período no calendário."}
 							</div>
 
-							<button
-								className="inline-flex h-10 w-full items-center justify-center rounded-2xl bg-primary px-4 text-sm font-medium text-primary-foreground disabled:cursor-not-allowed disabled:opacity-50"
+							<Button
 								type="submit"
-								disabled={generatePending || !range?.from || !range?.to}
+								disabled={
+									!canManage ||
+									generatePending ||
+									!range?.from ||
+									!range?.to ||
+									!enabledTypes[cleaningType]
+								}
+								className="h-11 w-full rounded-2xl bg-[#2563EB] hover:bg-[#1D4ED8]"
 							>
-								{generatePending
-									? "Gerando lista..."
-									: "Criar lista automática"}
-							</button>
+								{generatePending ? "Gerando..." : "Criar lista automática"}
+							</Button>
 
 							{generateState.message ? (
-								<div className="rounded-2xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900">
+								<div
+									className={`rounded-2xl border px-4 py-3 text-sm ${
+										generateState.success
+											? "border-emerald-200 bg-emerald-50 text-emerald-900"
+											: "border-amber-200 bg-amber-50 text-amber-900"
+									}`}
+								>
 									{generateState.message}
 								</div>
 							) : null}
@@ -163,11 +189,14 @@ export function CleaningGenerateTab({ data }: Props) {
 					</div>
 				</form>
 
-				<div className="rounded-3xl border bg-card p-4 shadow-sm">
+				<div className="rounded-3xl border border-border/60 bg-card p-4 shadow-sm">
 					<CleaningRangeCalendar
 						value={range}
 						bookedDates={bookedDates}
-						onChange={handleRangeChange}
+						onChange={(value) => {
+							setRange(value);
+							setEditedRows([]);
+						}}
 					/>
 				</div>
 			</div>
@@ -196,52 +225,57 @@ export function CleaningGenerateTab({ data }: Props) {
 						value={serializeRows(effectiveRows)}
 					/>
 
-					<div className="rounded-3xl border bg-card p-5 shadow-sm">
-						<div className="mb-4 flex items-start gap-3">
-							<div className="rounded-2xl bg-primary/10 p-2 text-primary">
-								<Sparkles className="size-5" />
+					<div className="rounded-3xl border border-border/60 bg-card p-5 shadow-sm">
+						<div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+							<div className="flex items-start gap-3">
+								<div className="rounded-2xl bg-[#7C3AED]/10 p-2 text-[#7C3AED]">
+									<Sparkles className="size-5" />
+								</div>
+								<div className="space-y-1">
+									<h3 className="text-base font-semibold">Tabela gerada</h3>
+									<p className="text-sm text-muted-foreground">
+										Revise, ajuste manualmente se necessário e salve.
+									</p>
+								</div>
 							</div>
 
-							<div className="space-y-1">
-								<h3 className="text-base font-semibold">Tabela gerada</h3>
-								<p className="text-sm text-muted-foreground">
-									Revise, ajuste manualmente se necessário e depois salve.
-								</p>
-							</div>
+							<Button
+								type="submit"
+								disabled={!canManage || savePending}
+								className="h-11 rounded-2xl bg-[#2563EB] hover:bg-[#1D4ED8]"
+							>
+								{savePending ? "Salvando..." : "Salvar lista"}
+							</Button>
 						</div>
 
 						<CleaningAssignmentTable
 							rows={effectiveRows}
 							people={people}
-							editable
-							onChange={handleRowsChange}
+							editable={canManage}
+							onChange={setEditedRows}
 						/>
-					</div>
 
-					{generateState.result?.warnings?.length ? (
-						<div className="rounded-2xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900">
-							<ul className="list-disc space-y-1 pl-5">
-								{generateState.result.warnings.map((warning) => (
-									<li key={warning}>{warning}</li>
-								))}
-							</ul>
-						</div>
-					) : null}
+						{generateState.result?.warnings?.length ? (
+							<div className="mt-4 rounded-2xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900">
+								<ul className="list-disc space-y-1 pl-5">
+									{generateState.result.warnings.map((warning) => (
+										<li key={warning}>{warning}</li>
+									))}
+								</ul>
+							</div>
+						) : null}
 
-					{saveState.message ? (
-						<div className="rounded-2xl border bg-muted/40 p-4 text-sm text-muted-foreground">
-							{saveState.message}
-						</div>
-					) : null}
-
-					<div className="flex justify-end">
-						<button
-							className="inline-flex h-10 items-center justify-center rounded-2xl bg-primary px-4 text-sm font-medium text-primary-foreground disabled:cursor-not-allowed disabled:opacity-50"
-							type="submit"
-							disabled={savePending}
-						>
-							{savePending ? "Salvando..." : "Salvar lista"}
-						</button>
+						{saveState.message ? (
+							<div
+								className={`mt-4 rounded-2xl border px-4 py-3 text-sm ${
+									saveState.success
+										? "border-emerald-200 bg-emerald-50 text-emerald-900"
+										: "border-red-200 bg-red-50 text-red-900"
+								}`}
+							>
+								{saveState.message}
+							</div>
+						) : null}
 					</div>
 				</form>
 			) : null}

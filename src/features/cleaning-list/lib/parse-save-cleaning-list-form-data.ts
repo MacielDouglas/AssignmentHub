@@ -1,27 +1,34 @@
+// src/features/cleaning-list/lib/parse-save-cleaning-list-form-data.ts
 import type { SaveCleaningListInput } from "../schemas/save-cleaning-list.schema";
+
+function str(v: FormDataEntryValue | null) {
+	return typeof v === "string" ? v.trim() : "";
+}
 
 export function parseSaveCleaningListFormData(
 	formData: FormData,
 ): SaveCleaningListInput {
-	const organizationId = String(formData.get("organizationId") ?? "");
-	const cleaningType = String(formData.get("cleaningType") ?? "");
-	const periodFrom = String(formData.get("periodFrom") ?? "");
-	const periodTo = String(formData.get("periodTo") ?? "");
-	const rowsJson = String(formData.get("rowsJson") ?? "[]");
+	const rowsJson = str(formData.get("rowsJson"));
 
 	let rows: unknown = [];
-
 	try {
-		rows = JSON.parse(rowsJson);
+		// limite de payload (~1.5MB)
+		if (rowsJson.length > 1_500_000) {
+			rows = [];
+		} else {
+			rows = JSON.parse(rowsJson);
+		}
 	} catch {
 		rows = [];
 	}
 
 	return {
-		organizationId,
-		cleaningType: cleaningType as SaveCleaningListInput["cleaningType"],
-		periodFrom: new Date(periodFrom),
-		periodTo: new Date(periodTo),
+		organizationId: str(formData.get("organizationId")),
+		cleaningType: str(
+			formData.get("cleaningType"),
+		) as SaveCleaningListInput["cleaningType"],
+		periodFrom: new Date(str(formData.get("periodFrom"))),
+		periodTo: new Date(str(formData.get("periodTo"))),
 		rows: rows as SaveCleaningListInput["rows"],
 	};
 }

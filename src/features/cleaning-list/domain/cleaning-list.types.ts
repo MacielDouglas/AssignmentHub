@@ -1,3 +1,4 @@
+// src/features/cleaning-list/domain/cleaning-list.types.ts
 import type {
 	CleaningAssignmentListStatus,
 	CleaningSectorTargetSex,
@@ -36,17 +37,8 @@ export type CleaningTypeConfigView = {
 	enabled: boolean;
 	assignmentMode: "GROUP" | "FAMILY" | "PERSON" | null;
 	notes: string | null;
-	timesPerWeek: number | null;
-	weekdays: Array<{
-		id: string;
-		weekday: string;
-		sortOrder: number;
-	}>;
-	dates: Array<{
-		id: string;
-		date: Date;
-		label: string | null;
-	}>;
+	weekdays: Array<{ id: string; weekday: string; sortOrder: number }>;
+	dates: Array<{ id: string; date: Date; label: string | null }>;
 	sectors: CleaningSectorRule[];
 };
 
@@ -85,36 +77,35 @@ export type CleaningGenerationResult = {
 	warnings: string[];
 };
 
-export type CleaningSavedAssignmentCell = {
-	sectorId: string;
-	sectorName: string;
-	required: number;
-	assigned: CleaningGeneratedAssignmentPerson[];
-};
-
-export type CleaningSavedAssignmentRow = {
-	date: Date;
-	cells: CleaningSavedAssignmentCell[];
-};
-
-export type CleaningSavedListView = {
+export type CleaningSavedListSummary = {
 	id: string;
 	cleaningType: CleaningType;
 	periodFrom: Date;
 	periodTo: Date;
 	status: CleaningAssignmentListStatus;
 	createdAt: Date;
-	rows: CleaningSavedAssignmentRow[];
+	canDelete: boolean;
+	datesCount: number;
 };
 
 export type SaveCleaningListState = {
 	success: boolean;
 	message: string;
-	errors: Record<string, string[]>;
+	errors: Record<string, string[] | undefined>;
 };
 
 export const initialSaveCleaningListState: SaveCleaningListState = {
 	success: false,
 	message: "",
 	errors: {},
+};
+
+export type DeleteCleaningListState = {
+	success: boolean;
+	message: string;
+};
+
+export const initialDeleteCleaningListState: DeleteCleaningListState = {
+	success: false,
+	message: "",
 };

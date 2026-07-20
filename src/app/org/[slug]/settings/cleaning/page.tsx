@@ -1,5 +1,7 @@
+// src/app/org/[slug]/settings/cleaning/page.tsx
 import type { Metadata } from "next";
 import { headers } from "next/headers";
+import Link from "next/link";
 import { notFound } from "next/navigation";
 
 import {
@@ -15,55 +17,42 @@ import { mapCleaningSettingsFormInitialState } from "@/features/cleaning/lib/map
 import { getCleaningSettingsQuery } from "@/features/cleaning/queries/get-cleaning-settings.query";
 import { auth } from "@/lib/auth";
 
-type OrganizationCleaningSettingsPageProps = {
-	params: Promise<{
-		slug: string;
-	}>;
-};
+type Props = { params: Promise<{ slug: string }> };
 
-export async function generateMetadata({
-	params,
-}: OrganizationCleaningSettingsPageProps): Promise<Metadata> {
+export async function generateMetadata({ params }: Props): Promise<Metadata> {
 	const { slug } = await params;
-
 	return {
-		title: `${slug} | Configurações de limpeza`,
-		description: "Gerencie as configurações globais do módulo de limpeza.",
+		title: `Limpeza | Configurações | ${slug}`,
+		description: "Configure modos de designação e setores de limpeza.",
+		robots: { index: false, follow: false },
 	};
 }
 
 export default async function OrganizationCleaningSettingsPage({
 	params,
-}: OrganizationCleaningSettingsPageProps) {
+}: Props) {
 	const { slug } = await params;
-
-	const session = await auth.api.getSession({
-		headers: await headers(),
-	});
-
-	if (!session?.user) {
-		notFound();
-	}
+	const session = await auth.api.getSession({ headers: await headers() });
+	if (!session?.user) notFound();
 
 	const data = await getCleaningSettingsQuery({
 		slug,
 		userId: session.user.id,
 	});
-
-	if (!data) {
-		notFound();
-	}
+	if (!data) notFound();
 
 	const initialState = mapCleaningSettingsFormInitialState(data);
 	const formKey = `${initialState.organizationId}:${initialState.settingsId ?? "new"}`;
 
 	return (
-		<div className="space-y-6">
+		<main className="space-y-5 pb-8">
 			<Breadcrumb>
 				<BreadcrumbList>
 					<BreadcrumbItem>
-						<BreadcrumbLink href={`/org/${data.organization.slug}/settings`}>
-							Configurações
+						<BreadcrumbLink asChild>
+							<Link href={`/org/${data.organization.slug}/settings`}>
+								Configurações
+							</Link>
 						</BreadcrumbLink>
 					</BreadcrumbItem>
 					<BreadcrumbSeparator />
@@ -74,6 +63,6 @@ export default async function OrganizationCleaningSettingsPage({
 			</Breadcrumb>
 
 			<CleaningSettingsForm key={formKey} initialState={initialState} />
-		</div>
+		</main>
 	);
 }

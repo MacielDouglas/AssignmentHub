@@ -1,41 +1,50 @@
+// src/features/cleaning/domain/cleaning-settings.types.ts
 import type {
 	CleaningAssignmentMode,
+	CleaningSectorTargetSex,
 	CleaningType,
-	CleaningWeekday,
-} from "../schemas/save-cleaning-settings.schema";
+	Weekday,
+} from "@/generated/prisma/enums";
 
-export type SectorItem = {
+export type CleaningSectorFormState = {
 	id?: string;
 	clientKey: string;
 	name: string;
 	description: string;
-	peopleRequired: string;
+	peopleRequired: number;
 	allowYoung: boolean;
+	targetSex: CleaningSectorTargetSex | "";
 	sortOrder: number;
 	isActive: boolean;
-	targetSex?: string;
+	locked: boolean; // true = tem designação em data passada
 };
 
-export type TypeFormState = {
+export type CleaningTypeConfigFormState = {
 	id?: string;
 	type: CleaningType;
 	enabled: boolean;
-	assignmentMode: CleaningAssignmentMode | null;
+	assignmentMode: CleaningAssignmentMode | "";
 	notes: string;
-	timesPerWeek: string;
-	weekdays: CleaningWeekday[];
-	dates: string[];
-	sectors: SectorItem[];
+	weekday: Weekday | ""; // WEEKLY: 0 ou 1
+	dates: string[]; // GENERAL: yyyy-mm-dd
+	sectors: CleaningSectorFormState[];
 };
 
-export type CleaningSettingsFormConfigMap = Record<CleaningType, TypeFormState>;
-
-export type CleaningSettingsStateErrors = Record<string, string[]>;
+export type CleaningSettingsFormState = {
+	organizationId: string;
+	settingsId: string | null;
+	canManage: boolean;
+	organizationName: string;
+	organizationSlug: string;
+	meeting: CleaningTypeConfigFormState;
+	weekly: CleaningTypeConfigFormState;
+	general: CleaningTypeConfigFormState;
+};
 
 export type SaveCleaningSettingsState = {
 	success: boolean;
 	message: string;
-	errors: CleaningSettingsStateErrors;
+	errors: Record<string, string[] | undefined>;
 };
 
 export const initialSaveCleaningSettingsState: SaveCleaningSettingsState = {

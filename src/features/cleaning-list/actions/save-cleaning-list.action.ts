@@ -1,3 +1,4 @@
+// src/features/cleaning-list/actions/save-cleaning-list.action.ts
 "use server";
 
 import { revalidatePath } from "next/cache";
@@ -13,18 +14,12 @@ import { parseSaveCleaningListFormData } from "../lib/parse-save-cleaning-list-f
 import { saveCleaningListSchema } from "../schemas/save-cleaning-list.schema";
 
 export async function saveCleaningListAction(
-	_prevState: SaveCleaningListState,
+	_prev: SaveCleaningListState,
 	formData: FormData,
 ): Promise<SaveCleaningListState> {
-	const session = await auth.api.getSession({
-		headers: await headers(),
-	});
-
+	const session = await auth.api.getSession({ headers: await headers() });
 	if (!session?.user) {
-		return {
-			...initialSaveCleaningListState,
-			message: "Sessão inválida.",
-		};
+		return { ...initialSaveCleaningListState, message: "Sessão inválida." };
 	}
 
 	const payload = parseSaveCleaningListFormData(formData);
@@ -45,11 +40,7 @@ export async function saveCleaningListAction(
 		},
 		select: {
 			role: true,
-			organization: {
-				select: {
-					slug: true,
-				},
-			},
+			organization: { select: { id: true, slug: true } },
 		},
 	});
 
@@ -60,14 +51,70 @@ export async function saveCleaningListAction(
 		};
 	}
 
-	const canManage = membership.role === "OWNER" || membership.role === "ADMIN";
-
-	if (!canManage) {
+	if (membership.role !== "OWNER" && membership.role !== "ADMIN") {
 		return {
 			...initialSaveCleaningListState,
 			message: "Você não tem permissão para salvar listas.",
 		};
 	}
+
+	// Valida setores e pessoas no servidor (anti-tamper)
+	const sectorIds = [
+		...new Set(
+			parsed.data.rows.flatMap((row) => row.cells.map((c) => c.sectorId)),
+		),
+	];
+	const personIds = [
+		...new Set(
+			parsed.data.rows.flatMap((row) =>
+				row.cells.flatMap((c) => c.assigned.map((p) => p.personId)),
+			),
+		),
+	];
+
+	const [sectors, people] = await Promise.all([
+		db.cleaningSector.findMany({
+			where: {
+				id: { in: sectorIds },
+				isActive: true,
+				cleaningTypeConfig: {
+					type: parsed.data.cleaningType,
+					enabled: true,
+					settings: { organizationId: membership.organization.id },
+				},
+			},
+			select: { id: true },
+		}),
+		db.person.findMany({
+			where: {
+				id: { in: personIds },
+				organizationId: membership.organization.id,
+				isActive: true,
+				cleaning: true,
+			},
+			select: {
+				id: true,
+				familyId: true,
+				groupId: true,
+			},
+		}),
+	]);
+
+	if (sectors.length !== sectorIds.length) {
+		return {
+			...initialSaveCleaningListState,
+			message: "Um ou mais setores são inválidos para este tipo.",
+		};
+	}
+
+	if (people.length !== personIds.length) {
+		return {
+			...initialSaveCleaningListState,
+			message: "Uma ou mais pessoas são inválidas para designação.",
+		};
+	}
+
+	const peopleById = new Map(people.map((p) => [p.id, p]));
 
 	try {
 		await db.$transaction(async (tx) => {
@@ -91,13 +138,17 @@ export async function saveCleaningListAction(
 
 				for (const cell of row.cells) {
 					for (const person of cell.assigned) {
+						const dbPerson = peopleById.get(person.personId);
+						if (!dbPerson) continue;
+
 						await tx.cleaningAssignmentSectorAssignment.create({
 							data: {
 								assignmentDateId: assignmentDate.id,
 								sectorId: cell.sectorId,
 								personId: person.personId,
-								familyId: person.familyId,
-								groupId: person.groupId,
+								// FKs reais do banco — nunca confiar só no client
+								familyId: dbPerson.familyId,
+								groupId: dbPerson.groupId,
 								position: person.position,
 							},
 						});
@@ -107,8 +158,6 @@ export async function saveCleaningListAction(
 		});
 
 		revalidatePath(`/org/${membership.organization.slug}/cleaning`);
-		revalidatePath(`/org/${membership.organization.slug}/settings/cleaning`);
-
 		return {
 			success: true,
 			message: "Lista de limpeza salva com sucesso.",
@@ -116,7 +165,6 @@ export async function saveCleaningListAction(
 		};
 	} catch (error) {
 		console.error(error);
-
 		return {
 			...initialSaveCleaningListState,
 			message: "Ocorreu um erro ao salvar a lista.",

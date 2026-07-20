@@ -1,151 +1,70 @@
-import type {
-	CleaningSettingsFormConfigMap,
-	// CleaningSettingsFormState,
-	SectorItem,
-	TypeFormState,
-} from "../domain/cleaning-settings.types";
-import type {
-	CleaningAssignmentMode,
-	CleaningType,
-	CleaningWeekday,
-} from "../schemas/save-cleaning-settings.schema";
-import { createSuggestedConfigMap } from "./cleaning-settings-defaults";
+// src/features/cleaning/lib/map-cleaning-settings-form-initial-state.ts
+import type { CleaningSettingsFormState } from "../domain/cleaning-settings.types";
+import type { getCleaningSettingsQuery } from "../queries/get-cleaning-settings.query";
+import {
+	createDefaultTypeConfig,
+	createEmptySector,
+} from "./cleaning-settings-defaults";
 
-type QueryResult = {
-	role: string;
-	organization: {
-		id: string;
-		name: string;
-		slug: string;
-		cleaningSettings: {
-			id: string;
-			cleaningPerMeeting: boolean;
-			weeklyCleaning: boolean;
-			generalCleaning: boolean;
-			configs: Array<{
-				id: string;
-				type: CleaningType;
-				enabled: boolean;
-				assignmentMode: CleaningAssignmentMode | null;
-				notes: string | null;
-				timesPerWeek: number | null;
-				weekdays: Array<{
-					weekday: CleaningWeekday;
-					sortOrder: number;
-				}>;
-				dates: Array<{
-					id: string;
-					date: Date;
-					label: string | null;
-				}>;
-				sectors: Array<{
-					id: string;
-					name: string;
-					description: string | null;
-					peopleRequired: number | null;
-					allowYoung: boolean;
-					sortOrder: number;
-					isActive: boolean;
-				}>;
-			}>;
-		} | null;
-	};
-} | null;
+type Data = NonNullable<Awaited<ReturnType<typeof getCleaningSettingsQuery>>>;
 
-function createClientKey(type: CleaningType, sortOrder: number, id?: string) {
-	return id ? `${type}-${id}` : `${type}-new-${sortOrder}`;
-}
+function mapConfig(
+	type: "MEETING" | "WEEKLY" | "GENERAL",
+	config: Data["organization"]["cleaningSettings"] extends infer S
+		? S extends { configs: (infer C)[] }
+			? C | undefined
+			: undefined
+		: undefined,
+	lockedSectorIds: Set<string>,
+) {
+	const base = createDefaultTypeConfig(type);
+	if (!config) return base;
 
-function mapSector(
-	type: CleaningType,
-	sector: {
-		id: string;
-		name: string;
-		description: string | null;
-		peopleRequired: number | null;
-		allowYoung: boolean;
-		sortOrder: number;
-		isActive: boolean;
-	},
-): SectorItem {
 	return {
-		id: sector.id,
-		clientKey: createClientKey(type, sector.sortOrder, sector.id),
-		name: sector.name,
-		description: sector.description ?? "",
-		peopleRequired:
-			sector.peopleRequired !== null ? String(sector.peopleRequired) : "",
-		allowYoung: sector.allowYoung,
-		sortOrder: sector.sortOrder,
-		isActive: sector.isActive,
-	};
-}
-
-function cloneConfig(config: TypeFormState): TypeFormState {
-	return {
-		...config,
-		weekdays: [...config.weekdays],
-		dates: [...config.dates],
-		sectors: config.sectors.map((sector) => ({ ...sector })),
-	};
-}
-
-function mergeConfig(
-	base: TypeFormState,
-	incoming: NonNullable<
-		NonNullable<QueryResult>["organization"]["cleaningSettings"]
-	>["configs"][number],
-): TypeFormState {
-	return {
-		...cloneConfig(base),
-		id: incoming.id,
-		type: incoming.type,
-		enabled: incoming.enabled,
-		assignmentMode: incoming.assignmentMode,
-		notes: incoming.notes ?? "",
-		timesPerWeek:
-			incoming.timesPerWeek !== null ? String(incoming.timesPerWeek) : "",
-		weekdays: incoming.weekdays
-			.slice()
-			.sort((a, b) => a.sortOrder - b.sortOrder)
-			.map((item) => item.weekday),
-		dates: incoming.dates
-			.slice()
-			.sort((a, b) => a.date.getTime() - b.date.getTime())
-			.map((item) => item.date.toISOString()),
-		sectors: incoming.sectors
-			.slice()
-			.sort((a, b) => a.sortOrder - b.sortOrder)
-			.map((sector) => mapSector(incoming.type, sector)),
+		id: config.id,
+		type,
+		enabled: config.enabled,
+		assignmentMode: (config.assignmentMode ?? base.assignmentMode) as never,
+		notes: config.notes ?? "",
+		weekday: (config.weekdays[0]?.weekday ?? "") as never,
+		dates: config.dates.map((d) => d.date.toISOString().slice(0, 10)),
+		sectors:
+			config.sectors.length > 0
+				? config.sectors.map((s, index) => ({
+						id: s.id,
+						clientKey: `sector-${s.id}`,
+						name: s.name,
+						description: s.description ?? "",
+						peopleRequired: s.peopleRequired ?? 1,
+						allowYoung: s.allowYoung,
+						targetSex: (s.targetSex ?? "") as "" | "MALE" | "FEMALE",
+						sortOrder: s.sortOrder ?? index,
+						isActive: s.isActive,
+						locked: lockedSectorIds.has(s.id),
+					}))
+				: [createEmptySector(0)],
 	};
 }
 
 export function mapCleaningSettingsFormInitialState(
-	membership: QueryResult,
+	data: Data,
 ): CleaningSettingsFormState {
-	const defaults = createSuggestedConfigMap();
-	const organizationId = membership?.organization.id ?? "";
-	const settings = membership?.organization.cleaningSettings ?? null;
-
-	const configs: CleaningSettingsFormConfigMap = {
-		MEETING: cloneConfig(defaults.MEETING),
-		WEEKLY: cloneConfig(defaults.WEEKLY),
-		GENERAL: cloneConfig(defaults.GENERAL),
+	const settings = data.organization.cleaningSettings;
+	const configs = settings?.configs ?? [];
+	const byType = {
+		MEETING: configs.find((c) => c.type === "MEETING"),
+		WEEKLY: configs.find((c) => c.type === "WEEKLY"),
+		GENERAL: configs.find((c) => c.type === "GENERAL"),
 	};
 
-	if (settings) {
-		for (const config of settings.configs) {
-			configs[config.type] = mergeConfig(defaults[config.type], config);
-		}
-	}
-
 	return {
-		organizationId,
-		settingsId: settings?.id,
-		cleaningPerMeeting: settings?.cleaningPerMeeting ?? false,
-		weeklyCleaning: settings?.weeklyCleaning ?? false,
-		generalCleaning: settings?.generalCleaning ?? false,
-		configs,
-		defaults,
+		organizationId: data.organization.id,
+		settingsId: settings?.id ?? null,
+		canManage: data.canManage,
+		organizationName: data.organization.name,
+		organizationSlug: data.organization.slug,
+		meeting: mapConfig("MEETING", byType.MEETING, data.lockedSectorIds),
+		weekly: mapConfig("WEEKLY", byType.WEEKLY, data.lockedSectorIds),
+		general: mapConfig("GENERAL", byType.GENERAL, data.lockedSectorIds),
 	};
 }

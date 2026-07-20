@@ -1,3 +1,4 @@
+// src/features/cleaning-list/components/cleaning-assignment-table.tsx
 "use client";
 
 import { format } from "date-fns";
@@ -41,31 +42,32 @@ export function CleaningAssignmentTable({
 	}
 
 	return (
-		<div className="overflow-hidden rounded-3xl border bg-card shadow-sm">
+		<div className="overflow-x-auto rounded-3xl border border-border/60 bg-background shadow-sm">
 			<Table>
 				<TableHeader>
 					<TableRow>
-						<TableHead className="w-30">Data</TableHead>
+						<TableHead className="w-28 sticky left-0 z-10 bg-background">
+							Data
+						</TableHead>
 						{sectorHeaders.map((cell) => (
-							<TableHead key={cell.sectorId}>{cell.sectorName}</TableHead>
+							<TableHead key={cell.sectorId} className="min-w-40">
+								{cell.sectorName}
+							</TableHead>
 						))}
 					</TableRow>
 				</TableHeader>
-
 				<TableBody>
 					{rows.map((row) => {
 						const rowKey = row.date.toISOString();
-
 						const usedPersonIds = row.cells.flatMap((cell) =>
 							cell.assigned.map((person) => person.personId),
 						);
 
 						return (
 							<TableRow key={rowKey}>
-								<TableCell className="font-medium">
+								<TableCell className="sticky left-0 z-10 bg-background font-medium">
 									{format(row.date, "dd/MM", { locale: ptBR })}
 								</TableCell>
-
 								{row.cells.map((cell) => (
 									<TableCell
 										key={`${rowKey}-${cell.sectorId}`}
@@ -94,7 +96,6 @@ export function CleaningAssignmentTable({
 																	),
 																},
 													);
-
 													onChange(nextRows);
 												}}
 											/>

@@ -1,3 +1,4 @@
+// src/features/cleaning-list/lib/get-cleaning-rotation-map.ts
 import type { CleaningType } from "@/generated/prisma/enums";
 import { db } from "@/lib/db";
 
@@ -20,48 +21,25 @@ export async function getCleaningRotationMap({
 		db.cleaningAssignmentSectorAssignment.findMany({
 			where: {
 				assignmentDate: {
-					list: {
-						organizationId,
-						cleaningType,
-						status: "SAVED",
-					},
+					list: { organizationId, cleaningType, status: "SAVED" },
 				},
 			},
-			orderBy: {
-				assignmentDate: {
-					date: "desc",
-				},
-			},
+			orderBy: { assignmentDate: { date: "desc" } },
 			select: {
 				personId: true,
-				assignmentDate: {
-					select: {
-						date: true,
-					},
-				},
+				assignmentDate: { select: { date: true } },
 			},
 		}),
 		db.cleaningAssignmentSectorAssignment.findMany({
 			where: {
 				assignmentDate: {
-					list: {
-						organizationId,
-						status: "SAVED",
-					},
+					list: { organizationId, status: "SAVED" },
 				},
 			},
-			orderBy: {
-				assignmentDate: {
-					date: "desc",
-				},
-			},
+			orderBy: { assignmentDate: { date: "desc" } },
 			select: {
 				personId: true,
-				assignmentDate: {
-					select: {
-						date: true,
-					},
-				},
+				assignmentDate: { select: { date: true } },
 			},
 		}),
 	]);
@@ -80,7 +58,6 @@ export async function getCleaningRotationMap({
 
 	for (const item of byType) {
 		const current = map.get(item.personId);
-
 		if (!current) {
 			map.set(item.personId, {
 				personId: item.personId,
@@ -89,7 +66,6 @@ export async function getCleaningRotationMap({
 			});
 			continue;
 		}
-
 		if (!current.lastAssignedAtByType) {
 			current.lastAssignedAtByType = item.assignmentDate.date;
 		}

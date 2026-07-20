@@ -1,10 +1,18 @@
+// src/features/cleaning-list/lib/cleaning-list.mappers.ts
 import type {
+	CleaningCandidatePerson,
 	CleaningGeneratedAssignmentRow,
-	CleaningSavedAssignmentRow,
 	CleaningTypeConfigView,
 } from "../domain/cleaning-list.types";
 
-type RawCleaningConfig = Omit<CleaningTypeConfigView, "sectors"> & {
+type RawConfig = {
+	id: string;
+	type: CleaningTypeConfigView["type"];
+	enabled: boolean;
+	assignmentMode: CleaningTypeConfigView["assignmentMode"];
+	notes: string | null;
+	weekdays: CleaningTypeConfigView["weekdays"];
+	dates: CleaningTypeConfigView["dates"];
 	sectors: Array<{
 		id: string;
 		name: string;
@@ -18,13 +26,13 @@ type RawCleaningConfig = Omit<CleaningTypeConfigView, "sectors"> & {
 };
 
 export function normalizeCleaningConfig(
-	config: RawCleaningConfig,
+	config: RawConfig,
 ): CleaningTypeConfigView {
 	return {
 		...config,
 		sectors: config.sectors.map((sector) => ({
 			...sector,
-			peopleRequired: sector.peopleRequired ?? 1,
+			peopleRequired: Math.max(1, sector.peopleRequired ?? 1),
 		})),
 	};
 }
@@ -40,10 +48,10 @@ export function mapOrganizationPeopleToCandidates(
 		isMarried: boolean;
 		familyId: string | null;
 		groupId: string | null;
-		family: { name: string } | null;
-		group: { name: string } | null;
+		family: { id: string; name: string } | null;
+		group: { id: string; name: string } | null;
 	}>,
-) {
+): CleaningCandidatePerson[] {
 	return people.map((person) => ({
 		id: person.id,
 		name: person.name,
@@ -52,8 +60,8 @@ export function mapOrganizationPeopleToCandidates(
 		cleaning: person.cleaning,
 		isActive: person.isActive,
 		isMarried: person.isMarried,
-		familyId: person.familyId ?? null,
-		groupId: person.groupId ?? null,
+		familyId: person.familyId,
+		groupId: person.groupId,
 		familyName: person.family?.name ?? null,
 		groupName: person.group?.name ?? null,
 	}));
@@ -66,31 +74,17 @@ export function mapSavedListToRows(
 					date: Date;
 					assignments: Array<{
 						position: number;
-						sector: {
-							id: string;
-							name: string;
-						};
-						person: {
-							id: string;
-							name: string;
-						};
-						family: {
-							id: string;
-							name: string;
-						} | null;
-						group: {
-							id: string;
-							name: string;
-						} | null;
+						sector: { id: string; name: string };
+						person: { id: string; name: string };
+						family: { id: string; name: string } | null;
+						group: { id: string; name: string } | null;
 					}>;
 				}>;
 		  }
 		| null
 		| undefined,
-): CleaningSavedAssignmentRow[] {
-	if (!savedList) {
-		return [];
-	}
+): CleaningGeneratedAssignmentRow[] {
+	if (!savedList) return [];
 
 	return savedList.dates.map((dateItem) => {
 		const cellMap = new Map<
@@ -99,15 +93,7 @@ export function mapSavedListToRows(
 				sectorId: string;
 				sectorName: string;
 				required: number;
-				assigned: Array<{
-					personId: string;
-					personName: string;
-					familyId: string | null;
-					familyName: string | null;
-					groupId: string | null;
-					groupName: string | null;
-					position: number;
-				}>;
+				assigned: CleaningGeneratedAssignmentRow["cells"][number]["assigned"];
 			}
 		>();
 
@@ -129,6 +115,7 @@ export function mapSavedListToRows(
 				position: assignment.position,
 			});
 
+			current.required = Math.max(current.required, current.assigned.length);
 			cellMap.set(assignment.sector.id, current);
 		}
 
@@ -140,5 +127,10 @@ export function mapSavedListToRows(
 }
 
 export function serializeRows(rows: CleaningGeneratedAssignmentRow[]) {
-	return JSON.stringify(rows);
+	return JSON.stringify(
+		rows.map((row) => ({
+			date: row.date.toISOString(),
+			cells: row.cells,
+		})),
+	);
 }

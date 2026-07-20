@@ -1,7 +1,7 @@
+// src/features/cleaning/schemas/save-cleaning-settings.schema.ts
 import { z } from "zod";
 
 export const CLEANING_TYPES = ["MEETING", "WEEKLY", "GENERAL"] as const;
-export const CLEANING_ASSIGNMENT_MODES = ["GROUP", "FAMILY", "PERSON"] as const;
 export const WEEKDAYS = [
 	"MONDAY",
 	"TUESDAY",
@@ -12,79 +12,197 @@ export const WEEKDAYS = [
 	"SUNDAY",
 ] as const;
 
-const cleaningTypeSchema = z.enum(CLEANING_TYPES);
-const cleaningAssignmentModeSchema = z.enum(CLEANING_ASSIGNMENT_MODES);
-const weekdaySchema = z.enum(WEEKDAYS);
+export const MEETING_MODES = ["PERSON", "FAMILY", "GROUP"] as const;
+export const WEEKLY_MODES = ["FAMILY", "GROUP"] as const;
+export const GENERAL_MODES = ["GROUP"] as const;
+export const TARGET_SEX = ["MALE", "FEMALE"] as const;
 
-const sectorSchema = z.object({
-	id: z.string().min(1).optional(),
-	name: z.string().trim().min(1, "Informe o nome do setor."),
-	description: z
+const uuidLike = z.string().trim().min(1).max(191);
+const optionalUuid = z
+	.string()
+	.trim()
+	.max(191)
+	.optional()
+	.transform((v) => (v && v.length > 0 ? v : undefined));
+
+const text = (max: number) =>
+	z
 		.string()
 		.trim()
-		.max(300, "A descrição deve ter no máximo 300 caracteres.")
-		.optional()
-		.or(z.literal("")),
-	peopleRequired: z
-		.number()
-		.int("Informe um número inteiro.")
-		.min(1, "Informe pelo menos 1 pessoa.")
-		.max(50, "Informe no máximo 50 pessoas.")
-		.nullable(),
+		.max(max)
+		.transform((v) => v.replace(/[<>]/g, ""));
+
+const optionalText = (max: number) =>
+	text(max).transform((v) => (v.length ? v : null));
+
+const dateOnly = z
+	.string()
+	.trim()
+	.regex(/^\d{4}-\d{2}-\d{2}$/, "Data inválida.")
+	.refine((v) => !Number.isNaN(new Date(`${v}T00:00:00.000Z`).getTime()), {
+		message: "Data inválida.",
+	});
+
+export const cleaningSectorSchema = z.object({
+	id: optionalUuid,
+	name: text(80).pipe(z.string().min(1, "Nome do setor é obrigatório.")),
+	description: optionalText(500),
+	peopleRequired: z.number().int().min(1).max(50).nullable(),
 	allowYoung: z.boolean(),
-	sortOrder: z.number().int().min(0),
+	targetSex: z.enum(TARGET_SEX).nullable(),
+	sortOrder: z.number().int().min(0).max(200),
 	isActive: z.boolean(),
 });
 
-const cleaningTypeConfigSchema = z.object({
-	id: z.string().min(1).optional(),
-	type: cleaningTypeSchema,
+const baseConfig = z.object({
+	id: optionalUuid,
 	enabled: z.boolean(),
-	assignmentMode: cleaningAssignmentModeSchema.nullable(),
-	notes: z
-		.string()
-		.trim()
-		.max(500, "As observações devem ter no máximo 500 caracteres.")
-		.optional()
-		.or(z.literal("")),
-	timesPerWeek: z
-		.number()
-		.int("Informe um número inteiro.")
-		.min(1, "Informe no mínimo 1 vez por semana.")
-		.max(7, "Informe no máximo 7 vezes por semana.")
-		.nullable(),
-	weekdays: z.array(weekdaySchema),
-	dates: z.array(z.coerce.date()),
-	sectors: z.array(sectorSchema),
+	notes: optionalText(1000),
+	sectors: z.array(cleaningSectorSchema).max(40),
 });
 
-export const saveCleaningSettingsSchema = z.object({
-	organizationId: z.string().min(1, "Organização inválida."),
-	settingsId: z.string().min(1).optional(),
-	cleaningPerMeeting: z.boolean(),
-	weeklyCleaning: z.boolean(),
-	generalCleaning: z.boolean(),
-	configs: z
-		.array(cleaningTypeConfigSchema)
-		.length(3)
-		.refine((configs) => {
-			const types = configs.map((item) => item.type).sort();
-			return (
-				JSON.stringify(types) ===
-				JSON.stringify(["GENERAL", "MEETING", "WEEKLY"])
-			);
-		}, "Os três tipos de configuração são obrigatórios."),
+export const meetingConfigSchema = baseConfig.extend({
+	type: z.literal("MEETING"),
+	assignmentMode: z.enum(MEETING_MODES).nullable(),
+	weekday: z.null(),
+	dates: z.array(z.never()).max(0),
 });
+
+export const weeklyConfigSchema = baseConfig.extend({
+	type: z.literal("WEEKLY"),
+	assignmentMode: z.enum(WEEKLY_MODES).nullable(),
+	weekday: z.enum(WEEKDAYS).nullable(),
+	dates: z.array(z.never()).max(0),
+});
+
+export const generalConfigSchema = baseConfig.extend({
+	type: z.literal("GENERAL"),
+	assignmentMode: z.enum(GENERAL_MODES).nullable(),
+	weekday: z.null(),
+	dates: z.array(dateOnly).max(60),
+});
+
+export const saveCleaningSettingsSchema = z
+	.object({
+		organizationId: uuidLike,
+		meeting: meetingConfigSchema,
+		weekly: weeklyConfigSchema,
+		general: generalConfigSchema,
+	})
+	.superRefine((data, ctx) => {
+		validateConfig(data.meeting, ctx, "meeting");
+		validateConfig(data.weekly, ctx, "weekly");
+		validateConfig(data.general, ctx, "general");
+	});
+
+function validateConfig(
+	config:
+		| z.infer<typeof meetingConfigSchema>
+		| z.infer<typeof weeklyConfigSchema>
+		| z.infer<typeof generalConfigSchema>,
+	ctx: z.RefinementCtx,
+	path: "meeting" | "weekly" | "general",
+) {
+	if (!config.enabled) return;
+
+	if (!config.assignmentMode) {
+		ctx.addIssue({
+			code: z.ZodIssueCode.custom,
+			path: [path, "assignmentMode"],
+			message: "Selecione o modo de designação.",
+		});
+	}
+
+	if (config.sectors.filter((s) => s.isActive).length === 0) {
+		ctx.addIssue({
+			code: z.ZodIssueCode.custom,
+			path: [path, "sectors"],
+			message: "Adicione ao menos um setor ativo.",
+		});
+	}
+
+	const names = new Set<string>();
+	for (const [index, sector] of config.sectors.entries()) {
+		const key = sector.name.trim().toLocaleLowerCase("pt-BR");
+		if (names.has(key)) {
+			ctx.addIssue({
+				code: z.ZodIssueCode.custom,
+				path: [path, "sectors", index, "name"],
+				message: "Nome de setor duplicado neste tipo.",
+			});
+		}
+		names.add(key);
+
+		const isBathroom = isBathroomSectorName(sector.name);
+		if (!isBathroom && sector.targetSex) {
+			ctx.addIssue({
+				code: z.ZodIssueCode.custom,
+				path: [path, "sectors", index, "targetSex"],
+				message: "Sexo alvo só é permitido no setor Banheiro.",
+			});
+		}
+
+		if (config.type === "MEETING") {
+			if (config.assignmentMode === "PERSON") {
+				if (!sector.peopleRequired || sector.peopleRequired < 1) {
+					ctx.addIssue({
+						code: z.ZodIssueCode.custom,
+						path: [path, "sectors", index, "peopleRequired"],
+						message: "Informe pessoas necessárias (mín. 1).",
+					});
+				}
+			} else {
+				// FAMILY / GROUP: sem peopleRequired no form
+				if (sector.peopleRequired != null) {
+					// normalizamos no parse; se vier algo, ok ignorar
+				}
+			}
+		}
+
+		if (config.type === "WEEKLY" || config.type === "GENERAL") {
+			if (!sector.peopleRequired || sector.peopleRequired < 1) {
+				ctx.addIssue({
+					code: z.ZodIssueCode.custom,
+					path: [path, "sectors", index, "peopleRequired"],
+					message: "Informe pessoas necessárias (mín. 1).",
+				});
+			}
+		}
+	}
+
+	if (
+		config.type === "GENERAL" &&
+		config.enabled &&
+		config.dates.length === 0
+	) {
+		ctx.addIssue({
+			code: z.ZodIssueCode.custom,
+			path: [path, "dates"],
+			message: "Informe ao menos uma data para limpeza geral.",
+		});
+	}
+
+	if (config.type === "GENERAL") {
+		const unique = new Set(config.dates);
+		if (unique.size !== config.dates.length) {
+			ctx.addIssue({
+				code: z.ZodIssueCode.custom,
+				path: [path, "dates"],
+				message: "Existem datas duplicadas.",
+			});
+		}
+	}
+}
+
+export function isBathroomSectorName(name: string) {
+	const n = name
+		.normalize("NFD")
+		.replace(/\p{M}/gu, "")
+		.toLocaleLowerCase("pt-BR")
+		.trim();
+	return n === "banheiro" || n.startsWith("banheiro ");
+}
 
 export type SaveCleaningSettingsInput = z.infer<
 	typeof saveCleaningSettingsSchema
->;
-export type SaveCleaningSettingsConfigInput =
-	SaveCleaningSettingsInput["configs"][number];
-export type SaveCleaningSettingsSectorInput =
-	SaveCleaningSettingsConfigInput["sectors"][number];
-export type CleaningWeekday = z.infer<typeof weekdaySchema>;
-export type CleaningType = z.infer<typeof cleaningTypeSchema>;
-export type CleaningAssignmentMode = z.infer<
-	typeof cleaningAssignmentModeSchema
 >;

@@ -1,3 +1,4 @@
+// src/features/cleaning-list/lib/auto-assign-cleaning.ts
 import type { CleaningType } from "@/generated/prisma/enums";
 import type {
 	CleaningCandidatePerson,
@@ -19,16 +20,6 @@ type GenerateInput = {
 	rotationMap: Map<string, RotationEntry>;
 };
 
-type AssignSectorInput = {
-	sector: CleaningSectorRule;
-	people: CleaningCandidatePerson[];
-	usedPersonIds: Set<string>;
-	rollingRotationMap: Map<string, RotationEntry>;
-	assignmentMode: CleaningTypeConfigView["assignmentMode"];
-	warnings: string[];
-	currentDate: Date;
-};
-
 export function autoAssignCleaning({
 	cleaningType,
 	periodFrom,
@@ -40,8 +31,7 @@ export function autoAssignCleaning({
 }: GenerateInput): CleaningGenerationResult {
 	const warnings: string[] = [];
 	const rows: CleaningGeneratedAssignmentRow[] = [];
-
-	const rollingRotationMap = new Map(rotationMap);
+	const rolling = new Map(rotationMap);
 
 	for (const date of dates) {
 		const usedPersonIds = new Set<string>();
@@ -54,52 +44,54 @@ export function autoAssignCleaning({
 					sector,
 					people,
 					usedPersonIds,
-					rollingRotationMap,
+					rolling,
 					assignmentMode: config.assignmentMode,
 					warnings,
 					currentDate: date,
 				}),
 			);
 
-		rows.push({
-			date,
-			cells,
-		});
+		rows.push({ date, cells });
 	}
 
-	return {
-		cleaningType,
-		periodFrom,
-		periodTo,
-		rows,
-		warnings,
-	};
+	return { cleaningType, periodFrom, periodTo, rows, warnings };
 }
 
-function assignSector({
-	sector,
-	people,
-	usedPersonIds,
-	rollingRotationMap,
-	assignmentMode,
-	warnings,
-	currentDate,
-}: AssignSectorInput): CleaningGeneratedAssignmentCell {
-	const required = Math.max(1, sector.peopleRequired || 1);
+function assignSector(input: {
+	sector: CleaningSectorRule;
+	people: CleaningCandidatePerson[];
+	usedPersonIds: Set<string>;
+	rolling: Map<string, RotationEntry>;
+	assignmentMode: CleaningTypeConfigView["assignmentMode"];
+	warnings: string[];
+	currentDate: Date;
+}): CleaningGeneratedAssignmentCell {
+	const {
+		sector,
+		people,
+		usedPersonIds,
+		rolling,
+		assignmentMode,
+		warnings,
+		currentDate,
+	} = input;
+
+	// MEETING FAMILY/GROUP: peopleRequired pode ser null no banco → fallback 1
+	const required = Math.max(1, sector.peopleRequired ?? 1);
 
 	const eligible = people
-		.filter((person) => isEligibleForSector(person, sector, usedPersonIds))
-		.sort((a, b) => compareByRotation(a, b, rollingRotationMap));
+		.filter((person) => isEligible(person, sector, usedPersonIds))
+		.sort((a, b) => compareByRotation(a, b, rolling));
 
-	const assigned = pickPeopleForSector({
+	const assigned = pickPeople(
 		required,
 		eligible,
 		usedPersonIds,
 		assignmentMode,
-	});
+	);
 
 	for (const person of assigned) {
-		rollingRotationMap.set(person.id, {
+		rolling.set(person.id, {
 			personId: person.id,
 			lastAssignedAtByType: currentDate,
 			lastAssignedAtOverall: currentDate,
@@ -108,7 +100,7 @@ function assignSector({
 
 	if (assigned.length < required) {
 		warnings.push(
-			`O setor "${sector.name}" não teve pessoas suficientes para preencher ${required} vaga(s).`,
+			`O setor ${sector.name} não teve pessoas suficientes para preencher ${required} vaga(s).`,
 		);
 	}
 
@@ -128,7 +120,7 @@ function assignSector({
 	};
 }
 
-function isEligibleForSector(
+function isEligible(
 	person: CleaningCandidatePerson,
 	sector: CleaningSectorRule,
 	usedPersonIds: Set<string>,
@@ -145,45 +137,31 @@ function compareByRotation(
 	b: CleaningCandidatePerson,
 	rotationMap: Map<string, RotationEntry>,
 ) {
-	const aRotation = rotationMap.get(a.id);
-	const bRotation = rotationMap.get(b.id);
+	const aR = rotationMap.get(a.id);
+	const bR = rotationMap.get(b.id);
+	const aByType = aR?.lastAssignedAtByType?.getTime() ?? 0;
+	const bByType = bR?.lastAssignedAtByType?.getTime() ?? 0;
+	if (aByType !== bByType) return aByType - bByType;
 
-	const aByType = aRotation?.lastAssignedAtByType?.getTime() ?? 0;
-	const bByType = bRotation?.lastAssignedAtByType?.getTime() ?? 0;
-
-	if (aByType !== bByType) {
-		return aByType - bByType;
-	}
-
-	const aOverall = aRotation?.lastAssignedAtOverall?.getTime() ?? 0;
-	const bOverall = bRotation?.lastAssignedAtOverall?.getTime() ?? 0;
-
-	if (aOverall !== bOverall) {
-		return aOverall - bOverall;
-	}
+	const aOverall = aR?.lastAssignedAtOverall?.getTime() ?? 0;
+	const bOverall = bR?.lastAssignedAtOverall?.getTime() ?? 0;
+	if (aOverall !== bOverall) return aOverall - bOverall;
 
 	return a.name.localeCompare(b.name, "pt-BR");
 }
 
-function pickPeopleForSector({
-	required,
-	eligible,
-	usedPersonIds,
-	assignmentMode,
-}: {
-	required: number;
-	eligible: CleaningCandidatePerson[];
-	usedPersonIds: Set<string>;
-	assignmentMode: CleaningTypeConfigView["assignmentMode"];
-}) {
+function pickPeople(
+	required: number,
+	eligible: CleaningCandidatePerson[],
+	usedPersonIds: Set<string>,
+	assignmentMode: CleaningTypeConfigView["assignmentMode"],
+) {
 	if (assignmentMode === "FAMILY") {
-		return pickByFamily(required, eligible, usedPersonIds);
+		return pickByUnit(required, eligible, usedPersonIds, "familyId");
 	}
-
 	if (assignmentMode === "GROUP") {
-		return pickByGroup(required, eligible, usedPersonIds);
+		return pickByUnit(required, eligible, usedPersonIds, "groupId");
 	}
-
 	return pickByPerson(required, eligible, usedPersonIds);
 }
 
@@ -193,33 +171,32 @@ function pickByPerson(
 	usedPersonIds: Set<string>,
 ) {
 	const assigned: CleaningCandidatePerson[] = [];
-
 	for (const person of eligible) {
 		if (assigned.length >= required) break;
 		if (usedPersonIds.has(person.id)) continue;
-
 		assigned.push(person);
 		usedPersonIds.add(person.id);
 	}
-
 	return assigned;
 }
 
-function pickByFamily(
+function pickByUnit(
 	required: number,
 	eligible: CleaningCandidatePerson[],
 	usedPersonIds: Set<string>,
+	key: "familyId" | "groupId",
 ) {
-	const byFamily = new Map<string, CleaningCandidatePerson[]>();
+	const buckets = new Map<string, CleaningCandidatePerson[]>();
 
 	for (const person of eligible) {
-		if (!person.familyId) continue;
-		const current = byFamily.get(person.familyId) ?? [];
+		const unitId = person[key];
+		if (!unitId) continue;
+		const current = buckets.get(unitId) ?? [];
 		current.push(person);
-		byFamily.set(person.familyId, current);
+		buckets.set(unitId, current);
 	}
 
-	const families = Array.from(byFamily.values()).sort((a, b) => {
+	const units = Array.from(buckets.values()).sort((a, b) => {
 		const aBest = a[0]?.name ?? "";
 		const bBest = b[0]?.name ?? "";
 		return aBest.localeCompare(bBest, "pt-BR");
@@ -227,61 +204,17 @@ function pickByFamily(
 
 	const assigned: CleaningCandidatePerson[] = [];
 
-	for (const family of families) {
-		for (const person of family) {
+	for (const unit of units) {
+		for (const person of unit) {
 			if (assigned.length >= required) break;
 			if (usedPersonIds.has(person.id)) continue;
-
 			assigned.push(person);
 			usedPersonIds.add(person.id);
 		}
-
-		if (assigned.length >= required) {
-			return assigned;
-		}
+		if (assigned.length >= required) break;
 	}
 
-	return [
-		...assigned,
-		...pickByPerson(required - assigned.length, eligible, usedPersonIds),
-	];
-}
-
-function pickByGroup(
-	required: number,
-	eligible: CleaningCandidatePerson[],
-	usedPersonIds: Set<string>,
-) {
-	const byGroup = new Map<string, CleaningCandidatePerson[]>();
-
-	for (const person of eligible) {
-		if (!person.groupId) continue;
-		const current = byGroup.get(person.groupId) ?? [];
-		current.push(person);
-		byGroup.set(person.groupId, current);
-	}
-
-	const groups = Array.from(byGroup.values()).sort((a, b) => {
-		const aBest = a[0]?.name ?? "";
-		const bBest = b[0]?.name ?? "";
-		return aBest.localeCompare(bBest, "pt-BR");
-	});
-
-	const assigned: CleaningCandidatePerson[] = [];
-
-	for (const group of groups) {
-		for (const person of group) {
-			if (assigned.length >= required) break;
-			if (usedPersonIds.has(person.id)) continue;
-
-			assigned.push(person);
-			usedPersonIds.add(person.id);
-		}
-
-		if (assigned.length >= required) {
-			return assigned;
-		}
-	}
+	if (assigned.length >= required) return assigned;
 
 	return [
 		...assigned,

@@ -1,35 +1,85 @@
+// src/features/cleaning-list/schemas/save-cleaning-list.schema.ts
 import { z } from "zod";
+import { CLEANING_TYPES } from "./generate-cleaning-list.schema";
 
-const assignmentPersonSchema = z.object({
-	personId: z.string().min(1),
-	familyId: z.string().nullable(),
-	groupId: z.string().nullable(),
-	position: z.coerce.number().int().min(0),
+const personSchema = z.object({
+	personId: z.string().trim().min(1).max(191),
+	personName: z
+		.string()
+		.trim()
+		.min(1)
+		.max(120)
+		.transform((v) => v.replace(/[<>]/g, "")),
+	familyId: z.string().trim().max(191).nullable(),
+	familyName: z.string().trim().max(120).nullable(),
+	groupId: z.string().trim().max(191).nullable(),
+	groupName: z.string().trim().max(120).nullable(),
+	position: z.number().int().min(0).max(100),
 });
 
-const assignmentCellSchema = z.object({
-	sectorId: z.string().min(1),
-	sectorName: z.string().min(1),
-	required: z.coerce.number().int().min(1),
-	assigned: z.array(assignmentPersonSchema),
+const cellSchema = z.object({
+	sectorId: z.string().trim().min(1).max(191),
+	sectorName: z
+		.string()
+		.trim()
+		.min(1)
+		.max(80)
+		.transform((v) => v.replace(/[<>]/g, "")),
+	required: z.number().int().min(1).max(50),
+	assigned: z.array(personSchema).max(50),
 });
 
-const assignmentRowSchema = z.object({
+const rowSchema = z.object({
 	date: z.coerce.date(),
-	cells: z.array(assignmentCellSchema).min(1),
+	cells: z.array(cellSchema).min(1).max(40),
 });
 
 export const saveCleaningListSchema = z
 	.object({
-		organizationId: z.string().min(1),
-		cleaningType: z.enum(["MEETING", "WEEKLY", "GENERAL"]),
+		organizationId: z.string().trim().min(1).max(191),
+		cleaningType: z.enum(CLEANING_TYPES),
 		periodFrom: z.coerce.date(),
 		periodTo: z.coerce.date(),
-		rows: z.array(assignmentRowSchema).min(1),
+		rows: z.array(rowSchema).min(1).max(400),
 	})
-	.refine((data) => data.periodFrom <= data.periodTo, {
-		message: "O período inicial não pode ser maior que o final.",
-		path: ["periodTo"],
+	.superRefine((data, ctx) => {
+		if (data.periodTo.getTime() < data.periodFrom.getTime()) {
+			ctx.addIssue({
+				code: z.ZodIssueCode.custom,
+				path: ["periodTo"],
+				message: "Período inválido.",
+			});
+		}
+
+		const seenPeopleByDate = new Map<string, Set<string>>();
+
+		for (const [rowIndex, row] of data.rows.entries()) {
+			const dayKey = row.date.toISOString().slice(0, 10);
+			const used = seenPeopleByDate.get(dayKey) ?? new Set<string>();
+
+			for (const [cellIndex, cell] of row.cells.entries()) {
+				if (cell.assigned.length > cell.required) {
+					ctx.addIssue({
+						code: z.ZodIssueCode.custom,
+						path: ["rows", rowIndex, "cells", cellIndex, "assigned"],
+						message: `Setor ${cell.sectorName} excede vagas.`,
+					});
+				}
+
+				for (const person of cell.assigned) {
+					if (used.has(person.personId)) {
+						ctx.addIssue({
+							code: z.ZodIssueCode.custom,
+							path: ["rows", rowIndex, "cells", cellIndex, "assigned"],
+							message: "Pessoa repetida no mesmo dia.",
+						});
+					}
+					used.add(person.personId);
+				}
+			}
+
+			seenPeopleByDate.set(dayKey, used);
+		}
 	});
 
 export type SaveCleaningListInput = z.infer<typeof saveCleaningListSchema>;

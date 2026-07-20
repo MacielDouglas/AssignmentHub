@@ -1,3 +1,4 @@
+// src/features/cleaning-list/components/person-multi-select.tsx
 "use client";
 
 import { Check, ChevronDown, X } from "lucide-react";
@@ -20,16 +21,14 @@ import {
 } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
 
-type Option = {
-	value: string;
-	label: string;
-};
+type Option = { value: string; label: string };
 
 type Props = {
 	options: Option[];
 	value: string[];
 	onChange: (value: string[]) => void;
 	placeholder?: string;
+	max?: number;
 };
 
 export function PersonMultiSelect({
@@ -37,6 +36,7 @@ export function PersonMultiSelect({
 	value,
 	onChange,
 	placeholder = "Selecione pessoas",
+	max,
 }: Props) {
 	const [open, setOpen] = useState(false);
 
@@ -50,12 +50,8 @@ export function PersonMultiSelect({
 			onChange(value.filter((item) => item !== nextValue));
 			return;
 		}
-
+		if (typeof max === "number" && value.length >= max) return;
 		onChange([...value, nextValue]);
-	}
-
-	function remove(nextValue: string) {
-		onChange(value.filter((item) => item !== nextValue));
 	}
 
 	return (
@@ -71,24 +67,24 @@ export function PersonMultiSelect({
 					>
 						<span className="truncate text-left">
 							{selectedOptions.length > 0
-								? `${selectedOptions.length} pessoa(s) selecionada(s)`
+								? `${selectedOptions.length} pessoa(s)`
 								: placeholder}
 						</span>
-
 						<ChevronDown className="size-4 shrink-0 opacity-60" />
 					</Button>
 				</PopoverTrigger>
 
-				<PopoverContent className="w-var(--radix-popover-trigger-width) p-0">
+				<PopoverContent
+					className="w-var(--radix-popover-trigger-width) p-0"
+					align="start"
+				>
 					<Command>
 						<CommandInput placeholder="Buscar pessoa..." />
 						<CommandList>
 							<CommandEmpty>Nenhuma pessoa encontrada.</CommandEmpty>
-
 							<CommandGroup>
 								{options.map((option) => {
 									const isSelected = value.includes(option.value);
-
 									return (
 										<CommandItem
 											key={option.value}
@@ -114,23 +110,22 @@ export function PersonMultiSelect({
 			{selectedOptions.length > 0 ? (
 				<div className="flex flex-wrap gap-2">
 					{selectedOptions.map((option) => (
-						<Badge key={option.value} variant="secondary" className="gap-1">
+						<Badge
+							key={option.value}
+							variant="secondary"
+							className="gap-1 pr-1"
+						>
 							{option.label}
-							<span
-								role="button"
-								tabIndex={0}
-								className="inline-flex cursor-pointer"
+							<button
+								type="button"
+								className="inline-flex size-5 items-center justify-center rounded-full hover:bg-muted"
 								aria-label={`Remover ${option.label}`}
-								onClick={() => remove(option.value)}
-								onKeyDown={(event) => {
-									if (event.key === "Enter" || event.key === " ") {
-										event.preventDefault();
-										remove(option.value);
-									}
-								}}
+								onClick={() =>
+									onChange(value.filter((item) => item !== option.value))
+								}
 							>
 								<X className="size-3" />
-							</span>
+							</button>
 						</Badge>
 					))}
 				</div>

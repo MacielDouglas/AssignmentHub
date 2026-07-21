@@ -14,13 +14,13 @@ import {
 } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import type { SettingsActionState } from "@/features/settings/actions/settings-action-state";
-import { upsertSpecialEventAction } from "@/features/settings/actions/upsert-special-event-action";
-import type { SpecialEventListItem } from "@/features/settings/components/settings-shell";
+import { upsertSpecialEventAction } from "@/features/settings/meetings/actions/upsert-special-event-action";
+import type { SpecialEventListItem } from "@/features/settings/meetings/components/settings-shell";
 import {
 	SPECIAL_EVENT_META,
 	SPECIAL_EVENT_TYPES,
 	type SpecialEventType,
-} from "@/features/settings/lib/special-event-meta";
+} from "@/features/settings/meetings/lib/special-event-meta";
 
 const initialState: SettingsActionState = { success: false, message: "" };
 

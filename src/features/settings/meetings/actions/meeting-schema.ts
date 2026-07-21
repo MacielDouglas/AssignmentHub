@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { SPECIAL_EVENT_TYPES } from "@/features/settings/lib/special-event-meta";
+import { SPECIAL_EVENT_TYPES } from "@/features/settings/meetings/lib/special-event-meta";
 
 const weekdays = [
 	"MONDAY",

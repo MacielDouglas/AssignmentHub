@@ -7,10 +7,10 @@ import { HiOutlineCalendarDays, HiOutlineClock } from "react-icons/hi2";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { StatusBadge } from "@/components/ui/status-badge";
-import { clearNextYearMeetingsAction } from "@/features/settings/actions/clear-next-year-meetings-action";
-import { saveWeeklyMeetingsAction } from "@/features/settings/actions/save-weekly-meetings-action";
 import type { SettingsActionState } from "@/features/settings/actions/settings-action-state";
-import type { WeeklyMeetingsView } from "@/features/settings/lib/meeting-schedule";
+import { clearNextYearMeetingsAction } from "@/features/settings/meetings/actions/clear-next-year-meetings-action";
+import { saveWeeklyMeetingsAction } from "@/features/settings/meetings/actions/save-weekly-meetings-action";
+import type { WeeklyMeetingsView } from "@/features/settings/meetings/lib/meeting-schedule";
 
 const WEEKDAYS = [
 	{ value: "MONDAY", label: "Segunda-feira" },

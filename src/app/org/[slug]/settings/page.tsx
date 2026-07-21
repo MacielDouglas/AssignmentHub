@@ -1,13 +1,13 @@
 import { headers } from "next/headers";
 import { notFound } from "next/navigation";
-
-import { SettingsShell } from "@/features/settings/components/settings-shell";
-import { loadWeeklyMeetingsView } from "@/features/settings/lib/meeting-schedule";
+import { loadCleaningSettingsView } from "@/features/settings/cleaning/lib/cleaning-settings";
+import { formatDateInput } from "@/features/settings/lib/year-bounds";
+import { SettingsShell } from "@/features/settings/meetings/components/settings-shell";
+import { loadWeeklyMeetingsView } from "@/features/settings/meetings/lib/meeting-schedule";
 import {
 	SPECIAL_EVENT_META,
 	SPECIAL_EVENT_TYPES,
-} from "@/features/settings/lib/special-event-meta";
-import { formatDateInput } from "@/features/settings/lib/year-bounds";
+} from "@/features/settings/meetings/lib/special-event-meta";
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
 
@@ -76,6 +76,8 @@ export default async function SettingsPage({
 		})),
 	);
 
+	const cleaning = await loadCleaningSettingsView(membership.organization.id);
+
 	const activeTab =
 		tab === "cleaning" || tab === "assignments" || tab === "meetings"
 			? tab
@@ -89,6 +91,7 @@ export default async function SettingsPage({
 			activeTab={activeTab}
 			weekly={weekly}
 			specialEvents={specialEvents}
+			cleaning={cleaning}
 		/>
 	);
 }

@@ -1,7 +1,7 @@
-import type { SpecialEventListItem } from "@/features/settings/components/settings-shell";
-import { SpecialEventsSection } from "@/features/settings/components/special-events-section";
-import { WeeklyMeetingsForm } from "@/features/settings/components/weekly-meetings-form";
-import type { WeeklyMeetingsView } from "@/features/settings/lib/meeting-schedule";
+import type { SpecialEventListItem } from "@/features/settings/meetings/components/settings-shell";
+import { SpecialEventsSection } from "@/features/settings/meetings/components/special-events-section";
+import { WeeklyMeetingsForm } from "@/features/settings/meetings/components/weekly-meetings-form";
+import type { WeeklyMeetingsView } from "@/features/settings/meetings/lib/meeting-schedule";
 
 type MeetingsSettingsPanelProps = {
 	organizationSlug: string;

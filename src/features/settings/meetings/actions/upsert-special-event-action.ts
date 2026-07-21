@@ -1,18 +1,18 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { parseUpsertSpecialEvent } from "@/features/settings/actions/meeting-schema";
 import type { SettingsActionState } from "@/features/settings/actions/settings-action-state";
 import { requireSettingsManager } from "@/features/settings/actions/settings-auth";
-import {
-	defaultTitleForType,
-	SPECIAL_EVENT_META,
-} from "@/features/settings/lib/special-event-meta";
 import {
 	endOfCivilYear,
 	parseDateInput,
 	startOfCivilYear,
 } from "@/features/settings/lib/year-bounds";
+import { parseUpsertSpecialEvent } from "@/features/settings/meetings/actions/meeting-schema";
+import {
+	defaultTitleForType,
+	SPECIAL_EVENT_META,
+} from "@/features/settings/meetings/lib/special-event-meta";
 import { db } from "@/lib/db";
 
 export async function upsertSpecialEventAction(

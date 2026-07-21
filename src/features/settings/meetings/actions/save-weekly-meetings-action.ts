@@ -1,7 +1,6 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { parseSaveWeeklyMeetings } from "@/features/settings/actions/meeting-schema";
 import type { SettingsActionState } from "@/features/settings/actions/settings-action-state";
 import { requireSettingsManager } from "@/features/settings/actions/settings-auth";
 import {
@@ -9,6 +8,7 @@ import {
 	startOfCivilYear,
 	todayUtcDateOnly,
 } from "@/features/settings/lib/year-bounds";
+import { parseSaveWeeklyMeetings } from "@/features/settings/meetings/actions/meeting-schema";
 import type { Weekday } from "@/generated/prisma/client";
 import { db } from "@/lib/db";
 

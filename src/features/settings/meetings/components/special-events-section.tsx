@@ -5,10 +5,10 @@ import { useActionState, useState } from "react";
 import { HiOutlineSparkles, HiOutlineTrash } from "react-icons/hi2";
 import { Button } from "@/components/ui/button";
 import { StatusBadge } from "@/components/ui/status-badge";
-import { deleteSpecialEventOccurrenceAction } from "@/features/settings/actions/delete-special-event-occurrence-action";
 import type { SettingsActionState } from "@/features/settings/actions/settings-action-state";
-import type { SpecialEventListItem } from "@/features/settings/components/settings-shell";
-import { SpecialEventFormDialog } from "@/features/settings/components/special-event-form-dialog";
+import { deleteSpecialEventOccurrenceAction } from "@/features/settings/meetings/actions/delete-special-event-occurrence-action";
+import type { SpecialEventListItem } from "@/features/settings/meetings/components/settings-shell";
+import { SpecialEventFormDialog } from "@/features/settings/meetings/components/special-event-form-dialog";
 
 // import { SPECIAL_EVENT_META } from "@/features/settings/lib/special-event-meta";
 

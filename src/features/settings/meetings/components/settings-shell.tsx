@@ -1,9 +1,10 @@
 import { HiOutlineCog6Tooth } from "react-icons/hi2";
-
-import { MeetingsSettingsPanel } from "@/features/settings/components/meetings-settings-panel";
-import { SettingsTabs } from "@/features/settings/components/settings-tabs";
-import type { WeeklyMeetingsView } from "@/features/settings/lib/meeting-schedule";
-import type { SpecialEventType } from "@/features/settings/lib/special-event-meta";
+import type { CleaningSettingsView } from "@/features/settings/cleaning/lib/cleaning-settings";
+import { MeetingsSettingsPanel } from "@/features/settings/meetings/components/meetings-settings-panel";
+import { SettingsTabs } from "@/features/settings/meetings/components/settings-tabs";
+import type { WeeklyMeetingsView } from "@/features/settings/meetings/lib/meeting-schedule";
+import type { SpecialEventType } from "@/features/settings/meetings/lib/special-event-meta";
+import { CleaningSettingsPanel } from "../../cleaning/components/cleaning-settings-panel";
 
 export type SpecialEventListItem = {
 	id: string;
@@ -24,6 +25,7 @@ type SettingsShellProps = {
 	activeTab: "meetings" | "cleaning" | "assignments";
 	weekly: WeeklyMeetingsView;
 	specialEvents: SpecialEventListItem[];
+	cleaning: CleaningSettingsView;
 };
 
 export function SettingsShell({
@@ -32,6 +34,7 @@ export function SettingsShell({
 	canEdit,
 	activeTab,
 	weekly,
+	cleaning,
 	specialEvents,
 }: SettingsShellProps) {
 	return (
@@ -67,14 +70,11 @@ export function SettingsShell({
 			) : null}
 
 			{activeTab === "cleaning" ? (
-				<section className="rounded-[28px] border border-dashed border-slate-300 bg-slate-50 p-8 text-center dark:border-slate-700 dark:bg-slate-900">
-					<h2 className="text-base font-semibold text-slate-900 dark:text-slate-50">
-						Configurações de limpeza
-					</h2>
-					<p className="mt-2 text-sm text-slate-500 dark:text-slate-400">
-						Em breve. Esta aba usará as mesmas reuniões configuradas aqui.
-					</p>
-				</section>
+				<CleaningSettingsPanel
+					organizationSlug={organizationSlug}
+					canEdit={canEdit}
+					cleaning={cleaning}
+				/>
 			) : null}
 
 			{activeTab === "assignments" ? (

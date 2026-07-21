@@ -539,6 +539,7 @@ model CleaningAssignmentSectorAssignment {
   position         Int      @default(0)
   createdAt        DateTime @default(now())
   updatedAt        DateTime @updatedAt
+  isManual         Boolean  @default(false)
 
   assignmentDate CleaningAssignmentDate @relation(fields: [assignmentDateId], references: [id], onDelete: Cascade)
   sector         CleaningSector         @relation(fields: [sectorId], references: [id], onDelete: Restrict)
@@ -546,6 +547,7 @@ model CleaningAssignmentSectorAssignment {
   family         Family?                @relation(fields: [familyId], references: [id], onDelete: SetNull)
   group          Group?                 @relation(fields: [groupId], references: [id], onDelete: SetNull)
 
+  @@unique([assignmentDateId, sectorId, personId])
   @@index([assignmentDateId, sectorId])
   @@index([personId])
   @@index([familyId])

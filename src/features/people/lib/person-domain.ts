@@ -228,8 +228,11 @@ async function dissolveFamily(tx: Tx, familyId: string) {
 async function syncFamilyMarriage(tx: Tx, familyId: string | null) {
 	if (!familyId) return;
 
+	// Inclui chefe (headedFamily) e membros (familyId)
 	const members = await tx.person.findMany({
-		where: { familyId },
+		where: {
+			OR: [{ familyId }, { headedFamily: { id: familyId } }],
+		},
 		orderBy: { name: "asc" },
 		select: {
 			id: true,
@@ -240,11 +243,32 @@ async function syncFamilyMarriage(tx: Tx, familyId: string | null) {
 		},
 	});
 
-	const eligible = members.filter(
-		(person) => !person.young && person.isMarried,
-	);
+	// Mantém o chefe com familyId preenchido (evita sumir da query)
+	await tx.person.updateMany({
+		where: {
+			headedFamily: { id: familyId },
+			OR: [{ familyId: null }, { familyId: { not: familyId } }],
+		},
+		data: { familyId },
+	});
 
-	if (eligible.length !== 2) {
+	const adults = members.filter((person) => !person.young);
+
+	// Quem o formulário marcou como casado (só adultos contam)
+	const marriedMarked = adults.filter((person) => person.isMarried);
+
+	const marriedMales = marriedMarked.filter((p) => p.sex === "MALE");
+	const marriedFemales = marriedMarked.filter((p) => p.sex === "FEMALE");
+
+	// Não pode haver dois casados do mesmo sexo
+	if (marriedMales.length > 1 || marriedFemales.length > 1) {
+		throw new Error(
+			"Não pode haver duas pessoas do mesmo sexo casadas na mesma família.",
+		);
+	}
+
+	// Ninguém marcado → limpa qualquer vínculo residual
+	if (marriedMarked.length === 0) {
 		for (const person of members) {
 			if (person.isMarried || person.spouseId) {
 				await tx.person.update({
@@ -256,37 +280,66 @@ async function syncFamilyMarriage(tx: Tx, familyId: string | null) {
 		return;
 	}
 
-	const [first, second] = eligible;
+	// Só um lado promovido (1 homem OU 1 mulher) → mantém casado sem cônjuge ainda
+	if (marriedMarked.length === 1) {
+		const only = marriedMarked[0];
 
-	if (first.sex === second.sex) {
-		throw new Error(
-			"Uma família só pode ter duas pessoas casadas, adultas e de sexos diferentes.",
-		);
+		for (const person of members) {
+			if (person.id === only.id) {
+				// Garante flag; spouse ainda null até o par ser marcado
+				if (!person.isMarried || person.spouseId) {
+					await tx.person.update({
+						where: { id: person.id },
+						data: { isMarried: true, spouseId: null },
+					});
+				}
+				continue;
+			}
+
+			// Qualquer outro não pode ficar casado / com spouse
+			if (person.isMarried || person.spouseId) {
+				await tx.person.update({
+					where: { id: person.id },
+					data: { isMarried: false, spouseId: null },
+				});
+			}
+		}
+		return;
 	}
 
-	const invalidOthers = members.filter(
-		(person) =>
-			person.id !== first.id &&
-			person.id !== second.id &&
-			(person.isMarried || person.spouseId),
-	);
+	// Dois marcados: obrigatoriamente 1 homem + 1 mulher
+	if (marriedMales.length === 1 && marriedFemales.length === 1) {
+		const husband = marriedMales[0];
+		const wife = marriedFemales[0];
 
-	for (const person of invalidOthers) {
+		// Limpa terceiros
+		for (const person of members) {
+			if (person.id !== husband.id && person.id !== wife.id) {
+				if (person.isMarried || person.spouseId) {
+					await tx.person.update({
+						where: { id: person.id },
+						data: { isMarried: false, spouseId: null },
+					});
+				}
+			}
+		}
+
 		await tx.person.update({
-			where: { id: person.id },
-			data: { isMarried: false, spouseId: null },
+			where: { id: husband.id },
+			data: { isMarried: true, spouseId: wife.id },
 		});
+
+		await tx.person.update({
+			where: { id: wife.id },
+			data: { isMarried: true, spouseId: husband.id },
+		});
+		return;
 	}
 
-	await tx.person.update({
-		where: { id: first.id },
-		data: { isMarried: true, spouseId: second.id },
-	});
-
-	await tx.person.update({
-		where: { id: second.id },
-		data: { isMarried: true, spouseId: first.id },
-	});
+	// Estado inválido residual
+	throw new Error(
+		"Estado de casamento inválido na família. Marque no máximo um homem e uma mulher adultos como casados.",
+	);
 }
 
 function buildPersonData(

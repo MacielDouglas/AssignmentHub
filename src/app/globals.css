@@ -172,3 +172,13 @@
     @apply transition-colors duration-200;
   }
 }
+
+@media print {
+  nav, header a, .print\:hidden {
+    display: none !important;
+  }
+  main {
+    max-width: none !important;
+    padding: 0 !important;
+  }
+}

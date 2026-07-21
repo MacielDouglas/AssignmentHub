@@ -1,6 +1,7 @@
 "use client";
 
 import {
+	BrushCleaning,
 	Building2,
 	FolderKanban,
 	Home,
@@ -36,6 +37,11 @@ const navItems = (organizationSlug: string) => [
 		href: `/org/${organizationSlug}/families`,
 		label: "Famílias",
 		icon: UsersRound,
+	},
+	{
+		href: `/org/${organizationSlug}/cleaning`,
+		label: "Designação Limpeza",
+		icon: BrushCleaning,
 	},
 	{
 		href: `/org/${organizationSlug}/outlines`,

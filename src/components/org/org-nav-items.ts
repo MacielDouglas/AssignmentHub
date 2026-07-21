@@ -1,5 +1,6 @@
 import type { LucideIcon } from "lucide-react";
 import {
+	BrushCleaning,
 	FolderKanban,
 	Home,
 	ScrollText,
@@ -37,6 +38,11 @@ export function getOrgNavItems(slug: string): OrgNavItem[] {
 			href: `/org/${slug}/families`,
 			label: "Famílias",
 			icon: UsersRound,
+		},
+		{
+			href: `/org/${slug}/cleaning`,
+			label: "Designação Limpeza",
+			icon: BrushCleaning,
 		},
 		{
 			href: `/org/${slug}/outlines`,

@@ -6,7 +6,9 @@ import { HiOutlinePrinter, HiOutlineUser } from "react-icons/hi2";
 import { Button } from "@/components/ui/button";
 import { StatusBadge } from "@/components/ui/status-badge";
 import { getSavedListDetail } from "@/features/cleaning/actions/load-saved-list";
+import { DownloadCleaningPdfButton } from "@/features/cleaning/components/export/download-cleaning-pdf-button";
 import type { CleaningPageData } from "@/features/cleaning/lib/cleaning-page-data";
+import type { SavedListDetailForPdf } from "@/features/cleaning/lib/cleaning-pdf-types";
 import { CLEANING_TYPE_LABEL } from "@/features/settings/cleaning/lib/cleaning-defaults";
 import type { CleaningType } from "@/generated/prisma/client";
 
@@ -60,8 +62,34 @@ export function CleaningBoard({ data }: Props) {
 		};
 	}, [effectiveSelectedId, data.organizationId]);
 
+	// Detalhe só vale se bater com a seleção atual (sem setState no effect)
 	const shownDetail =
 		effectiveSelectedId && detailForId === effectiveSelectedId ? detail : null;
+
+	const pdfList: SavedListDetailForPdf | null = shownDetail
+		? {
+				id: shownDetail.id,
+				cleaningType: shownDetail.cleaningType,
+				periodFrom: shownDetail.periodFrom,
+				periodTo: shownDetail.periodTo,
+				days: shownDetail.days.map((day) => ({
+					date: day.date,
+					assignments: day.assignments.map((a) => ({
+						id: a.id,
+						sectorId: a.sectorId,
+						sectorName: a.sectorName,
+						sectorDescription: a.sectorDescription,
+						sortOrder: a.sortOrder ?? 0,
+						personId: a.personId,
+						personName: a.personName,
+						position: a.position,
+						isManual: a.isManual,
+						familyId: a.familyId,
+						groupId: a.groupId,
+					})),
+				})),
+			}
+		: null;
 
 	const myAssignments = useMemo(() => {
 		if (!shownDetail || !data.currentPersonId) return [];
@@ -142,7 +170,12 @@ export function CleaningBoard({ data }: Props) {
 				</section>
 			) : null}
 
-			<div className="flex justify-end print:hidden">
+			<div className="flex flex-wrap justify-end gap-2 print:hidden">
+				<DownloadCleaningPdfButton
+					organizationName={data.organizationName}
+					savedList={pdfList}
+					label="Baixar PDF"
+				/>
 				<Button
 					type="button"
 					variant="outline"

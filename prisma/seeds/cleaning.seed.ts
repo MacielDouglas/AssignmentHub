@@ -22,7 +22,7 @@ const meetingSectors: SectorSeed[] = [
 	{
 		name: "Limpar banheiro",
 		description:
-			"Limpe o vaso sanitário, o mictório e a parede ao redor com desinfetante. Recolha o lixo. Passe um pano com desinfetante no chão. Limpe os espelhos, pias e torneiras.",
+			"Limpe o vaso sanitário, o mictório (masculino) e a parede ao redor com desinfetante. Recolha o lixo. Passe um pano com desinfetante no chão. Limpe os espelhos, pias e torneiras.",
 		peopleRequired: 2,
 		sortOrder: 2,
 	},

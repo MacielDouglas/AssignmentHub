@@ -26,6 +26,7 @@ import {
 } from "@/features/cleaning/lib/session-dates";
 import { CLEANING_TYPE_LABEL } from "@/features/settings/cleaning/lib/cleaning-defaults";
 import type { CleaningType, Weekday } from "@/generated/prisma/client";
+import { DownloadCleaningPdfButton } from "../export/download-cleaning-pdf-button";
 
 type Props = {
 	data: CleaningPageData;
@@ -226,6 +227,13 @@ export function CleaningGeneratePanel({
 						>
 							Descartar
 						</Button>
+
+						<DownloadCleaningPdfButton
+							organizationName={data.organizationName}
+							draft={draft}
+							label="Baixar PDF"
+						/>
+
 						<Button
 							type="button"
 							disabled={pending}

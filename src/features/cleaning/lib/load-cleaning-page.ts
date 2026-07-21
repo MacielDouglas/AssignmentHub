@@ -23,6 +23,7 @@ function dateToIsoOrNull(d: Date | null | undefined): string | null {
 export async function loadCleaningPageData(args: {
 	organizationId: string;
 	organizationSlug: string;
+	organizationName: string;
 	canManage: boolean;
 	userId: string;
 }): Promise<CleaningPageData> {
@@ -82,7 +83,6 @@ export async function loadCleaningPageData(args: {
 		name: p.name,
 		sex: p.sex,
 		young: p.young,
-		// chefe com familyId null ainda conta na família
 		familyId: p.familyId ?? p.headedFamily?.id ?? null,
 		groupId: p.groupId,
 		spouseId: p.spouseId,
@@ -111,6 +111,7 @@ export async function loadCleaningPageData(args: {
 	return {
 		organizationId: args.organizationId,
 		organizationSlug: args.organizationSlug,
+		organizationName: args.organizationName || "Congregação",
 		canManage: args.canManage,
 		currentPersonId: membershipUser?.personId ?? null,
 		cleaningSettings,

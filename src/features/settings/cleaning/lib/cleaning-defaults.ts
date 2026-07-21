@@ -18,6 +18,9 @@ const MEETING_TASK_FLOOR =
 const MEETING_TASK_BATH =
 	"Limpe o vaso sanitário, o mictório e a parede ao redor com desinfetante. Recolha o lixo. Passe um pano com desinfetante no chão. Limpe os espelhos com um pano umedecido com água e detergente. Limpe as pias e torneiras com um pano umedecido e detergente.";
 
+const MEETING_TASK_BATH_FEMALE =
+	"Limpe o vaso sanitário e a parede ao redor com desinfetante. Recolha o lixo. Passe um pano com desinfetante no chão. Limpe os espelhos com um pano umedecido com água e detergente. Limpe as pias e torneiras com um pano umedecido e detergente.";
+
 export const DEFAULT_SECTORS: Record<CleaningType, DefaultSector[]> = {
 	MEETING: [
 		{
@@ -46,7 +49,7 @@ export const DEFAULT_SECTORS: Record<CleaningType, DefaultSector[]> = {
 		},
 		{
 			name: "Banheiro Feminino",
-			description: MEETING_TASK_BATH,
+			description: MEETING_TASK_BATH_FEMALE,
 			peopleRequired: 1,
 			allowYoung: false,
 			targetSex: "FEMALE",
@@ -188,7 +191,7 @@ export const DEFAULT_SECTORS: Record<CleaningType, DefaultSector[]> = {
 		{
 			name: "Banheiros",
 			description:
-				"Limpe os revestimentos das paredes e divisórias dos banheiros com pano umedecido e detergente. Limpe as divisórias próximas ao vaso sanitário e mictório com um pano umedecido e desinfetante.",
+				"Limpe os revestimentos das paredes e divisórias dos banheiros com pano umedecido e detergente. Limpe as divisórias próximas ao vaso sanitário e mictório (masculino) com um pano umedecido e desinfetante.",
 			peopleRequired: null,
 			allowYoung: true,
 			targetSex: null,

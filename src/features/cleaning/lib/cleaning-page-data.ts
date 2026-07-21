@@ -16,6 +16,8 @@ export type SavedListSummary = {
 export type CleaningPageData = {
 	organizationId: string;
 	organizationSlug: string;
+	/** Nome exibido no PDF e cabeçalhos */
+	organizationName: string;
 	canManage: boolean;
 	currentPersonId: string | null;
 	cleaningSettings: {

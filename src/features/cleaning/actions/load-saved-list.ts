@@ -46,6 +46,7 @@ export async function getSavedListDetail(
 				sectorId: a.sector.id,
 				sectorName: a.sector.name,
 				sectorDescription: a.sector.description,
+				sortOrder: a.sector.sortOrder,
 				personId: a.person.id,
 				personName: a.person.name,
 				position: a.position,

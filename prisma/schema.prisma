@@ -554,3 +554,111 @@ model CleaningAssignmentSectorAssignment {
   @@index([groupId])
   @@index([sectorId, position])
 }
+
+// =============================================================================
+// Conteúdo das reuniões (catálogo global — compartilhado entre organizações)
+// =============================================================================
+
+enum ContentLocale {
+  pt
+  es
+}
+
+enum ContentImportSourceType {
+  SONGBOOK
+  PUBLIC_TALKS
+  WATCHTOWER
+  MWB
+}
+
+enum ContentImportJobStatus {
+  PENDING
+  PROCESSING
+  AWAITING_REVIEW
+  COMMITTED
+  FAILED
+}
+
+/// Cântico (compartilhado VM + fim de semana). Número + locale únicos.
+model Song {
+  id        String        @id @default(uuid())
+  number    Int
+  title     String
+  locale    ContentLocale
+  createdAt DateTime      @default(now())
+  updatedAt DateTime      @updatedAt
+
+  watchtowerOpening WatchtowerStudy[] @relation("WatchtowerOpeningSong")
+  watchtowerClosing WatchtowerStudy[] @relation("WatchtowerClosingSong")
+
+  @@unique([number, locale])
+  @@index([locale])
+  @@index([locale, number])
+  @@map("song")
+}
+
+/// Artigo / semana de estudo de A Sentinela (reunião de fim de semana)
+model WatchtowerStudy {
+  id             String        @id @default(uuid())
+  locale         ContentLocale
+  /// Segunda-feira da semana de estudo (somente data)
+  weekStart      DateTime      @db.Date
+  /// Domingo da semana de estudo (somente data)
+  weekEnd        DateTime      @db.Date
+  /// Rótulo original, ex: "2-8 de noviembre de 2026"
+  weekLabelRaw   String?
+  title          String
+  openingSongNum Int
+  closingSongNum Int
+  /// Hex, ex: "#113366"
+  highlightColor String?
+  /// Código da revista, ex: "w26.09-S"
+  issueCode      String?
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+
+  openingSongId String?
+  closingSongId String?
+  openingSong   Song?   @relation("WatchtowerOpeningSong", fields: [openingSongId], references: [id], onDelete: SetNull)
+  closingSong   Song?   @relation("WatchtowerClosingSong", fields: [closingSongId], references: [id], onDelete: SetNull)
+
+  @@unique([weekStart, locale])
+  @@index([locale, weekStart])
+  @@index([issueCode])
+  @@map("watchtower_study")
+}
+
+model ContentImportJob {
+  id            String                  @id @default(uuid())
+  sourceType    ContentImportSourceType
+  locale        ContentLocale
+  status        ContentImportJobStatus  @default(PENDING)
+  /// JSON extraído / editado na revisão (antes do commit)
+  extractedJson Json?
+  aiNotes       String?
+  errorMessage  String?
+  createdAt     DateTime                @default(now())
+  updatedAt     DateTime                @updatedAt
+  committedAt   DateTime?
+
+  files ContentImportFile[]
+
+  @@index([sourceType, status, createdAt])
+  @@index([locale, sourceType])
+  @@map("content_import_job")
+}
+
+model ContentImportFile {
+  id         String   @id @default(uuid())
+  jobId      String
+  fileName   String
+  mimeType   String
+  storageKey String
+  sizeBytes  Int
+  createdAt  DateTime @default(now())
+
+  job ContentImportJob @relation(fields: [jobId], references: [id], onDelete: Cascade)
+
+  @@index([jobId])
+  @@map("content_import_file")
+}

@@ -1,0 +1,123 @@
+{
+	"Common": {
+		"appName": "AssignmentHub",
+		"loading": "Carregando…",
+		"save": "Salvar",
+		"cancel": "Cancelar",
+		"edit": "Editar",
+		"delete": "Excluir",
+		"back": "Voltar",
+		"actions": "Ações",
+		"language": "Idioma",
+		"errorGeneric": "Algo deu errado. Tente novamente."
+	},
+	"LocaleSwitcher": {
+		"label": "Idioma",
+		"pt": "Português",
+		"es": "Español"
+	},
+	"CleaningShell": {
+		"eyebrow": "Designações de limpeza",
+		"title": "Limpeza do Salão",
+		"subtitleBase": "Consulte as designações publicadas",
+		"subtitleCanGenerate": " ou gere uma nova tabela com rodízio automático.",
+		"subtitleMemberOnly": ".",
+		"tabCreate": "Criar tabela",
+		"tabBoard": "Tabela de limpeza"
+	},
+	"CleaningTypes": {
+		"MEETING": "Limpeza de reunião",
+		"WEEKLY": "Limpeza semanal",
+		"GENERAL": "Limpeza geral",
+		"fallback": "Limpeza"
+	},
+	"CleaningGenerate": {
+		"preset4w": "Próximas 4 semanas",
+		"presetMonth": "Próximo mês",
+		"presetYear": "Até fim do ano",
+		"previewBanner": "Pré-visualização — edite à vontade e salve quando estiver pronta.",
+		"discard": "Descartar",
+		"downloadPdf": "Baixar PDF",
+		"saving": "Salvando...",
+		"saveTable": "Salvar tabela",
+		"typeSection": "Tipo de limpeza",
+		"sectorsMode": "{count} setores · modo {mode}",
+		"configureInSettings": "Configure e ative em Configurações → Limpeza",
+		"statusOn": "Ativa",
+		"statusOff": "Off",
+		"period": "Período",
+		"start": "Início",
+		"end": "Fim",
+		"familyTitle": "Família no mesmo dia",
+		"familyBody": "Todos os membros da mesma família são designados no mesmo dia. Vagas restantes são preenchidas por pessoas sem família. Não há regra de casal no mesmo setor — apenas sexo, jovem e rotatividade.",
+		"generalDatesTitle": "Datas da limpeza geral",
+		"generalDatesHint": "Marque as que entram nesta tabela (vazio = todas no período).",
+		"eligibleSummary": "{people} pessoas elegíveis · {sectors} setores",
+		"createTable": "Criar tabela de limpeza",
+		"errTypeDisabled": "Este tipo está desativado nas configurações.",
+		"errNoSectors": "Nenhum setor ativo. Configure os setores primeiro.",
+		"errMaxRange": "O período deve ter no máximo 1 ano.",
+		"errNoPeople": "Nenhuma pessoa elegível (flag limpeza).",
+		"errNoMeetingDays": "Configure os dias de reunião em Configurações.",
+		"errNoWeeklyDays": "Configure os dias da limpeza semanal.",
+		"errNoDates": "Nenhuma data de limpeza neste período."
+	},
+	"CleaningBoard": {
+		"filterAll": "Todas",
+		"emptyPublished": "Nenhuma tabela publicada ainda.",
+		"myAssignments": "Minhas designações",
+		"downloadPdf": "Baixar PDF",
+		"print": "Imprimir",
+		"loading": "Carregando…",
+		"statusPublished": "Publicada"
+	},
+	"CleaningEditor": {
+		"hide": "Ocultar",
+		"noAssignment": "Sem designação",
+		"manualSuffix": " · manual",
+		"emDash": "—"
+	},
+	"CleaningPdf": {
+		"downloadPdf": "Baixar PDF",
+		"generating": "Gerando...",
+		"errNoTable": "Nenhuma tabela selecionada.",
+		"errGenerate": "Falha ao gerar PDF.",
+		"orgFallback": "Congregação",
+		"sectorFallback": "Setor",
+		"titleTemplate": "Designação de Limpeza — {type}",
+		"titleDefault": "Designação de Limpeza",
+		"periodLine": "Período: {from} a {to}",
+		"colDate": "Data",
+		"tasksHeading": "Descrição das tarefas",
+		"noDescription": "Sem descrição cadastrada.",
+		"errNoSectors": "Nenhum setor para exportar no PDF.",
+		"errNoDays": "Nenhuma data para exportar no PDF.",
+		"weekday0": "Domingo",
+		"weekday1": "Segunda-feira",
+		"weekday2": "Terça-feira",
+		"weekday3": "Quarta-feira",
+		"weekday4": "Quinta-feira",
+		"weekday5": "Sexta-feira",
+		"weekday6": "Sábado",
+		"emptyCell": "—"
+	},
+	"CleaningSave": {
+		"invalidPayload": "Payload inválido.",
+		"invalidData": "Dados da tabela inválidos.",
+		"invalidPeriod": "Período inválido.",
+		"overlap": "Já existe uma tabela salva neste período para este tipo. Ajuste as datas ou edite a tabela existente.",
+		"success": "Tabela de limpeza salva.",
+		"failed": "Não foi possível salvar a tabela de limpeza."
+	},
+	"CleaningSession": {
+		"meetingWithTime": "Reunião {time}",
+		"meeting": "Reunião",
+		"weekly": "Limpeza semanal",
+		"general": "Limpeza geral"
+	},
+	"CleaningAuth": {
+		"login": "Faça login.",
+		"orgNotFound": "Organização não encontrada.",
+		"notMember": "Você não pertence a esta organização."
+	}
+}

@@ -1,5 +1,6 @@
 "use client";
 
+import { useTranslations } from "next-intl";
 import { useEffect, useMemo, useState, useTransition } from "react";
 import { HiOutlinePrinter, HiOutlineUser } from "react-icons/hi2";
 
@@ -9,7 +10,6 @@ import { getSavedListDetail } from "@/features/cleaning/actions/load-saved-list"
 import { DownloadCleaningPdfButton } from "@/features/cleaning/components/export/download-cleaning-pdf-button";
 import type { CleaningPageData } from "@/features/cleaning/lib/cleaning-page-data";
 import type { SavedListDetailForPdf } from "@/features/cleaning/lib/cleaning-pdf-types";
-import { CLEANING_TYPE_LABEL } from "@/features/settings/cleaning/lib/cleaning-defaults";
 import type { CleaningType } from "@/generated/prisma/client";
 
 type Detail = NonNullable<Awaited<ReturnType<typeof getSavedListDetail>>>;
@@ -24,6 +24,9 @@ function formatBr(dateKey: string) {
 }
 
 export function CleaningBoard({ data }: Props) {
+	const t = useTranslations("CleaningBoard");
+	const tTypes = useTranslations("CleaningTypes");
+
 	const [typeFilter, setTypeFilter] = useState<CleaningType | "ALL">("ALL");
 	const [selectedId, setSelectedId] = useState<string | null>(
 		data.savedLists[0]?.id ?? null,
@@ -62,7 +65,6 @@ export function CleaningBoard({ data }: Props) {
 		};
 	}, [effectiveSelectedId, data.organizationId]);
 
-	// Detalhe só vale se bater com a seleção atual (sem setState no effect)
 	const shownDetail =
 		effectiveSelectedId && detailForId === effectiveSelectedId ? detail : null;
 
@@ -107,25 +109,25 @@ export function CleaningBoard({ data }: Props) {
 	return (
 		<div className="space-y-4">
 			<div className="flex flex-wrap gap-2 print:hidden">
-				{(["ALL", "MEETING", "WEEKLY", "GENERAL"] as const).map((t) => (
+				{(["ALL", "MEETING", "WEEKLY", "GENERAL"] as const).map((key) => (
 					<button
-						key={t}
+						key={key}
 						type="button"
-						onClick={() => setTypeFilter(t)}
+						onClick={() => setTypeFilter(key)}
 						className={`rounded-full px-3 py-1.5 text-xs font-medium ${
-							typeFilter === t
+							typeFilter === key
 								? "bg-blue-600 text-white"
 								: "border border-slate-200 dark:border-slate-700"
 						}`}
 					>
-						{t === "ALL" ? "Todas" : CLEANING_TYPE_LABEL[t]}
+						{key === "ALL" ? t("filterAll") : tTypes(key)}
 					</button>
 				))}
 			</div>
 
 			{lists.length === 0 ? (
 				<div className="rounded-[24px] border border-dashed border-slate-200 p-8 text-center text-sm text-slate-500 dark:border-slate-800">
-					Nenhuma tabela publicada ainda.
+					{t("emptyPublished")}
 				</div>
 			) : (
 				<div className="flex gap-2 overflow-x-auto pb-1 print:hidden">
@@ -142,9 +144,7 @@ export function CleaningBoard({ data }: Props) {
 										: "border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-950"
 								}`}
 							>
-								<p className="font-semibold">
-									{CLEANING_TYPE_LABEL[l.cleaningType]}
-								</p>
+								<p className="font-semibold">{tTypes(l.cleaningType)}</p>
 								<p className="text-slate-500">
 									{formatBr(l.periodFrom)} – {formatBr(l.periodTo)}
 								</p>
@@ -158,7 +158,7 @@ export function CleaningBoard({ data }: Props) {
 				<section className="rounded-[22px] border border-violet-200 bg-violet-50 p-4 dark:border-violet-900 dark:bg-violet-950/30 print:hidden">
 					<div className="mb-2 flex items-center gap-2 text-sm font-semibold text-violet-900 dark:text-violet-100">
 						<HiOutlineUser className="h-4 w-4" />
-						Minhas designações
+						{t("myAssignments")}
 					</div>
 					<ul className="space-y-1 text-sm text-violet-900 dark:text-violet-100">
 						{myAssignments.map((a) => (
@@ -174,7 +174,6 @@ export function CleaningBoard({ data }: Props) {
 				<DownloadCleaningPdfButton
 					organizationName={data.organizationName}
 					savedList={pdfList}
-					label="Baixar PDF"
 				/>
 				<Button
 					type="button"
@@ -183,19 +182,19 @@ export function CleaningBoard({ data }: Props) {
 					onClick={() => window.print()}
 				>
 					<HiOutlinePrinter className="mr-2 h-4 w-4" />
-					Imprimir
+					{t("print")}
 				</Button>
 			</div>
 
 			{isPending && !shownDetail ? (
-				<p className="text-sm text-slate-500">Carregando…</p>
+				<p className="text-sm text-slate-500">{t("loading")}</p>
 			) : shownDetail ? (
 				<div className="space-y-3 print:space-y-2">
 					<div className="flex flex-wrap items-center gap-2">
 						<h2 className="text-lg font-semibold">
-							{CLEANING_TYPE_LABEL[shownDetail.cleaningType]}
+							{tTypes(shownDetail.cleaningType)}
 						</h2>
-						<StatusBadge label="Publicada" tone="emerald" />
+						<StatusBadge label={t("statusPublished")} tone="emerald" />
 					</div>
 
 					{shownDetail.days.map((day) => {
@@ -239,7 +238,7 @@ export function CleaningBoard({ data }: Props) {
 					})}
 				</div>
 			) : lists.length > 0 ? (
-				<p className="text-sm text-slate-500">Carregando…</p>
+				<p className="text-sm text-slate-500">{t("loading")}</p>
 			) : null}
 		</div>
 	);

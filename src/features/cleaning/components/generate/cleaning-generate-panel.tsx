@@ -1,6 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
+import { useLocale, useTranslations } from "next-intl";
 import { useMemo, useState, useTransition } from "react";
 import {
 	HiOutlineCalendarDays,
@@ -24,7 +25,6 @@ import {
 	toDateKey,
 	weeklySessionDates,
 } from "@/features/cleaning/lib/session-dates";
-import { CLEANING_TYPE_LABEL } from "@/features/settings/cleaning/lib/cleaning-defaults";
 import type { CleaningType, Weekday } from "@/generated/prisma/client";
 import { DownloadCleaningPdfButton } from "../export/download-cleaning-pdf-button";
 
@@ -35,11 +35,7 @@ type Props = {
 	onSaved: () => void;
 };
 
-const PRESETS = [
-	{ id: "4w", label: "Próximas 4 semanas" },
-	{ id: "month", label: "Próximo mês" },
-	{ id: "year", label: "Até fim do ano" },
-] as const;
+const PRESET_IDS = ["4w", "month", "year"] as const;
 
 export function CleaningGeneratePanel({
 	data,
@@ -47,7 +43,12 @@ export function CleaningGeneratePanel({
 	onDraftChange,
 	onSaved,
 }: Props) {
+	const t = useTranslations("CleaningGenerate");
+	const tTypes = useTranslations("CleaningTypes");
+	const tSession = useTranslations("CleaningSession");
+	const locale = useLocale();
 	const router = useRouter();
+
 	const [type, setType] = useState<CleaningType>("MEETING");
 	const [from, setFrom] = useState(() => toDateKey(new Date()));
 	const [to, setTo] = useState(() => {
@@ -60,8 +61,7 @@ export function CleaningGeneratePanel({
 	const [saveMsg, setSaveMsg] = useState<string | null>(null);
 	const [pending, startTransition] = useTransition();
 
-	const typeView = data.cleaningSettings.types.find((t) => t.type === type);
-
+	const typeView = data.cleaningSettings.types.find((x) => x.type === type);
 	const enabled = Boolean(typeView?.enabled);
 	const sectors = useMemo(
 		() => (typeView ? sectorsFromConfig(typeView) : []),
@@ -73,7 +73,7 @@ export function CleaningGeneratePanel({
 		time: s.time,
 	}));
 
-	const applyPreset = (id: string) => {
+	const applyPreset = (id: (typeof PRESET_IDS)[number]) => {
 		const start = new Date();
 		const fromKey = toDateKey(start);
 		if (id === "4w") {
@@ -89,11 +89,9 @@ export function CleaningGeneratePanel({
 			setTo(toDateKey(end));
 			return;
 		}
-		if (id === "year") {
-			const end = new Date(start.getFullYear(), 11, 31);
-			setFrom(fromKey);
-			setTo(toDateKey(end));
-		}
+		const end = new Date(start.getFullYear(), 11, 31);
+		setFrom(fromKey);
+		setTo(toDateKey(end));
 	};
 
 	const generalOptions = typeView?.dates ?? [];
@@ -103,19 +101,19 @@ export function CleaningGeneratePanel({
 		setSaveMsg(null);
 
 		if (!enabled) {
-			setError("Este tipo está desativado nas configurações.");
+			setError(t("errTypeDisabled"));
 			return;
 		}
 		if (sectors.length === 0) {
-			setError("Nenhum setor ativo. Configure os setores primeiro.");
+			setError(t("errNoSectors"));
 			return;
 		}
 		if (!maxRangeOk(from, to)) {
-			setError("O período deve ter no máximo 1 ano.");
+			setError(t("errMaxRange"));
 			return;
 		}
 		if (data.people.length === 0) {
-			setError("Nenhuma pessoa elegível (flag limpeza).");
+			setError(t("errNoPeople"));
 			return;
 		}
 
@@ -123,17 +121,25 @@ export function CleaningGeneratePanel({
 
 		if (type === "MEETING") {
 			if (meetingSlots.length === 0) {
-				setError("Configure os dias de reunião em Configurações.");
+				setError(t("errNoMeetingDays"));
 				return;
 			}
-			sessionDates = meetingSessionDates(from, to, meetingSlots);
+			sessionDates = meetingSessionDates(from, to, meetingSlots).map((s) => ({
+				date: s.date,
+				label: s.time
+					? tSession("meetingWithTime", { time: s.time })
+					: tSession("meeting"),
+			}));
 		} else if (type === "WEEKLY") {
 			const wds = (typeView?.weekdays ?? []) as Weekday[];
 			if (wds.length === 0) {
-				setError("Configure os dias da limpeza semanal.");
+				setError(t("errNoWeeklyDays"));
 				return;
 			}
-			sessionDates = weeklySessionDates(from, to, wds);
+			sessionDates = weeklySessionDates(from, to, wds).map((s) => ({
+				date: s.date,
+				label: tSession("weekly"),
+			}));
 		} else {
 			const selected =
 				selectedGeneral.length > 0
@@ -142,11 +148,16 @@ export function CleaningGeneratePanel({
 			const labels = Object.fromEntries(
 				generalOptions.map((d) => [d.date, d.label]),
 			);
-			sessionDates = generalSessionDates(selected, from, to, labels);
+			sessionDates = generalSessionDates(selected, from, to, labels).map(
+				(s) => ({
+					date: s.date,
+					label: s.label ?? tSession("general"),
+				}),
+			);
 		}
 
 		if (sessionDates.length === 0) {
-			setError("Nenhuma data de limpeza neste período.");
+			setError(t("errNoDates"));
 			return;
 		}
 
@@ -154,7 +165,7 @@ export function CleaningGeneratePanel({
 			cleaningType: type,
 			periodFrom: from,
 			periodTo: to,
-			keepFamilyTogether: true, // regra fixa: família inteira no mesmo dia
+			keepFamilyTogether: true,
 			sectors,
 			people: data.people,
 			sessionDates,
@@ -177,6 +188,7 @@ export function CleaningGeneratePanel({
 				cleaningType: draft.cleaningType,
 				periodFrom: draft.periodFrom,
 				periodTo: draft.periodTo,
+				locale,
 				days: draft.days.map((d) => ({
 					date: d.date,
 					hiddenSectorIds: d.hiddenSectorIds,
@@ -208,15 +220,19 @@ export function CleaningGeneratePanel({
 		});
 	};
 
+	const presetLabel = (id: (typeof PRESET_IDS)[number]) => {
+		if (id === "4w") return t("preset4w");
+		if (id === "month") return t("presetMonth");
+		return t("presetYear");
+	};
+
 	if (draft) {
 		return (
 			<div className="space-y-4">
 				<div className="flex flex-wrap items-center justify-between gap-2 rounded-[22px] border border-emerald-200 bg-emerald-50 px-4 py-3 dark:border-emerald-900 dark:bg-emerald-950/40">
 					<div className="flex items-center gap-2 text-sm text-emerald-800 dark:text-emerald-200">
 						<HiOutlineCheckCircle className="h-5 w-5 shrink-0" />
-						<span>
-							Pré-visualização — edite à vontade e salve quando estiver pronta.
-						</span>
+						<span>{t("previewBanner")}</span>
 					</div>
 					<div className="flex flex-wrap gap-2">
 						<Button
@@ -225,13 +241,12 @@ export function CleaningGeneratePanel({
 							className="h-10 rounded-2xl"
 							onClick={() => onDraftChange(null)}
 						>
-							Descartar
+							{t("discard")}
 						</Button>
 
 						<DownloadCleaningPdfButton
 							organizationName={data.organizationName}
 							draft={draft}
-							label="Baixar PDF"
 						/>
 
 						<Button
@@ -240,7 +255,7 @@ export function CleaningGeneratePanel({
 							onClick={handleSave}
 							className="h-10 rounded-2xl bg-linear-to-r from-blue-600 to-violet-600 text-white"
 						>
-							{pending ? "Salvando..." : "Salvar tabela"}
+							{pending ? t("saving") : t("saveTable")}
 						</Button>
 					</div>
 				</div>
@@ -256,18 +271,19 @@ export function CleaningGeneratePanel({
 		<div className="space-y-5">
 			<section className="space-y-3">
 				<h2 className="text-sm font-semibold text-slate-900 dark:text-slate-50">
-					Tipo de limpeza
+					{t("typeSection")}
 				</h2>
 				<div className="grid gap-2">
-					{data.cleaningSettings.types.map((t) => {
-						const on = type === t.type;
-						const ok = t.enabled && t.sectors.some((s) => s.isActive);
+					{data.cleaningSettings.types.map((row) => {
+						const on = type === row.type;
+						const ok = row.enabled && row.sectors.some((s) => s.isActive);
+						const activeCount = row.sectors.filter((s) => s.isActive).length;
 						return (
 							<button
-								key={t.type}
+								key={row.type}
 								type="button"
 								disabled={!ok}
-								onClick={() => setType(t.type)}
+								onClick={() => setType(row.type)}
 								className={`rounded-[22px] border p-4 text-left transition ${
 									on
 										? "border-transparent bg-linear-to-r from-blue-600 to-violet-600 text-white shadow-md"
@@ -278,20 +294,21 @@ export function CleaningGeneratePanel({
 							>
 								<div className="flex items-start justify-between gap-2">
 									<div>
-										<p className="font-semibold">
-											{CLEANING_TYPE_LABEL[t.type]}
-										</p>
+										<p className="font-semibold">{tTypes(row.type)}</p>
 										<p
 											className={`mt-1 text-xs ${on ? "text-white/80" : "text-slate-500"}`}
 										>
 											{ok
-												? `${t.sectors.filter((s) => s.isActive).length} setores · modo ${t.assignmentMode ?? "—"}`
-												: "Configure e ative em Configurações → Limpeza"}
+												? t("sectorsMode", {
+														count: activeCount,
+														mode: row.assignmentMode ?? "—",
+													})
+												: t("configureInSettings")}
 										</p>
 									</div>
 									<StatusBadge
-										label={t.enabled ? "Ativa" : "Off"}
-										tone={t.enabled ? "emerald" : "amber"}
+										label={row.enabled ? t("statusOn") : t("statusOff")}
+										tone={row.enabled ? "emerald" : "amber"}
 									/>
 								</div>
 							</button>
@@ -303,25 +320,25 @@ export function CleaningGeneratePanel({
 			<section className="space-y-3 rounded-[24px] border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-950">
 				<div className="flex items-center gap-2">
 					<HiOutlineCalendarDays className="h-5 w-5 text-blue-600" />
-					<h2 className="text-sm font-semibold">Período</h2>
+					<h2 className="text-sm font-semibold">{t("period")}</h2>
 				</div>
 
 				<div className="flex flex-wrap gap-2">
-					{PRESETS.map((p) => (
+					{PRESET_IDS.map((id) => (
 						<button
-							key={p.id}
+							key={id}
 							type="button"
-							onClick={() => applyPreset(p.id)}
+							onClick={() => applyPreset(id)}
 							className="rounded-full border border-slate-200 px-3 py-1.5 text-xs font-medium dark:border-slate-700"
 						>
-							{p.label}
+							{presetLabel(id)}
 						</button>
 					))}
 				</div>
 
 				<div className="grid grid-cols-2 gap-3">
 					<div className="space-y-1.5">
-						<Label className="text-xs">Início</Label>
+						<Label className="text-xs">{t("start")}</Label>
 						<input
 							type="date"
 							value={from}
@@ -330,7 +347,7 @@ export function CleaningGeneratePanel({
 						/>
 					</div>
 					<div className="space-y-1.5">
-						<Label className="text-xs">Fim</Label>
+						<Label className="text-xs">{t("end")}</Label>
 						<input
 							type="date"
 							value={to}
@@ -343,21 +360,15 @@ export function CleaningGeneratePanel({
 
 			{type === "MEETING" ? (
 				<div className="rounded-[22px] border border-slate-200 bg-white p-4 text-sm dark:border-slate-800 dark:bg-slate-950">
-					<p className="font-medium">Família no mesmo dia</p>
-					<p className="mt-0.5 text-xs text-slate-500">
-						Todos os membros da mesma família são designados no mesmo dia. Vagas
-						restantes são preenchidas por pessoas sem família. Não há regra de
-						casal no mesmo setor — apenas sexo, jovem e rotatividade.
-					</p>
+					<p className="font-medium">{t("familyTitle")}</p>
+					<p className="mt-0.5 text-xs text-slate-500">{t("familyBody")}</p>
 				</div>
 			) : null}
 
 			{type === "GENERAL" && generalOptions.length > 0 ? (
 				<section className="space-y-2 rounded-[22px] border border-slate-200 bg-white p-4 dark:border-slate-800 dark:bg-slate-950">
-					<h3 className="text-sm font-semibold">Datas da limpeza geral</h3>
-					<p className="text-xs text-slate-500">
-						Marque as que entram nesta tabela (vazio = todas no período).
-					</p>
+					<h3 className="text-sm font-semibold">{t("generalDatesTitle")}</h3>
+					<p className="text-xs text-slate-500">{t("generalDatesHint")}</p>
 					<ul className="space-y-2">
 						{generalOptions.map((d) => {
 							const on = selectedGeneral.includes(d.date);
@@ -385,7 +396,10 @@ export function CleaningGeneratePanel({
 
 			<div className="flex items-center gap-2 rounded-[18px] bg-slate-50 px-3 py-2 text-xs text-slate-600 dark:bg-slate-900 dark:text-slate-300">
 				<HiOutlineUsers className="h-4 w-4 shrink-0" />
-				{data.people.length} pessoas elegíveis · {sectors.length} setores
+				{t("eligibleSummary", {
+					people: data.people.length,
+					sectors: sectors.length,
+				})}
 			</div>
 
 			{error ? <p className="text-sm text-red-600">{error}</p> : null}
@@ -396,7 +410,7 @@ export function CleaningGeneratePanel({
 				onClick={handleGenerate}
 				className="h-12 w-full rounded-2xl bg-linear-to-r from-blue-600 to-violet-600 text-base text-white shadow-lg"
 			>
-				Criar tabela de limpeza
+				{t("createTable")}
 			</Button>
 		</div>
 	);

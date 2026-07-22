@@ -1,5 +1,6 @@
 import { ChevronDown, Search } from "lucide-react";
 import { LogoutButton } from "../auth/logout-button";
+import { LocaleSwitcher } from "../locale-switcher";
 
 type OrganizationOption = {
 	id: string;
@@ -53,6 +54,8 @@ export function OrgHeader({
 							{userEmail ?? "Sem e-mail"}
 						</p>
 					</div>
+
+					<LocaleSwitcher variant="buttons" className="flex gap-1" />
 
 					<LogoutButton />
 				</div>

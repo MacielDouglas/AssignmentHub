@@ -1,3 +1,18 @@
+export type CleaningPdfI18n = {
+	colDate: string;
+	/** Já formatado, ex.: "Período: 01/01/2026 a 31/01/2026" */
+	periodLine: string;
+	tasksHeading: string;
+	noDescription: string;
+	emptyCell: string;
+	titleDefault: string;
+	orgFallback: string;
+	sectorFallback: string;
+	weekdays: readonly [string, string, string, string, string, string, string];
+	errNoSectors: string;
+	errNoDays: string;
+};
+
 export type CleaningPdfSector = {
 	id: string;
 	name: string;
@@ -6,9 +21,7 @@ export type CleaningPdfSector = {
 };
 
 export type CleaningPdfDay = {
-	/** yyyy-mm-dd */
 	date: string;
-	/** nomes por sectorId, ordem de position */
 	bySector: Record<string, string[]>;
 };
 
@@ -19,13 +32,13 @@ export type CleaningPdfInput = {
 	periodTo: string;
 	sectors: CleaningPdfSector[];
 	days: CleaningPdfDay[];
-	fileName?: string;
+	fileName: string;
+	i18n: CleaningPdfI18n;
 };
 
-/** Detalhe serializável da lista salva (PDF + UI) */
 export type SavedListDetailForPdf = {
 	id: string;
-	cleaningType: "MEETING" | "WEEKLY" | "GENERAL";
+	cleaningType: string;
 	periodFrom: string;
 	periodTo: string;
 	days: Array<{

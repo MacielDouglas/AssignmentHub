@@ -1,8 +1,8 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { getTranslations } from "next-intl/server";
 import { z } from "zod";
-
 import type { SettingsActionState } from "@/features/settings/actions/settings-action-state";
 import { requireSettingsManager } from "@/features/settings/actions/settings-auth";
 import { parseDateInput } from "@/features/settings/lib/year-bounds";
@@ -37,17 +37,18 @@ export async function saveCleaningListAction(
 	formData: FormData,
 ): Promise<SettingsActionState> {
 	void _prev;
+	const t = await getTranslations("CleaningSave");
 
 	let json: unknown;
 	try {
 		json = JSON.parse(String(formData.get("payload") ?? "{}"));
 	} catch {
-		return { success: false, message: "Payload inválido." };
+		return { success: false, message: t("invalidPayload") };
 	}
 
 	const parsed = bodySchema.safeParse(json);
 	if (!parsed.success) {
-		return { success: false, message: "Dados da tabela inválidos." };
+		return { success: false, message: t("invalidData") };
 	}
 
 	const authz = await requireSettingsManager(parsed.data.organizationSlug);
@@ -56,12 +57,11 @@ export async function saveCleaningListAction(
 	const periodFrom = parseDateInput(parsed.data.periodFrom);
 	const periodTo = parseDateInput(parsed.data.periodTo);
 	if (!periodFrom || !periodTo || periodFrom > periodTo) {
-		return { success: false, message: "Período inválido." };
+		return { success: false, message: t("invalidPeriod") };
 	}
 
 	const type = parsed.data.cleaningType as CleaningType;
 
-	// Bloqueia overlap com SAVED do mesmo tipo
 	const overlap = await db.cleaningAssignmentList.findFirst({
 		where: {
 			organizationId: authz.organization.id,
@@ -74,11 +74,7 @@ export async function saveCleaningListAction(
 	});
 
 	if (overlap) {
-		return {
-			success: false,
-			message:
-				"Já existe uma tabela salva neste período para este tipo. Ajuste as datas ou edite a tabela existente.",
-		};
+		return { success: false, message: t("overlap") };
 	}
 
 	try {
@@ -124,11 +120,8 @@ export async function saveCleaningListAction(
 
 		revalidatePath(`/org/${authz.organization.slug}/cleaning`);
 		revalidatePath(`/org/${authz.organization.slug}/cleaning`, "page");
-		return { success: true, message: "Tabela de limpeza salva." };
+		return { success: true, message: t("success") };
 	} catch {
-		return {
-			success: false,
-			message: "Não foi possível salvar a tabela de limpeza.",
-		};
+		return { success: false, message: t("failed") };
 	}
 }

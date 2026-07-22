@@ -93,7 +93,6 @@ function selectUnitsForDay(
 		);
 		if (la !== lb) return la - lb;
 
-		// empate: famílias antes de solos (ajuda a concentrar famílias no dia)
 		const aFamily = a.familyId ? 0 : 1;
 		const bFamily = b.familyId ? 0 : 1;
 		if (aFamily !== bFamily) return aFamily - bFamily;
@@ -125,27 +124,9 @@ function selectUnitsForDay(
 		const isFamilyUnit = Boolean(unit.familyId) && keepFamilyTogether;
 
 		if (isFamilyUnit) {
-			// família inteira ou nada
-			if (available.length > open) continue;
-			if (
-				available.length !== unit.members.filter((m) => !used.has(m.id)).length
-			) {
-				// algum membro da família não tem setor possível → não parte a família
-				// (membros inelegíveis a todos os setores ficam de fora do pool "available")
-				const stillInPool = unit.members.filter((m) => !used.has(m.id));
-				if (available.length !== stillInPool.length) {
-					// se sobrou alguém da família sem setor possível, ainda designamos
-					// só os que têm setor — mas só se TODOS os que têm cleaning/pool
-					// puderem entrar. Aqui available já é o subconjunto elegível.
-					// Política: entra a família inteira do pool (todos em `people`).
-				}
-			}
-
-			// todos os membros da unidade presentes no pool de limpeza
 			const whole = unit.members.filter((m) => !used.has(m.id));
 			const placeable = whole.filter(personCanWorkSomewhere);
 			if (placeable.length !== whole.length) {
-				// alguém da família não encaixa em nenhum setor → pula a família
 				continue;
 			}
 			if (whole.length > open) continue;
@@ -158,7 +139,6 @@ function selectUnitsForDay(
 			continue;
 		}
 
-		// solo (sem família) ou keepFamilyTogether=false
 		for (const m of available) {
 			if (open <= 0) break;
 			selected.push(m);
@@ -197,7 +177,8 @@ function assignPeopleToSectors(
 		const tryFill = (relaxYoung: boolean) => {
 			while (filled < need) {
 				const candidates = [...remaining]
-					.map((id) => byId.get(id)!)
+					.map((id) => byId.get(id))
+					.filter((p): p is EligiblePerson => p != null)
 					.filter((p) => isEligibleForSector(p, sector, relaxYoung))
 					.map((p) => ({
 						p,

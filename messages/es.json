@@ -1,0 +1,123 @@
+{
+	"Common": {
+		"appName": "AssignmentHub",
+		"loading": "Cargando…",
+		"save": "Guardar",
+		"cancel": "Cancelar",
+		"edit": "Editar",
+		"delete": "Eliminar",
+		"back": "Volver",
+		"actions": "Acciones",
+		"language": "Idioma",
+		"errorGeneric": "Algo salió mal. Inténtalo de nuevo."
+	},
+	"LocaleSwitcher": {
+		"label": "Idioma",
+		"pt": "Portugués",
+		"es": "Español"
+	},
+	"CleaningShell": {
+		"eyebrow": "Asignaciones de limpieza",
+		"title": "Limpieza del Salón",
+		"subtitleBase": "Consulta las asignaciones publicadas",
+		"subtitleCanGenerate": " o genera una nueva tabla con rotación automática.",
+		"subtitleMemberOnly": ".",
+		"tabCreate": "Crear tabla",
+		"tabBoard": "Tabla de limpieza"
+	},
+	"CleaningTypes": {
+		"MEETING": "Limpieza de reunión",
+		"WEEKLY": "Limpieza semanal",
+		"GENERAL": "Limpieza general",
+		"fallback": "Limpieza"
+	},
+	"CleaningGenerate": {
+		"preset4w": "Próximas 4 semanas",
+		"presetMonth": "Próximo mes",
+		"presetYear": "Hasta fin de año",
+		"previewBanner": "Vista previa — edita a tu gusto y guarda cuando esté lista.",
+		"discard": "Descartar",
+		"downloadPdf": "Descargar PDF",
+		"saving": "Guardando...",
+		"saveTable": "Guardar tabla",
+		"typeSection": "Tipo de limpieza",
+		"sectorsMode": "{count} sectores · modo {mode}",
+		"configureInSettings": "Configura y activa en Configuración → Limpieza",
+		"statusOn": "Activa",
+		"statusOff": "Off",
+		"period": "Período",
+		"start": "Inicio",
+		"end": "Fin",
+		"familyTitle": "Familia el mismo día",
+		"familyBody": "Todos los miembros de la misma familia se asignan el mismo día. Las plazas restantes se completan con personas sin familia. No hay regla de pareja en el mismo sector: solo sexo, joven y rotación.",
+		"generalDatesTitle": "Fechas de la limpieza general",
+		"generalDatesHint": "Marca las que entran en esta tabla (vacío = todas en el período).",
+		"eligibleSummary": "{people} personas elegibles · {sectors} sectores",
+		"createTable": "Crear tabla de limpieza",
+		"errTypeDisabled": "Este tipo está desactivado en la configuración.",
+		"errNoSectors": "Ningún sector activo. Configura los sectores primero.",
+		"errMaxRange": "El período debe tener como máximo 1 año.",
+		"errNoPeople": "Ninguna persona elegible (marca de limpieza).",
+		"errNoMeetingDays": "Configura los días de reunión en Configuración.",
+		"errNoWeeklyDays": "Configura los días de la limpieza semanal.",
+		"errNoDates": "Ninguna fecha de limpieza en este período."
+	},
+	"CleaningBoard": {
+		"filterAll": "Todas",
+		"emptyPublished": "Aún no hay tablas publicadas.",
+		"myAssignments": "Mis asignaciones",
+		"downloadPdf": "Descargar PDF",
+		"print": "Imprimir",
+		"loading": "Cargando…",
+		"statusPublished": "Publicada"
+	},
+	"CleaningEditor": {
+		"hide": "Ocultar",
+		"noAssignment": "Sin asignación",
+		"manualSuffix": " · manual",
+		"emDash": "—"
+	},
+	"CleaningPdf": {
+		"downloadPdf": "Descargar PDF",
+		"generating": "Generando...",
+		"errNoTable": "Ninguna tabla seleccionada.",
+		"errGenerate": "Error al generar el PDF.",
+		"orgFallback": "Congregación",
+		"sectorFallback": "Sector",
+		"titleTemplate": "Asignación de Limpieza — {type}",
+		"titleDefault": "Asignación de Limpieza",
+		"periodLine": "Período: {from} a {to}",
+		"colDate": "Fecha",
+		"tasksHeading": "Descripción de las tareas",
+		"noDescription": "Sin descripción registrada.",
+		"errNoSectors": "Ningún sector para exportar en el PDF.",
+		"errNoDays": "Ninguna fecha para exportar en el PDF.",
+		"weekday0": "Domingo",
+		"weekday1": "Lunes",
+		"weekday2": "Martes",
+		"weekday3": "Miércoles",
+		"weekday4": "Jueves",
+		"weekday5": "Viernes",
+		"weekday6": "Sábado",
+		"emptyCell": "—"
+	},
+	"CleaningSave": {
+		"invalidPayload": "Payload no válido.",
+		"invalidData": "Datos de la tabla no válidos.",
+		"invalidPeriod": "Período no válido.",
+		"overlap": "Ya existe una tabla guardada en este período para este tipo. Ajusta las fechas o edita la tabla existente.",
+		"success": "Tabla de limpieza guardada.",
+		"failed": "No se pudo guardar la tabla de limpieza."
+	},
+	"CleaningSession": {
+		"meetingWithTime": "Reunión {time}",
+		"meeting": "Reunión",
+		"weekly": "Limpieza semanal",
+		"general": "Limpieza general"
+	},
+	"CleaningAuth": {
+		"login": "Inicia sesión.",
+		"orgNotFound": "Organización no encontrada.",
+		"notMember": "No perteneces a esta organización."
+	}
+}

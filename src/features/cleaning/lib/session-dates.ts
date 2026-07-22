@@ -39,30 +39,29 @@ export function meetingSessionDates(
 	from: string,
 	to: string,
 	slots: Array<{ weekday: Weekday; time: string }>,
-): Array<{ date: string; label: string }> {
+): Array<{ date: string; time: string }> {
 	const want = new Set(slots.map((s) => WEEKDAY_INDEX[s.weekday]));
 	const labelByDow = new Map(
 		slots.map((s) => [WEEKDAY_INDEX[s.weekday], s.time] as const),
 	);
 	return eachDateKey(from, to)
 		.filter((k) => want.has(parseDateKey(k).getDay()))
-		.map((date) => {
-			const t = labelByDow.get(parseDateKey(date).getDay()) ?? "";
-			return { date, label: t ? `Reunião ${t}` : "Reunião" };
-		});
+		.map((date) => ({
+			date,
+			time: labelByDow.get(parseDateKey(date).getDay()) ?? "",
+		}));
 }
 
 export function weeklySessionDates(
 	from: string,
 	to: string,
 	weekdays: Weekday[],
-): Array<{ date: string; label: string }> {
+): Array<{ date: string }> {
 	const want = new Set(weekdays.map((w) => WEEKDAY_INDEX[w]));
 	return eachDateKey(from, to)
 		.filter((k) => want.has(parseDateKey(k).getDay()))
-		.map((date) => ({ date, label: "Limpeza semanal" }));
+		.map((date) => ({ date }));
 }
-
 export function generalSessionDates(
 	selected: string[],
 	from: string,

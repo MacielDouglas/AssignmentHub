@@ -1,5 +1,7 @@
 "use client";
 
+import { useTranslations } from "next-intl";
+
 import { Button } from "@/components/ui/button";
 import type {
 	RosterDraft,
@@ -17,8 +19,10 @@ function formatBr(dateKey: string) {
 }
 
 export function RosterEditor({ draft, onChange }: Props) {
+	const t = useTranslations("CleaningEditor");
+
 	const personName = (id: string) =>
-		draft.people.find((p) => p.id === id)?.name ?? "—";
+		draft.people.find((p) => p.id === id)?.name ?? t("emDash");
 
 	const updateDaySlots = (date: string, slots: RosterSlot[]) => {
 		onChange({
@@ -108,12 +112,14 @@ export function RosterEditor({ draft, onChange }: Props) {
 												className="h-8 shrink-0 rounded-xl px-2 text-xs"
 												onClick={() => hideSector(day.date, sector.id)}
 											>
-												Ocultar
+												{t("hide")}
 											</Button>
 										</div>
 
 										{slots.length === 0 ? (
-											<p className="text-xs text-amber-600">Sem designação</p>
+											<p className="text-xs text-amber-600">
+												{t("noAssignment")}
+											</p>
 										) : (
 											<div className="space-y-2">
 												{slots.map((slot) => (
@@ -132,7 +138,7 @@ export function RosterEditor({ draft, onChange }: Props) {
 																<option key={p.id} value={p.id}>
 																	{p.name}
 																	{slot.isManual && p.id === slot.personId
-																		? " · manual"
+																		? t("manualSuffix")
 																		: ""}
 																</option>
 															))}

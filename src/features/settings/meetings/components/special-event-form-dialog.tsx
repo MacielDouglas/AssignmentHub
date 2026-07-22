@@ -1,6 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
 import { useActionState, useState } from "react";
 import { HiOutlinePlus } from "react-icons/hi2";
 
@@ -27,36 +28,46 @@ const initialState: SettingsActionState = { success: false, message: "" };
 const fieldClassName =
 	"h-11 w-full rounded-2xl border border-slate-200 bg-white px-3 text-sm outline-none ring-blue-500/30 focus:ring-4 dark:border-slate-800 dark:bg-slate-950";
 
+const PREFIXES = ["Viajante: ", "Superintendente: "] as const;
+
+function parseTravelerName(notes: string | null | undefined): string {
+	if (!notes) return "";
+	for (const p of PREFIXES) {
+		if (notes.startsWith(p)) {
+			return notes.slice(p.length).split("\n")[0]?.split(" | ")[0] ?? "";
+		}
+	}
+	return "";
+}
+
+function parseTravelerNotes(notes: string | null | undefined): string {
+	if (!notes) return "";
+	for (const p of PREFIXES) {
+		if (notes.startsWith(p)) {
+			if (!notes.includes(" | ")) return "";
+			return notes.split(" | ").slice(1).join(" | ");
+		}
+	}
+	return notes;
+}
+
 type SpecialEventFormDialogProps = {
 	organizationSlug: string;
 	event?: SpecialEventListItem;
 };
 
-function parseTravelerName(notes: string | null | undefined) {
-	if (!notes?.startsWith("Viajante: ")) return "";
-	return notes.replace(/^Viajante:\s*/, "").split(" | ")[0] ?? "";
-}
-
-function parseTravelerNotes(notes: string | null | undefined) {
-	if (!notes?.startsWith("Viajante: ")) return notes ?? "";
-	if (!notes.includes(" | ")) return "";
-	return notes.split(" | ").slice(1).join(" | ");
-}
-
 export function SpecialEventFormDialog({
 	organizationSlug,
 	event,
 }: SpecialEventFormDialogProps) {
+	const t = useTranslations("SettingsSpecialEvents");
 	const router = useRouter();
 	const [open, setOpen] = useState(false);
-	/** Remonta o form (e o useActionState) a cada abertura — limpa success anterior */
 	const [formInstance, setFormInstance] = useState(0);
 
 	const handleOpenChange = (next: boolean) => {
 		setOpen(next);
-		if (next) {
-			setFormInstance((n) => n + 1);
-		}
+		if (next) setFormInstance((n) => n + 1);
 	};
 
 	return (
@@ -64,21 +75,19 @@ export function SpecialEventFormDialog({
 			<DialogTrigger asChild>
 				{event ? (
 					<Button variant="outline" className="h-10 rounded-2xl">
-						Editar
+						{t("edit")}
 					</Button>
 				) : (
 					<Button className="h-11 rounded-2xl bg-linear-to-r from-blue-600 to-violet-600 text-white">
 						<HiOutlinePlus className="mr-2 h-4 w-4" />
-						Novo evento
+						{t("newEvent")}
 					</Button>
 				)}
 			</DialogTrigger>
 
 			<DialogContent className="max-h-[90vh] overflow-y-auto rounded-[28px] sm:max-w-lg">
 				<DialogHeader>
-					<DialogTitle>
-						{event ? "Editar evento especial" : "Novo evento especial"}
-					</DialogTitle>
+					<DialogTitle>{event ? t("editTitle") : t("newTitle")}</DialogTitle>
 				</DialogHeader>
 
 				{open ? (
@@ -105,12 +114,16 @@ type FormFieldsProps = {
 	onSuccess: () => void;
 };
 
+/** Client component síncrono — NÃO async */
 function SpecialEventFormFields({
 	organizationSlug,
 	event,
 	onCancel,
 	onSuccess,
 }: FormFieldsProps) {
+	const t = useTranslations("SettingsSpecialEvents");
+	const tTypes = useTranslations("SpecialEventTypes");
+
 	const [type, setType] = useState<SpecialEventType>(
 		event?.type ?? "CELEBRATION",
 	);
@@ -120,7 +133,6 @@ function SpecialEventFormFields({
 		initialState,
 	);
 
-	// Fecha + refresh quando a action termina com sucesso (padrão React: ajustar estado no render)
 	const [handledSuccess, setHandledSuccess] = useState(false);
 	if (state.success && !handledSuccess) {
 		setHandledSuccess(true);
@@ -134,6 +146,9 @@ function SpecialEventFormFields({
 			? parseTravelerNotes(event.notes)
 			: (event?.notes ?? "");
 
+	const titleLabel =
+		type === "TRAVELING_OVERSEER_VISIT" ? t("travelerName") : t("titleField");
+
 	return (
 		<form action={formAction} className="space-y-4">
 			<input type="hidden" name="organizationSlug" value={organizationSlug} />
@@ -142,7 +157,7 @@ function SpecialEventFormFields({
 			) : null}
 
 			<div className="space-y-2">
-				<Label className="text-sm font-medium">Tipo</Label>
+				<Label className="text-sm font-medium">{t("type")}</Label>
 				<select
 					name="type"
 					value={type}
@@ -150,9 +165,9 @@ function SpecialEventFormFields({
 					onChange={(e) => setType(e.target.value as SpecialEventType)}
 					className={fieldClassName}
 				>
-					{SPECIAL_EVENT_TYPES.map((t) => (
-						<option key={t} value={t}>
-							{SPECIAL_EVENT_META[t].label}
+					{SPECIAL_EVENT_TYPES.map((eventType) => (
+						<option key={eventType} value={eventType}>
+							{tTypes(eventType)}
 						</option>
 					))}
 				</select>
@@ -160,9 +175,7 @@ function SpecialEventFormFields({
 
 			{meta.fields.includes("title") ? (
 				<div className="space-y-2">
-					<Label className="text-sm font-medium">
-						{meta.titleLabel ?? "Título"}
-					</Label>
+					<Label className="text-sm font-medium">{titleLabel}</Label>
 					<input
 						name="title"
 						defaultValue={travelerName}
@@ -174,7 +187,7 @@ function SpecialEventFormFields({
 
 			<div className="grid gap-4 sm:grid-cols-2">
 				<div className="space-y-2">
-					<Label className="text-sm font-medium">Data inicial</Label>
+					<Label className="text-sm font-medium">{t("startDate")}</Label>
 					<input
 						type="date"
 						name="startDate"
@@ -185,7 +198,7 @@ function SpecialEventFormFields({
 				</div>
 				{meta.fields.includes("endDate") ? (
 					<div className="space-y-2">
-						<Label className="text-sm font-medium">Data final</Label>
+						<Label className="text-sm font-medium">{t("endDate")}</Label>
 						<input
 							type="date"
 							name="endDate"
@@ -199,7 +212,7 @@ function SpecialEventFormFields({
 
 			{meta.fields.includes("time") && !meta.allDay ? (
 				<div className="space-y-2">
-					<Label className="text-sm font-medium">Horário</Label>
+					<Label className="text-sm font-medium">{t("time")}</Label>
 					<input
 						type="time"
 						name="time"
@@ -212,7 +225,7 @@ function SpecialEventFormFields({
 
 			{meta.fields.includes("location") ? (
 				<div className="space-y-2">
-					<Label className="text-sm font-medium">Local</Label>
+					<Label className="text-sm font-medium">{t("location")}</Label>
 					<input
 						name="location"
 						defaultValue={event?.location ?? ""}
@@ -223,7 +236,7 @@ function SpecialEventFormFields({
 
 			{meta.fields.includes("notes") ? (
 				<div className="space-y-2">
-					<Label className="text-sm font-medium">Observações (opcional)</Label>
+					<Label className="text-sm font-medium">{t("notes")}</Label>
 					<textarea
 						name="notes"
 						defaultValue={notesDefault}
@@ -244,14 +257,14 @@ function SpecialEventFormFields({
 					className="h-11 rounded-2xl"
 					onClick={onCancel}
 				>
-					Cancelar
+					{t("cancel")}
 				</Button>
 				<Button
 					type="submit"
 					disabled={pending}
 					className="h-11 rounded-2xl bg-linear-to-r from-blue-600 to-violet-600 text-white"
 				>
-					{pending ? "Salvando..." : "Salvar"}
+					{pending ? t("saving") : t("save")}
 				</Button>
 			</div>
 		</form>

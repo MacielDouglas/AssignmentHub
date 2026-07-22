@@ -1,3 +1,4 @@
+import { getTranslations } from "next-intl/server";
 import { HiOutlineCog6Tooth } from "react-icons/hi2";
 import type { CleaningSettingsView } from "@/features/settings/cleaning/lib/cleaning-settings";
 import { MeetingsSettingsPanel } from "@/features/settings/meetings/components/meetings-settings-panel";
@@ -28,7 +29,7 @@ type SettingsShellProps = {
 	cleaning: CleaningSettingsView;
 };
 
-export function SettingsShell({
+export async function SettingsShell({
 	organizationSlug,
 	organizationName,
 	canEdit,
@@ -37,6 +38,8 @@ export function SettingsShell({
 	cleaning,
 	specialEvents,
 }: SettingsShellProps) {
+	const t = await getTranslations("SettingsShell");
+
 	return (
 		<main className="space-y-6">
 			<header className="rounded-[28px] border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-950 sm:p-6">
@@ -49,10 +52,10 @@ export function SettingsShell({
 							{organizationName}
 						</p>
 						<h1 className="text-2xl font-semibold tracking-tight text-slate-900 dark:text-slate-50">
-							Configurações
+							{t("title")}
 						</h1>
 						<p className="max-w-2xl text-sm text-slate-500 dark:text-slate-400">
-							Definições usadas em todo o app: reuniões, limpeza e designações.
+							{t("subtitle")}
 						</p>
 					</div>
 				</div>
@@ -78,13 +81,9 @@ export function SettingsShell({
 			) : null}
 
 			{activeTab === "assignments" ? (
-				<section className="rounded-[28px] border border-dashed border-slate-300 bg-slate-50 p-8 text-center dark:border-slate-700 dark:bg-slate-900">
-					<h2 className="text-base font-semibold text-slate-900 dark:text-slate-50">
-						Configurações de designações
-					</h2>
-					<p className="mt-2 text-sm text-slate-500 dark:text-slate-400">
-						Em breve.
-					</p>
+				<section className="rounded-[28px] border border-dashed ...">
+					<h2 className="text-base font-semibold">{t("assignmentsTitle")}</h2>
+					<p className="mt-2 text-sm ...">{t("assignmentsSoon")}</p>
 				</section>
 			) : null}
 		</main>

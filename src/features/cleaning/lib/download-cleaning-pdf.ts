@@ -48,8 +48,6 @@ export function downloadCleaningPdf(input: CleaningPdfInput): void {
 	const i18n = input.i18n;
 	const organizationName = safeText(input.organizationName, i18n.orgFallback);
 	const title = safeText(input.title, i18n.titleDefault);
-	// const periodFrom = safeText(input.periodFrom, "");
-	// const periodTo = safeText(input.periodTo, "");
 
 	const sectors = [...(input.sectors ?? [])]
 		.filter((s) => s?.id)

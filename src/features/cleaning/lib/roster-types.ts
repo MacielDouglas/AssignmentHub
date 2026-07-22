@@ -45,6 +45,7 @@ export type RosterDraft = {
 	days: RosterDay[];
 	sectors: RosterSector[];
 	people: EligiblePerson[];
+	listId?: string | null;
 };
 
 export type GenerateRosterInput = {

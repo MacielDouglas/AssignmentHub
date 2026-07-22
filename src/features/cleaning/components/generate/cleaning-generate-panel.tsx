@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useLocale, useTranslations } from "next-intl";
+import { useTranslations } from "next-intl";
 import { useMemo, useState, useTransition } from "react";
 import {
 	HiOutlineCalendarDays,
@@ -46,7 +46,7 @@ export function CleaningGeneratePanel({
 	const t = useTranslations("CleaningGenerate");
 	const tTypes = useTranslations("CleaningTypes");
 	const tSession = useTranslations("CleaningSession");
-	const locale = useLocale();
+	// const locale = useLocale();
 	const router = useRouter();
 
 	const [type, setType] = useState<CleaningType>("MEETING");
@@ -185,10 +185,10 @@ export function CleaningGeneratePanel({
 			"payload",
 			JSON.stringify({
 				organizationSlug: data.organizationSlug,
+				listId: draft.listId ?? null,
 				cleaningType: draft.cleaningType,
 				periodFrom: draft.periodFrom,
 				periodTo: draft.periodTo,
-				locale,
 				days: draft.days.map((d) => ({
 					date: d.date,
 					hiddenSectorIds: d.hiddenSectorIds,

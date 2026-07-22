@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { getTranslations } from "next-intl/server";
 import { z } from "zod";
+
 import type { SettingsActionState } from "@/features/settings/actions/settings-action-state";
 import { requireSettingsManager } from "@/features/settings/actions/settings-auth";
 import { parseDateInput } from "@/features/settings/lib/year-bounds";
@@ -26,6 +27,8 @@ const daySchema = z.object({
 
 const bodySchema = z.object({
 	organizationSlug: z.string().min(1),
+	/** Se presente → atualiza a lista existente */
+	listId: z.string().uuid().optional().nullable(),
 	cleaningType: z.enum(["MEETING", "WEEKLY", "GENERAL"]),
 	periodFrom: z.string(),
 	periodTo: z.string(),
@@ -61,6 +64,20 @@ export async function saveCleaningListAction(
 	}
 
 	const type = parsed.data.cleaningType as CleaningType;
+	const listId = parsed.data.listId ?? null;
+
+	if (listId) {
+		const existing = await db.cleaningAssignmentList.findFirst({
+			where: {
+				id: listId,
+				organizationId: authz.organization.id,
+			},
+			select: { id: true },
+		});
+		if (!existing) {
+			return { success: false, message: t("notFound") };
+		}
+	}
 
 	const overlap = await db.cleaningAssignmentList.findFirst({
 		where: {
@@ -69,8 +86,9 @@ export async function saveCleaningListAction(
 			status: "SAVED",
 			periodFrom: { lte: periodTo },
 			periodTo: { gte: periodFrom },
+			...(listId ? { id: { not: listId } } : {}),
 		},
-		select: { id: true, periodFrom: true, periodTo: true },
+		select: { id: true },
 	});
 
 	if (overlap) {
@@ -79,28 +97,57 @@ export async function saveCleaningListAction(
 
 	try {
 		await db.$transaction(async (tx) => {
-			const list = await tx.cleaningAssignmentList.create({
-				data: {
-					organizationId: authz.organization.id,
-					cleaningType: type,
-					periodFrom,
-					periodTo,
-					status: "SAVED",
-				},
-			});
+			let targetListId = listId;
+
+			if (targetListId) {
+				// limpa filhos e atualiza cabeçalho
+				const dates = await tx.cleaningAssignmentDate.findMany({
+					where: { listId: targetListId },
+					select: { id: true },
+				});
+				const dateIds = dates.map((d) => d.id);
+				if (dateIds.length > 0) {
+					await tx.cleaningAssignmentSectorAssignment.deleteMany({
+						where: { assignmentDateId: { in: dateIds } },
+					});
+					await tx.cleaningAssignmentDate.deleteMany({
+						where: { listId: targetListId },
+					});
+				}
+
+				await tx.cleaningAssignmentList.update({
+					where: { id: targetListId },
+					data: {
+						cleaningType: type,
+						periodFrom,
+						periodTo,
+						status: "SAVED",
+					},
+				});
+			} else {
+				const list = await tx.cleaningAssignmentList.create({
+					data: {
+						organizationId: authz.organization.id,
+						cleaningType: type,
+						periodFrom,
+						periodTo,
+						status: "SAVED",
+					},
+				});
+				targetListId = list.id;
+			}
 
 			for (const day of parsed.data.days) {
 				const date = parseDateInput(day.date);
 				if (!date) continue;
 
 				const dateRow = await tx.cleaningAssignmentDate.create({
-					data: { listId: list.id, date },
+					data: { listId: targetListId, date },
 				});
 
 				const slots = day.slots.filter(
 					(s) => !day.hiddenSectorIds.includes(s.sectorId),
 				);
-
 				if (slots.length === 0) continue;
 
 				await tx.cleaningAssignmentSectorAssignment.createMany({
@@ -120,7 +167,10 @@ export async function saveCleaningListAction(
 
 		revalidatePath(`/org/${authz.organization.slug}/cleaning`);
 		revalidatePath(`/org/${authz.organization.slug}/cleaning`, "page");
-		return { success: true, message: t("success") };
+		return {
+			success: true,
+			message: listId ? t("updated") : t("success"),
+		};
 	} catch {
 		return { success: false, message: t("failed") };
 	}

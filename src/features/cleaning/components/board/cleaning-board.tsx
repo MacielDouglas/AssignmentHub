@@ -1,21 +1,32 @@
 "use client";
 
+import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { useEffect, useMemo, useState, useTransition } from "react";
-import { HiOutlinePrinter, HiOutlineUser } from "react-icons/hi2";
+import {
+	HiOutlinePencilSquare,
+	HiOutlinePrinter,
+	HiOutlineTrash,
+	HiOutlineUser,
+} from "react-icons/hi2";
 
 import { Button } from "@/components/ui/button";
 import { StatusBadge } from "@/components/ui/status-badge";
+import { deleteCleaningListAction } from "@/features/cleaning/actions/delete-cleaning-list-action";
 import { getSavedListDetail } from "@/features/cleaning/actions/load-saved-list";
 import { DownloadCleaningPdfButton } from "@/features/cleaning/components/export/download-cleaning-pdf-button";
 import type { CleaningPageData } from "@/features/cleaning/lib/cleaning-page-data";
 import type { SavedListDetailForPdf } from "@/features/cleaning/lib/cleaning-pdf-types";
+import type { RosterDraft } from "@/features/cleaning/lib/roster-types";
+import { savedListToDraft } from "@/features/cleaning/lib/saved-list-to-draft";
 import type { CleaningType } from "@/generated/prisma/client";
 
 type Detail = NonNullable<Awaited<ReturnType<typeof getSavedListDetail>>>;
 
 type Props = {
 	data: CleaningPageData;
+	/** Só OWNER/ADMIN — shell passa quando canManage */
+	onEditList?: (draft: RosterDraft) => void;
 };
 
 function formatBr(dateKey: string) {
@@ -23,9 +34,11 @@ function formatBr(dateKey: string) {
 	return `${d}/${m}/${y}`;
 }
 
-export function CleaningBoard({ data }: Props) {
+export function CleaningBoard({ data, onEditList }: Props) {
 	const t = useTranslations("CleaningBoard");
 	const tTypes = useTranslations("CleaningTypes");
+	const tManage = useTranslations("CleaningListManage");
+	const router = useRouter();
 
 	const [typeFilter, setTypeFilter] = useState<CleaningType | "ALL">("ALL");
 	const [selectedId, setSelectedId] = useState<string | null>(
@@ -34,6 +47,11 @@ export function CleaningBoard({ data }: Props) {
 	const [detail, setDetail] = useState<Detail | null>(null);
 	const [detailForId, setDetailForId] = useState<string | null>(null);
 	const [isPending, startTransition] = useTransition();
+	const [manageError, setManageError] = useState<string | null>(null);
+	const [confirmDelete, setConfirmDelete] = useState(false);
+	const [deleting, startDelete] = useTransition();
+
+	const canManage = Boolean(onEditList) && data.canManage;
 
 	const lists = useMemo(() => {
 		if (typeFilter === "ALL") return data.savedLists;
@@ -47,9 +65,7 @@ export function CleaningBoard({ data }: Props) {
 
 	useEffect(() => {
 		if (!effectiveSelectedId) return;
-
 		let cancelled = false;
-
 		startTransition(() => {
 			void getSavedListDetail(effectiveSelectedId, data.organizationId).then(
 				(d) => {
@@ -59,7 +75,6 @@ export function CleaningBoard({ data }: Props) {
 				},
 			);
 		});
-
 		return () => {
 			cancelled = true;
 		};
@@ -106,8 +121,35 @@ export function CleaningBoard({ data }: Props) {
 		return out;
 	}, [shownDetail, data.currentPersonId]);
 
+	const handleEdit = () => {
+		if (!shownDetail || !onEditList || !pdfList) return;
+		const draft = savedListToDraft(pdfList, data.people);
+		onEditList(draft);
+	};
+
+	const handleDelete = () => {
+		if (!effectiveSelectedId) return;
+		setManageError(null);
+		startDelete(async () => {
+			const res = await deleteCleaningListAction({
+				organizationSlug: data.organizationSlug,
+				listId: effectiveSelectedId,
+			});
+			if (!res.success) {
+				setManageError(res.message);
+				return;
+			}
+			setConfirmDelete(false);
+			setSelectedId(null);
+			setDetail(null);
+			setDetailForId(null);
+			router.refresh();
+		});
+	};
+
 	return (
 		<div className="space-y-4">
+			{/* filtros — iguais ao seu */}
 			<div className="flex flex-wrap gap-2 print:hidden">
 				{(["ALL", "MEETING", "WEEKLY", "GENERAL"] as const).map((key) => (
 					<button
@@ -137,7 +179,11 @@ export function CleaningBoard({ data }: Props) {
 							<button
 								key={l.id}
 								type="button"
-								onClick={() => setSelectedId(l.id)}
+								onClick={() => {
+									setSelectedId(l.id);
+									setConfirmDelete(false);
+									setManageError(null);
+								}}
 								className={`min-w-35 shrink-0 rounded-[18px] border px-3 py-2 text-left text-xs ${
 									on
 										? "border-blue-500 bg-blue-50 dark:bg-blue-950/40"
@@ -154,6 +200,7 @@ export function CleaningBoard({ data }: Props) {
 				</div>
 			)}
 
+			{/* minhas designações — igual */}
 			{myAssignments.length > 0 ? (
 				<section className="rounded-[22px] border border-violet-200 bg-violet-50 p-4 dark:border-violet-900 dark:bg-violet-950/30 print:hidden">
 					<div className="mb-2 flex items-center gap-2 text-sm font-semibold text-violet-900 dark:text-violet-100">
@@ -171,6 +218,29 @@ export function CleaningBoard({ data }: Props) {
 			) : null}
 
 			<div className="flex flex-wrap justify-end gap-2 print:hidden">
+				{canManage && shownDetail ? (
+					<>
+						<Button
+							type="button"
+							variant="outline"
+							className="h-10 rounded-2xl"
+							onClick={handleEdit}
+						>
+							<HiOutlinePencilSquare className="mr-2 h-4 w-4" />
+							{tManage("edit")}
+						</Button>
+						<Button
+							type="button"
+							variant="outline"
+							className="h-10 rounded-2xl text-red-600 hover:bg-red-50 hover:text-red-700 dark:hover:bg-red-950/40"
+							onClick={() => setConfirmDelete(true)}
+						>
+							<HiOutlineTrash className="mr-2 h-4 w-4" />
+							{tManage("delete")}
+						</Button>
+					</>
+				) : null}
+
 				<DownloadCleaningPdfButton
 					organizationName={data.organizationName}
 					savedList={pdfList}
@@ -186,6 +256,48 @@ export function CleaningBoard({ data }: Props) {
 				</Button>
 			</div>
 
+			{confirmDelete && canManage ? (
+				<div
+					role="alertdialog"
+					aria-labelledby="delete-list-title"
+					className="space-y-3 rounded-[22px] border border-red-200 bg-red-50 p-4 dark:border-red-900 dark:bg-red-950/30 print:hidden"
+				>
+					<p
+						id="delete-list-title"
+						className="text-sm font-semibold text-red-900 dark:text-red-100"
+					>
+						{tManage("deleteConfirmTitle")}
+					</p>
+					<p className="text-xs text-red-800 dark:text-red-200">
+						{tManage("deleteConfirmBody")}
+					</p>
+					<div className="flex flex-wrap gap-2">
+						<Button
+							type="button"
+							variant="outline"
+							className="h-10 rounded-2xl"
+							disabled={deleting}
+							onClick={() => setConfirmDelete(false)}
+						>
+							{tManage("cancel")}
+						</Button>
+						<Button
+							type="button"
+							disabled={deleting}
+							onClick={handleDelete}
+							className="h-10 rounded-2xl bg-red-600 text-white hover:bg-red-700"
+						>
+							{deleting ? tManage("deleting") : tManage("deleteConfirmAction")}
+						</Button>
+					</div>
+				</div>
+			) : null}
+
+			{manageError ? (
+				<p className="text-sm text-red-600 print:hidden">{manageError}</p>
+			) : null}
+
+			{/* resto: loading + days — igual ao seu código atual */}
 			{isPending && !shownDetail ? (
 				<p className="text-sm text-slate-500">{t("loading")}</p>
 			) : shownDetail ? (

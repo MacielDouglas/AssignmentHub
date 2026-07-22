@@ -63,6 +63,12 @@ export function CleaningShell({ data, initialTab }: Props) {
 		? `${t("subtitleBase")}${t("subtitleCanGenerate")}`
 		: `${t("subtitleBase")}${t("subtitleMemberOnly")}`;
 
+	const handleEditList = (next: RosterDraft) => {
+		if (!canGenerate) return;
+		setDraft(next);
+		setActive("gerar");
+	};
+
 	return (
 		<main className="mx-auto max-w-3xl space-y-5 px-3 pb-24 pt-4 sm:px-4 sm:pb-10">
 			<header className="space-y-2">
@@ -110,7 +116,10 @@ export function CleaningShell({ data, initialTab }: Props) {
 					}}
 				/>
 			) : (
-				<CleaningBoard data={data} />
+				<CleaningBoard
+					data={data}
+					onEditList={canGenerate ? handleEditList : undefined}
+				/>
 			)}
 		</main>
 	);

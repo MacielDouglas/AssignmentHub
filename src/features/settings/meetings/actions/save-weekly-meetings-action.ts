@@ -1,6 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { getTranslations } from "next-intl/server";
 import type { SettingsActionState } from "@/features/settings/actions/settings-action-state";
 import { requireSettingsManager } from "@/features/settings/actions/settings-auth";
 import {
@@ -18,11 +19,13 @@ export async function saveWeeklyMeetingsAction(
 ): Promise<SettingsActionState> {
 	void _prevState;
 
+	const t = await getTranslations("SettingsMeetings");
+
 	const parsed = parseSaveWeeklyMeetings(formData);
 	if (!parsed.success) {
 		return {
 			success: false,
-			message: "Dados inválidos.",
+			message: t("invalidData"),
 			fieldErrors: parsed.error.flatten().fieldErrors,
 		};
 	}
@@ -225,7 +228,7 @@ export async function saveWeeklyMeetingsAction(
 							isActive: true,
 							effectiveFrom: startOfCivilYear(nextYear),
 							effectiveUntil: null,
-							title: `Reuniões de congregação ${nextYear}`,
+							title: t("titleCurrent"),
 						},
 					});
 				} else {
@@ -234,7 +237,7 @@ export async function saveWeeklyMeetingsAction(
 							organizationId: organization.id,
 							type: "MEETINGS",
 							mode: "WEEKLY_RECURRING",
-							title: `Reuniões de congregação ${nextYear}`,
+							title: t("titleNextYear", { year: nextYear }),
 							isActive: true,
 							effectiveFrom: startOfCivilYear(nextYear),
 							effectiveUntil: null,
@@ -266,12 +269,12 @@ export async function saveWeeklyMeetingsAction(
 		revalidatePath(`/org/${organization.slug}/settings`);
 		return {
 			success: true,
-			message: "Reuniões semanais salvas com sucesso.",
+			message: t("saved"),
 		};
 	} catch {
 		return {
 			success: false,
-			message: "Não foi possível salvar as reuniões semanais.",
+			message: t("saveFailed"),
 		};
 	}
 }

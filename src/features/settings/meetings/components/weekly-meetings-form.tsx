@@ -1,9 +1,9 @@
 "use client";
 
 import { useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
 import { useActionState, useEffect, useState } from "react";
 import { HiOutlineCalendarDays, HiOutlineClock } from "react-icons/hi2";
-
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { StatusBadge } from "@/components/ui/status-badge";
@@ -12,14 +12,24 @@ import { clearNextYearMeetingsAction } from "@/features/settings/meetings/action
 import { saveWeeklyMeetingsAction } from "@/features/settings/meetings/actions/save-weekly-meetings-action";
 import type { WeeklyMeetingsView } from "@/features/settings/meetings/lib/meeting-schedule";
 
-const WEEKDAYS = [
-	{ value: "MONDAY", label: "Segunda-feira" },
-	{ value: "TUESDAY", label: "Terça-feira" },
-	{ value: "WEDNESDAY", label: "Quarta-feira" },
-	{ value: "THURSDAY", label: "Quinta-feira" },
-	{ value: "FRIDAY", label: "Sexta-feira" },
-	{ value: "SATURDAY", label: "Sábado" },
-	{ value: "SUNDAY", label: "Domingo" },
+// const WEEKDAYS = [
+// 	{ value: "MONDAY", label: "Segunda-feira" },
+// 	{ value: "TUESDAY", label: "Terça-feira" },
+// 	{ value: "WEDNESDAY", label: "Quarta-feira" },
+// 	{ value: "THURSDAY", label: "Quinta-feira" },
+// 	{ value: "FRIDAY", label: "Sexta-feira" },
+// 	{ value: "SATURDAY", label: "Sábado" },
+// 	{ value: "SUNDAY", label: "Domingo" },
+// ] as const;
+
+const WEEKDAY_VALUES = [
+	"MONDAY",
+	"TUESDAY",
+	"WEDNESDAY",
+	"THURSDAY",
+	"FRIDAY",
+	"SATURDAY",
+	"SUNDAY",
 ] as const;
 
 const initialState: SettingsActionState = { success: false, message: "" };
@@ -38,6 +48,8 @@ export function WeeklyMeetingsForm({
 	canEdit,
 	weekly,
 }: WeeklyMeetingsFormProps) {
+	const t = useTranslations("SettingsMeetings");
+
 	const router = useRouter();
 
 	const [state, formAction, pending] = useActionState(
@@ -74,17 +86,19 @@ export function WeeklyMeetingsForm({
 					<div className="flex items-center gap-2">
 						<HiOutlineCalendarDays className="h-5 w-5 text-blue-600" />
 						<h2 className="text-lg font-semibold text-slate-900 dark:text-slate-50">
-							Reuniões de congregação
+							{t("title")}
 						</h2>
 					</div>
 					<p className="text-sm text-slate-500 dark:text-slate-400">
-						Duas reuniões por semana, horário fixo o ano todo (fuso Brasil,
-						formato 24h). Alterações no horário atual abrem nova vigência a
-						partir de hoje e preservam o histórico.
+						{t("description")}
 					</p>
 				</div>
 				<StatusBadge
-					label={weekly.current.scheduleId ? "Configurado" : "Pendente"}
+					label={
+						weekly.current.scheduleId
+							? t("statusConfigured")
+							: t("statusPending")
+					}
 					tone={weekly.current.scheduleId ? "emerald" : "amber"}
 				/>
 			</header>
@@ -137,6 +151,7 @@ function WeeklyMeetingsFormFields({
 	const [nextEnabled, setNextEnabled] = useState(
 		Boolean(weekly.nextYear.scheduleId),
 	);
+	const t = useTranslations("SettingsMeetings");
 
 	return (
 		<form action={formAction} className="space-y-6">
@@ -149,19 +164,19 @@ function WeeklyMeetingsFormFields({
 
 			<div className="space-y-3">
 				<h3 className="text-sm font-semibold text-slate-900 dark:text-slate-50">
-					Horário atual
+					{t("currentSchedule")}
 				</h3>
 				<div className="grid gap-4 md:grid-cols-2">
 					<SlotFields
 						prefix="currentSlot1"
-						label="1ª reunião"
+						label={t("slot1")}
 						defaultWeekday={s0?.weekday ?? "WEDNESDAY"}
 						defaultTime={s0?.time ?? "19:30"}
 						disabled={!canEdit}
 					/>
 					<SlotFields
 						prefix="currentSlot2"
-						label="2ª reunião"
+						label={t("slot2")}
 						defaultWeekday={s1?.weekday ?? "SUNDAY"}
 						defaultTime={s1?.time ?? "18:00"}
 						disabled={!canEdit}
@@ -183,25 +198,24 @@ function WeeklyMeetingsFormFields({
 						onChange={(e) => setNextEnabled(e.target.checked)}
 						className="h-4 w-4 rounded border-slate-300"
 					/>
-					Definir horário para {weekly.nextYear.year} (opcional)
+					{t("nextYearOptional", { year: weekly.nextYear.year })}
 				</label>
 				<p className="text-xs text-slate-500 dark:text-slate-400">
-					Entra em vigor automaticamente em 01/01/{weekly.nextYear.year}. A
-					agenda desse ano já usa esse horário.
+					{t("nextYearHint", { year: weekly.nextYear.year })}
 				</p>
 
 				{nextEnabled ? (
 					<div className="grid gap-4 md:grid-cols-2">
 						<SlotFields
 							prefix="nextSlot1"
-							label="1ª reunião (próximo ano)"
+							label={t("slot1Next")}
 							defaultWeekday={n0?.weekday ?? "WEDNESDAY"}
 							defaultTime={n0?.time ?? "19:30"}
 							disabled={!canEdit}
 						/>
 						<SlotFields
 							prefix="nextSlot2"
-							label="2ª reunião (próximo ano)"
+							label={t("slot2Next")}
 							defaultWeekday={n1?.weekday ?? "SUNDAY"}
 							defaultTime={n1?.time ?? "18:00"}
 							disabled={!canEdit}
@@ -239,7 +253,7 @@ function WeeklyMeetingsFormFields({
 							disabled={clearing || pending}
 							className="h-11 rounded-2xl"
 						>
-							{clearing ? "Removendo..." : "Remover horário do próximo ano"}
+							{clearing ? t("removing") : t("removeNextYear")}
 						</Button>
 					) : null}
 					<Button
@@ -248,13 +262,11 @@ function WeeklyMeetingsFormFields({
 						className="h-11 rounded-2xl bg-linear-to-r from-blue-600 to-violet-600 text-white"
 					>
 						<HiOutlineClock className="mr-2 h-4 w-4" />
-						{pending ? "Salvando..." : "Salvar reuniões"}
+						{pending ? t("saving") : t("saveMeetings")}
 					</Button>
 				</div>
 			) : (
-				<p className="text-sm text-slate-500">
-					Somente administradores podem editar.
-				</p>
+				<p className="text-sm text-slate-500">{t("readOnly")}</p>
 			)}
 		</form>
 	);
@@ -273,28 +285,30 @@ function SlotFields({
 	defaultTime: string;
 	disabled?: boolean;
 }) {
+	const t = useTranslations("SettingsMeetings");
+	const tDays = useTranslations("Weekdays");
 	return (
 		<div className="space-y-2 rounded-[20px] border border-slate-200 bg-white p-4 dark:border-slate-800 dark:bg-slate-950">
 			<p className="text-xs font-medium uppercase tracking-wide text-slate-500">
 				{label}
 			</p>
 			<div className="space-y-2">
-				<Label className="text-sm font-medium">Dia</Label>
+				<Label className="text-sm font-medium">{t("day")}</Label>
 				<select
 					name={`${prefix}Weekday`}
 					defaultValue={defaultWeekday}
 					disabled={disabled}
 					className={fieldClassName}
 				>
-					{WEEKDAYS.map((d) => (
-						<option key={d.value} value={d.value}>
-							{d.label}
+					{WEEKDAY_VALUES.map((d) => (
+						<option key={d} value={d}>
+							{tDays(d)}
 						</option>
 					))}
 				</select>
 			</div>
 			<div className="space-y-2">
-				<Label className="text-sm font-medium">Horário</Label>
+				<Label className="text-sm font-medium">{t("time")}</Label>
 				<input
 					type="time"
 					name={`${prefix}Time`}

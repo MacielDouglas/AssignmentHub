@@ -1,12 +1,13 @@
 import { headers } from "next/headers";
 import { notFound } from "next/navigation";
+import { getTranslations } from "next-intl/server";
 import { loadCleaningSettingsView } from "@/features/settings/cleaning/lib/cleaning-settings";
 import { formatDateInput } from "@/features/settings/lib/year-bounds";
 import { SettingsShell } from "@/features/settings/meetings/components/settings-shell";
 import { loadWeeklyMeetingsView } from "@/features/settings/meetings/lib/meeting-schedule";
 import {
-	SPECIAL_EVENT_META,
 	SPECIAL_EVENT_TYPES,
+	type SpecialEventType,
 } from "@/features/settings/meetings/lib/special-event-meta";
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
@@ -59,14 +60,13 @@ export default async function SettingsPage({
 		},
 	});
 
+	const tEvents = await getTranslations("SpecialEventTypes");
+
 	const specialEvents = specialSchedules.flatMap((schedule) =>
 		schedule.occurrences.map((occ) => ({
 			id: occ.id,
 			type: schedule.type as (typeof SPECIAL_EVENT_TYPES)[number],
-			typeLabel:
-				SPECIAL_EVENT_META[
-					schedule.type as (typeof SPECIAL_EVENT_TYPES)[number]
-				]?.label ?? schedule.title,
+			typeLabel: tEvents(schedule.type as SpecialEventType),
 			startDate: formatDateInput(occ.startDate),
 			endDate: occ.endDate ? formatDateInput(occ.endDate) : null,
 			time: occ.time,

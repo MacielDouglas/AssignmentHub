@@ -3,6 +3,7 @@ import {
 	BrushCleaning,
 	FolderKanban,
 	Home,
+	NotebookPen,
 	ScrollText,
 	Settings,
 	Users,
@@ -33,6 +34,11 @@ export function getOrgNavItems(slug: string): OrgNavItem[] {
 			href: `/org/${slug}/groups`,
 			label: "Grupos",
 			icon: FolderKanban,
+		},
+		{
+			href: `/org/${slug}/meeting-content`,
+			label: "Conteúdo das Reuniões",
+			icon: NotebookPen,
 		},
 		{
 			href: `/org/${slug}/families`,

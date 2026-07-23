@@ -298,5 +298,36 @@
 		"restoredNone": "Nenhum setor padrão faltando.",
 		"restoredCount": "{count} setores padrão restaurados.",
 		"personModeOnlyMeeting": "Modo pessoa só na limpeza de reunião."
+	},
+	"meetingContent": {
+		"watchtower": {
+			"heroTitle": "A Sentinela (edição de estudo)",
+			"heroDescription": "Envie o arquivo .jwpub da JW Library. Os estudos e cânticos são lidos da estrutura do arquivo — você revisa e salva no catálogo.",
+			"failedTitle": "Falha na importação",
+			"import": {
+				"title": "Importar .jwpub",
+				"description": "Use a edição de estudo baixada na JW Library (português ou espanhol). Um arquivo por vez, até 40 MB.",
+				"pickFile": "Escolher arquivo .jwpub",
+				"hint": "Somente .jwpub · idioma detectado automaticamente",
+				"submit": "Extrair estudos",
+				"processing": "Extraindo…",
+				"errorNoFile": "Selecione um arquivo .jwpub.",
+				"localeNote": "O idioma dos estudos vem do arquivo (não do idioma da interface: {ui})."
+			},
+			"review": {
+				"title": "Revisar antes de salvar",
+				"notes": "Notas da extração",
+				"saveDraft": "Salvar rascunho",
+				"commit": "Confirmar e salvar no catálogo",
+				"locale": "Idioma",
+				"issueCode": "Código da revista",
+				"week": "Semana",
+				"dates": "Datas (início / fim)",
+				"theme": "Tema",
+				"opening": "Cântico inicial",
+				"closing": "Cântico final",
+				"color": "Cor"
+			}
+		}
 	}
 }

@@ -635,7 +635,8 @@ model ContentImportJob {
   status        ContentImportJobStatus  @default(PENDING)
   /// JSON extraído / editado na revisão (antes do commit)
   extractedJson Json?
-  aiNotes       String?
+  /// Notas da extração (ex.: origem do arquivo)
+  notes         String?
   errorMessage  String?
   createdAt     DateTime                @default(now())
   updatedAt     DateTime                @updatedAt

@@ -298,5 +298,36 @@
 		"restoredNone": "No faltan sectores predeterminados.",
 		"restoredCount": "{count} sectores predeterminados restaurados.",
 		"personModeOnlyMeeting": "Modo persona solo en limpieza de reunión."
+	},
+	"meetingContent": {
+		"watchtower": {
+			"heroTitle": "La Atalaya (edición de estudio)",
+			"heroDescription": "Suba el archivo .jwpub de JW Library. Los artículos y cánticos se leen de la estructura del archivo; usted revisa y guarda en el catálogo.",
+			"failedTitle": "Error en la importación",
+			"import": {
+				"title": "Importar .jwpub",
+				"description": "Use la edición de estudio descargada en JW Library (portugués o español). Un archivo a la vez, hasta 40 MB.",
+				"pickFile": "Elegir archivo .jwpub",
+				"hint": "Solo .jwpub · idioma detectado automáticamente",
+				"submit": "Extraer artículos",
+				"processing": "Extrayendo…",
+				"errorNoFile": "Seleccione un archivo .jwpub.",
+				"localeNote": "El idioma de los artículos viene del archivo (no del idioma de la interfaz: {ui})."
+			},
+			"review": {
+				"title": "Revisar antes de guardar",
+				"notes": "Notas de la extracción",
+				"saveDraft": "Guardar borrador",
+				"commit": "Confirmar y guardar en el catálogo",
+				"locale": "Idioma",
+				"issueCode": "Código de la revista",
+				"week": "Semana",
+				"dates": "Fechas (inicio / fin)",
+				"theme": "Tema",
+				"opening": "Cántico inicial",
+				"closing": "Cántico final",
+				"color": "Color"
+			}
+		}
 	}
 }

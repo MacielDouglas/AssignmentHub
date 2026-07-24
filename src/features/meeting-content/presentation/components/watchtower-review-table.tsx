@@ -52,94 +52,86 @@ function songValue(n: number | null | undefined): string {
 	return String(n);
 }
 
-
 type IsoDateInputProps = {
-  id: string;
-  label: string;
-  value: string | null;
-  onChange: (value: string | null) => void;
+	id: string;
+	label: string;
+	value: string | null;
+	onChange: (value: string | null) => void;
 };
 
 function isIsoDate(value: string): boolean {
-  if (!/^\d{4}-\d{2}-\d{2}$/.test(value)) return false;
+	if (!/^\d{4}-\d{2}-\d{2}$/.test(value)) return false;
 
-  const [year, month, day] = value.split("-").map(Number);
-  if (!year || !month || !day) return false;
+	const [year, month, day] = value.split("-").map(Number);
+	if (!year || !month || !day) return false;
 
-  const date = new Date(Date.UTC(year, month - 1, day));
+	const date = new Date(Date.UTC(year, month - 1, day));
 
-  return (
-    date.getUTCFullYear() === year &&
-    date.getUTCMonth() === month - 1 &&
-    date.getUTCDate() === day
-  );
+	return (
+		date.getUTCFullYear() === year &&
+		date.getUTCMonth() === month - 1 &&
+		date.getUTCDate() === day
+	);
 }
 
-function IsoDateInput({
-  id,
-  label,
-  value,
-  onChange,
-}: IsoDateInputProps) {
-  const [text, setText] = useState(value ?? "");
-  const [invalid, setInvalid] = useState(false);
+function IsoDateInput({ id, label, value, onChange }: IsoDateInputProps) {
+	const [text, setText] = useState(value ?? "");
+	const [invalid, setInvalid] = useState(false);
 
-  function commit() {
-    const next = text.trim();
+	function commit() {
+		const next = text.trim();
 
-    if (!next) {
-      setInvalid(false);
-      onChange(null);
-      return;
-    }
+		if (!next) {
+			setInvalid(false);
+			onChange(null);
+			return;
+		}
 
-    if (!isIsoDate(next)) {
-      setInvalid(true);
-      return;
-    }
+		if (!isIsoDate(next)) {
+			setInvalid(true);
+			return;
+		}
 
-    setInvalid(false);
-    onChange(next);
-  }
+		setInvalid(false);
+		onChange(next);
+	}
 
-  return (
-    <div className="space-y-2">
-      <Label htmlFor={id}>{label}</Label>
+	return (
+		<div className="space-y-2">
+			<Label htmlFor={id}>{label}</Label>
 
-      <Input
-        id={id}
-        type="text"
-        inputMode="numeric"
-        autoComplete="off"
-        placeholder="2026-09-28"
-        className="h-11 rounded-2xl font-mono"
-        value={text}
-        maxLength={10}
-        aria-invalid={invalid}
-        onChange={(event) => {
-          const next = event.target.value
-            .replace(/[^\d-]/g, "")
-            .slice(0, 10);
+			<Input
+				id={id}
+				type="text"
+				inputMode="numeric"
+				autoComplete="off"
+				placeholder="2026-09-28"
+				className="h-11 rounded-2xl font-mono"
+				value={text}
+				maxLength={10}
+				aria-invalid={invalid}
+				onChange={(event) => {
+					const next = event.target.value.replace(/[^\d-]/g, "").slice(0, 10);
 
-          setText(next);
-          setInvalid(false);
-        }}
-        onBlur={commit}
-        onKeyDown={(event) => {
-          if (event.key === "Enter") {
-            event.preventDefault();
-            commit();
-          }
-        }}
-      />
+					setText(next);
+					setInvalid(false);
+				}}
+				onBlur={commit}
+				onKeyDown={(event) => {
+					if (event.key === "Enter") {
+						event.preventDefault();
+						commit();
+					}
+				}}
+			/>
 
-      {invalid ? (
-        <p className="text-xs text-red-600 dark:text-red-400">
-          Use uma data real no formato AAAA-MM-DD, por exemplo 2026-09-28.
-        </p>
-      ) : null}
-    </div>
-  );
+			{invalid ? (
+				<p className="text-xs text-red-600 dark:text-red-400">
+					Use uma data real no formato AAAA-MM-DD, por exemplo 2026-09-28.
+				</p>
+			) : null}
+		</div>
+	);
 }
 
 export function WatchtowerReviewTable({ slug, job }: Props) {
@@ -382,19 +374,21 @@ export function WatchtowerReviewTable({ slug, job }: Props) {
 											}
 										/>
 									</div>
-                  <IsoDateInput
-  id={`week-start-${index}`}
-  label="Início (segunda)"
-  value={article.weekStart}
-  onChange={(weekStart) => updateArticle(index, { weekStart })}
-/>
+									<IsoDateInput
+										id={`week-start-${index}`}
+										label="Início (segunda)"
+										value={article.weekStart}
+										onChange={(weekStart) =>
+											updateArticle(index, { weekStart })
+										}
+									/>
 
-                  <IsoDateInput
-  id={`week-end-${index}`}
-  label="Fim (domingo)"
-  value={article.weekEnd}
-  onChange={(weekEnd) => updateArticle(index, { weekEnd })}
-/>
+									<IsoDateInput
+										id={`week-end-${index}`}
+										label="Fim (domingo)"
+										value={article.weekEnd}
+										onChange={(weekEnd) => updateArticle(index, { weekEnd })}
+									/>
 									<div className="space-y-2 sm:col-span-2">
 										<Label>Título</Label>
 										<Input

@@ -133,34 +133,30 @@ export const LocaleOptionalSchema = z.object({
 });
 
 export const WatchtowerStudyUpdateSchema = z.object({
-  id: z.string().uuid(),
+	id: z.string().uuid(),
 
-  locale: z.enum(["pt", "es"]),
+	locale: z.enum(["pt", "es"]),
 
-  weekLabelRaw: z.string().trim().min(1).max(200),
+	weekLabelRaw: z.string().trim().min(1).max(200),
 
-  weekStart: z
-    .string()
-    .regex(/^\d{4}-\d{2}-\d{2}$/, "Use AAAA-MM-DD"),
+	weekStart: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Use AAAA-MM-DD"),
 
-  weekEnd: z
-    .string()
-    .regex(/^\d{4}-\d{2}-\d{2}$/, "Use AAAA-MM-DD"),
+	weekEnd: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Use AAAA-MM-DD"),
 
-  title: z.string().trim().min(1).max(500),
+	title: z.string().trim().min(1).max(500),
 
-  openingSong: z.number().int().min(1).max(999),
+	openingSong: z.number().int().min(1).max(999),
 
-  closingSong: z.number().int().min(1).max(999),
+	closingSong: z.number().int().min(1).max(999),
 
-  highlightColor: z
-    .string()
-    .regex(/^#[0-9A-Fa-f]{6}$/, "Cor deve estar no formato #RRGGBB")
-    .nullable(),
+	highlightColor: z
+		.string()
+		.regex(/^#[0-9A-Fa-f]{6}$/, "Cor deve estar no formato #RRGGBB")
+		.nullable(),
 
-  issueCode: z.string().trim().max(64).nullable(),
+	issueCode: z.string().trim().max(64).nullable(),
 });
 
 export type WatchtowerStudyUpdateInput = z.infer<
-  typeof WatchtowerStudyUpdateSchema
+	typeof WatchtowerStudyUpdateSchema
 >;

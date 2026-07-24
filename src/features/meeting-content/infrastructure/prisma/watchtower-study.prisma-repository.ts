@@ -2,9 +2,9 @@ import type { ContentLocale } from "@/features/meeting-content/domain/values-obj
 import { db } from "@/lib/db";
 import type { WatchtowerStudyEntity } from "../../domain/entities/watchtower-study";
 import type {
-  UpdateWatchtowerStudyInput,
-  UpsertWatchtowerStudyInput,
-  WatchtowerStudyRepository,
+	UpdateWatchtowerStudyInput,
+	UpsertWatchtowerStudyInput,
+	WatchtowerStudyRepository,
 } from "../../domain/repositories/watchtower-study.repository";
 import { toIsoDate } from "../../domain/values-objects/study-week";
 
@@ -103,26 +103,26 @@ export class PrismaWatchtowerStudyRepository
 		});
 	}
 
-  async updateById(input: UpdateWatchtowerStudyInput): Promise<void> {
-  await db.watchtowerStudy.update({
-    where: {
-      id: input.id,
-    },
-    data: {
-      locale: input.locale,
-      weekStart: input.weekStart,
-      weekEnd: input.weekEnd,
-      weekLabelRaw: input.weekLabelRaw,
-      title: input.title,
-      openingSongNum: input.openingSongNum,
-      closingSongNum: input.closingSongNum,
-      highlightColor: input.highlightColor,
-      issueCode: input.issueCode,
-      openingSongId: input.openingSongId,
-      closingSongId: input.closingSongId,
-    },
-  });
-}
+	async updateById(input: UpdateWatchtowerStudyInput): Promise<void> {
+		await db.watchtowerStudy.update({
+			where: {
+				id: input.id,
+			},
+			data: {
+				locale: input.locale,
+				weekStart: input.weekStart,
+				weekEnd: input.weekEnd,
+				weekLabelRaw: input.weekLabelRaw,
+				title: input.title,
+				openingSongNum: input.openingSongNum,
+				closingSongNum: input.closingSongNum,
+				highlightColor: input.highlightColor,
+				issueCode: input.issueCode,
+				openingSongId: input.openingSongId,
+				closingSongId: input.closingSongId,
+			},
+		});
+	}
 
 	async deleteByIds(ids: string[]): Promise<number> {
 		const res = await db.watchtowerStudy.deleteMany({

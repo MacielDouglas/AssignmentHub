@@ -20,8 +20,8 @@ import { updateWatchtowerImportDraftUseCase } from "@/features/meeting-content/a
 import { createMeetingContentDeps } from "@/features/meeting-content/infrastructure/composition";
 
 import {
-  WatchtowerStudyUpdateSchema,
-  type WatchtowerStudyUpdateInput,
+	type WatchtowerStudyUpdateInput,
+	WatchtowerStudyUpdateSchema,
 } from "../../application/dto/watchtower-extract.dto";
 
 import { updateWatchtowerStudyUseCase } from "../../application/use-cases/update-watchtower-study";
@@ -128,41 +128,40 @@ export async function deleteWatchtowerStudiesAction(
 	}
 }
 
-
 export async function updateWatchtowerStudyAction(
-  slug: string,
-  payload: WatchtowerStudyUpdateInput,
+	slug: string,
+	payload: WatchtowerStudyUpdateInput,
 ): Promise<ActionResult> {
-  try {
-    await requireMeetingContentManage(slug);
+	try {
+		await requireMeetingContentManage(slug);
 
-    const input = WatchtowerStudyUpdateSchema.parse(payload);
-    const dependencies = createMeetingContentDeps();
+		const input = WatchtowerStudyUpdateSchema.parse(payload);
+		const dependencies = createMeetingContentDeps();
 
-    const result = await updateWatchtowerStudyUseCase(dependencies, input);
+		const result = await updateWatchtowerStudyUseCase(dependencies, input);
 
-    if (!result.ok) {
-      return {
-        ok: false,
-        error: result.error,
-      };
-    }
+		if (!result.ok) {
+			return {
+				ok: false,
+				error: result.error,
+			};
+		}
 
-    revalidateMeetingContent(slug);
+		revalidateMeetingContent(slug);
 
-    return {
-      ok: true,
-      data: undefined,
-    };
-  } catch (error) {
-    return {
-      ok: false,
-      error:
-        error instanceof Error
-          ? error.message
-          : "Não foi possível atualizar o estudo.",
-    };
-  }
+		return {
+			ok: true,
+			data: undefined,
+		};
+	} catch (error) {
+		return {
+			ok: false,
+			error:
+				error instanceof Error
+					? error.message
+					: "Não foi possível atualizar o estudo.",
+		};
+	}
 }
 
 export async function deleteAllWatchtowerStudiesAction(

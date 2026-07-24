@@ -22,8 +22,9 @@ export type SpecialEventField =
 
 type Meta = {
 	type: SpecialEventType;
+	label: string;
 	mode: OrganizationScheduleMode;
-	/** no máx. 1 occurrence por ano civil */
+	/** no máx. 1 ocorrência por ano civil */
 	oncePerYear: boolean;
 	allDay: boolean;
 	fields: SpecialEventField[];
@@ -33,56 +34,62 @@ type Meta = {
 export const SPECIAL_EVENT_META: Record<SpecialEventType, Meta> = {
 	CELEBRATION: {
 		type: "CELEBRATION",
-		// label: "Comemoração",
+		label: "Comemoração",
 		mode: "SINGLE_DATETIME",
 		oncePerYear: true,
 		allDay: false,
 		fields: ["startDate", "time", "location", "notes"],
 	},
+
 	TRAVELING_OVERSEER_VISIT: {
 		type: "TRAVELING_OVERSEER_VISIT",
-		// label: "Visita do viajante",
+		label: "Visita do viajante",
 		mode: "DATE_RANGE",
 		oncePerYear: false,
 		allDay: true,
 		fields: ["startDate", "endDate", "title", "notes"],
 		titleLabel: "Nome do viajante",
 	},
+
 	SPECIAL_MEETING: {
 		type: "SPECIAL_MEETING",
-		// label: "Reunião especial",
+		label: "Reunião especial",
 		mode: "SINGLE_DATETIME",
 		oncePerYear: false,
 		allDay: false,
 		fields: ["startDate", "time", "notes"],
 	},
+
 	SPECIAL_TALK: {
 		type: "SPECIAL_TALK",
-		// label: "Discurso especial",
+		label: "Discurso especial",
 		mode: "SINGLE_DATETIME",
 		oncePerYear: false,
 		allDay: false,
 		fields: ["startDate", "time", "notes"],
 	},
+
 	CONVENTION: {
 		type: "CONVENTION",
-		// label: "Congresso",
+		label: "Congresso",
 		mode: "DATE_RANGE",
 		oncePerYear: true,
 		allDay: true,
 		fields: ["startDate", "endDate", "location", "notes"],
 	},
+
 	CIRCUIT_ASSEMBLY_TRAVELING_OVERSEER: {
 		type: "CIRCUIT_ASSEMBLY_TRAVELING_OVERSEER",
-		// label: "Assembleia com viajante",
+		label: "Assembleia com viajante",
 		mode: "SINGLE_DATETIME",
 		oncePerYear: false,
 		allDay: true,
 		fields: ["startDate", "location", "notes"],
 	},
+
 	CIRCUIT_ASSEMBLY_BRANCH_REPRESENTATIVE: {
 		type: "CIRCUIT_ASSEMBLY_BRANCH_REPRESENTATIVE",
-		// label: "Assembleia com representante",
+		label: "Assembleia com representante",
 		mode: "SINGLE_DATETIME",
 		oncePerYear: false,
 		allDay: true,

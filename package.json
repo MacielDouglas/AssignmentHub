@@ -6,8 +6,11 @@
 		"dev": "next dev",
 		"build": "next build",
 		"start": "next start",
-		"lint": "biome check",
-		"format": "biome format --write",
+		"format": "biome check --write .",
+		"lint": "biome check .",
+		"typecheck": "tsc --noEmit",
+		"check": "bun run lint && bun run typecheck",
+		"verify": "bun run format && bun run check",
 		"db:seed": "prisma db seed"
 	},
 	"dependencies": {

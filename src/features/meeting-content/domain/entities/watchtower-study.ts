@@ -1,5 +1,25 @@
 import type { ContentLocale } from "@/features/meeting-content/domain/values-objects/content-locale";
 
+export type ContentImportJobStatus =
+	| "PENDING"
+	| "PROCESSING"
+	| "AWAITING_REVIEW"
+	| "COMMITTED"
+	| "FAILED";
+
+export type ContentImportJobEntity = {
+	id: string;
+	sourceType: "WATCHTOWER" | "SONGBOOK" | "PUBLIC_TALKS" | "MWB";
+	locale: ContentLocale;
+	status: ContentImportJobStatus;
+	extractedJson: unknown | null;
+	notes: string | null;
+	errorMessage: string | null;
+	fileNames: string[];
+	createdAt: string;
+	committedAt: string | null;
+};
+
 export type WatchtowerStudyEntity = {
 	id: string;
 	locale: ContentLocale;
@@ -15,24 +35,4 @@ export type WatchtowerStudyEntity = {
 	closingSongTitle: string | null;
 	createdAt: string;
 	updatedAt: string;
-};
-
-export type ContentImportJobStatus =
-	| "PENDING"
-	| "PROCESSING"
-	| "AWAITING_REVIEW"
-	| "COMMITTED"
-	| "FAILED";
-
-export type ContentImportJobEntity = {
-	id: string;
-	sourceType: "WATCHTOWER";
-	locale: ContentLocale;
-	status: ContentImportJobStatus;
-	extractedJson: unknown | null;
-	notes: string | null;
-	errorMessage: string | null;
-	fileNames: string[];
-	createdAt: string;
-	committedAt: string | null;
 };

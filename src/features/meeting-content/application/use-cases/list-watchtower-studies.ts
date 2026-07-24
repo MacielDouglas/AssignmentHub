@@ -12,7 +12,7 @@ export async function listWatchtowerStudiesUseCase(
 	const [items, counts, pendingJob] = await Promise.all([
 		deps.studies.list(locale),
 		deps.studies.countByLocale(),
-		deps.jobs.findLatestPendingWatchtower(),
+		deps.jobs.findLatestPending("WATCHTOWER"),
 	]);
 
 	return { items, counts, pendingJob };

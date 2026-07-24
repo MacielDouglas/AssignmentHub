@@ -1,12 +1,14 @@
-import type { ContentLocale } from "@/features/meeting-content/domain/values-objects/content-locale";
 import { db } from "@/lib/db";
+
 import type { ContentImportJobEntity } from "../../domain/entities/watchtower-study";
 import type {
 	ContentImportJobRepository,
+	ContentImportSourceType,
 	CreateImportJobInput,
 } from "../../domain/repositories/content-import-job.repository";
+import type { ContentLocale } from "../../domain/values-objects/content-locale";
 
-function mapJob(row: {
+type JobRow = {
 	id: string;
 	sourceType: string;
 	locale: ContentLocale;
@@ -16,17 +18,19 @@ function mapJob(row: {
 	errorMessage: string | null;
 	createdAt: Date;
 	committedAt: Date | null;
-	files: { fileName: string }[];
-}): ContentImportJobEntity {
+	files: Array<{ fileName: string }>;
+};
+
+function mapJob(row: JobRow): ContentImportJobEntity {
 	return {
 		id: row.id,
-		sourceType: "WATCHTOWER",
+		sourceType: row.sourceType as ContentImportJobEntity["sourceType"],
 		locale: row.locale,
 		status: row.status,
 		extractedJson: row.extractedJson,
 		notes: row.notes,
 		errorMessage: row.errorMessage,
-		fileNames: row.files.map((f) => f.fileName),
+		fileNames: row.files.map((file) => file.fileName),
 		createdAt: row.createdAt.toISOString(),
 		committedAt: row.committedAt?.toISOString() ?? null,
 	};
@@ -40,7 +44,7 @@ export class PrismaContentImportJobRepository
 	): Promise<ContentImportJobEntity> {
 		const row = await db.contentImportJob.create({
 			data: {
-				sourceType: "WATCHTOWER",
+				sourceType: input.sourceType,
 				locale: input.locale,
 				status: "PROCESSING",
 				files: {
@@ -52,27 +56,37 @@ export class PrismaContentImportJobRepository
 					})),
 				},
 			},
-			include: { files: { select: { fileName: true } } },
+			include: {
+				files: {
+					select: { fileName: true },
+				},
+			},
 		});
-		return mapJob(row as never);
+
+		return mapJob(row);
 	}
 
 	async markAwaitingReview(input: {
 		id: string;
 		extractedJson: unknown;
-		notes: string | null;
+		notes?: string | null;
 	}): Promise<ContentImportJobEntity> {
 		const row = await db.contentImportJob.update({
 			where: { id: input.id },
 			data: {
 				status: "AWAITING_REVIEW",
 				extractedJson: input.extractedJson as object,
-				notes: input.notes,
+				notes: input.notes ?? null,
 				errorMessage: null,
 			},
-			include: { files: { select: { fileName: true } } },
+			include: {
+				files: {
+					select: { fileName: true },
+				},
+			},
 		});
-		return mapJob(row as never);
+
+		return mapJob(row);
 	}
 
 	async markFailed(id: string, errorMessage: string): Promise<void> {
@@ -106,31 +120,54 @@ export class PrismaContentImportJobRepository
 				status: "AWAITING_REVIEW",
 				errorMessage: null,
 			},
-			include: { files: { select: { fileName: true } } },
+			include: {
+				files: {
+					select: { fileName: true },
+				},
+			},
 		});
-		return mapJob(row as never);
+
+		return mapJob(row);
 	}
 
 	async findById(id: string): Promise<ContentImportJobEntity | null> {
 		const row = await db.contentImportJob.findUnique({
 			where: { id },
-			include: { files: { select: { fileName: true } } },
+			include: {
+				files: {
+					select: { fileName: true },
+				},
+			},
 		});
-		if (row?.sourceType !== "WATCHTOWER") return null;
-		return mapJob(row as never);
+
+		return row ? mapJob(row) : null;
+	}
+
+	async findLatestPending(
+		sourceType: ContentImportSourceType,
+	): Promise<ContentImportJobEntity | null> {
+		const row = await db.contentImportJob.findFirst({
+			where: {
+				sourceType,
+				status: {
+					in: ["AWAITING_REVIEW", "PROCESSING"],
+				},
+			},
+			orderBy: {
+				createdAt: "desc",
+			},
+			include: {
+				files: {
+					select: { fileName: true },
+				},
+			},
+		});
+
+		return row ? mapJob(row) : null;
 	}
 
 	async findLatestPendingWatchtower(): Promise<ContentImportJobEntity | null> {
-		const row = await db.contentImportJob.findFirst({
-			where: {
-				sourceType: "WATCHTOWER",
-				status: { in: ["AWAITING_REVIEW", "PROCESSING"] },
-			},
-			orderBy: { createdAt: "desc" },
-			include: { files: { select: { fileName: true } } },
-		});
-		if (!row) return null;
-		return mapJob(row as never);
+		return this.findLatestPending("WATCHTOWER");
 	}
 
 	async discard(id: string): Promise<void> {
@@ -139,7 +176,7 @@ export class PrismaContentImportJobRepository
 			data: {
 				status: "FAILED",
 				errorMessage: "Importação descartada pelo usuário.",
-				extractedJson: undefined, // ou Prisma.DbNull se preferir limpar
+				extractedJson: undefined,
 			},
 		});
 	}

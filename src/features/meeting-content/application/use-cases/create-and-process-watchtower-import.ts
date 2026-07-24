@@ -13,7 +13,7 @@ import { extractWatchtowerFromJwpubFile } from "@/features/meeting-content/infra
 import { db } from "@/lib/db";
 
 function safeFileName(name: string): string {
-	return name.replace(/[^\w.\-()\sÀ-ÿ]/g, "_").slice(0, 180);
+	return name.replace(/[^\w.\-()+ ]+/g, "_").slice(0, 180);
 }
 
 function getExtension(name: string): string {
@@ -41,14 +41,14 @@ export async function createAndProcessWatchtowerImportUseCase(
 		if (ext !== ".jwpub") {
 			return {
 				ok: false,
-				error: `Formato não suportado: ${safeFileName(input.file.name)}. Use .jwpub da JW Library.`,
+				error: `Formato não suportado (${safeFileName(input.file.name)}). Use .jwpub da JW Library.`,
 			};
 		}
 
 		if (input.file.size <= 0 || input.file.size > MAX_UPLOAD_BYTES) {
 			return {
 				ok: false,
-				error: `Tamanho inválido (máx. ${Math.floor(MAX_UPLOAD_BYTES / (1024 * 1024))} MB).`,
+				error: `Tamanho inválido (máx. ${Math.floor(MAX_UPLOAD_BYTES / 1024 / 1024)} MB).`,
 			};
 		}
 
@@ -57,7 +57,9 @@ export async function createAndProcessWatchtowerImportUseCase(
 			return { ok: false, error: "Arquivo ZIP/JWPUB inválido." };
 		}
 
+		// locale temporário; será sobrescrito com o locale real do manifest
 		const job = await deps.jobs.createProcessing({
+			sourceType: "WATCHTOWER",
 			locale: "es",
 			fileNames: [safeFileName(input.file.name)],
 		});
@@ -82,7 +84,7 @@ export async function createAndProcessWatchtowerImportUseCase(
 		await deps.jobs.markAwaitingReview({
 			id: job.id,
 			extractedJson: parsed.data,
-			notes: parsed.data.notes,
+			notes: parsed.data.notes ?? null,
 		});
 
 		await db.contentImportJob.update({
@@ -98,7 +100,7 @@ export async function createAndProcessWatchtowerImportUseCase(
 			try {
 				await deps.jobs.markFailed(jobId, message);
 			} catch {
-				/* ignore */
+				// ignore
 			}
 		}
 		return { ok: false, error: message };
@@ -107,7 +109,7 @@ export async function createAndProcessWatchtowerImportUseCase(
 			try {
 				await rm(tempDir, { recursive: true, force: true });
 			} catch {
-				/* Windows EBUSY */
+				// Windows EBUSY
 			}
 		}
 	}

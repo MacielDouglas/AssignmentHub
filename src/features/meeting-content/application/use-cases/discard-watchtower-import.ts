@@ -5,13 +5,13 @@ export async function discardWatchtowerImportUseCase(
 	jobId: string,
 ): Promise<{ ok: true } | { ok: false; error: string }> {
 	const job = await deps.jobs.findById(jobId);
-
 	if (job?.sourceType !== "WATCHTOWER") {
 		return { ok: false, error: "Importação não encontrada." };
 	}
 	if (job.status === "COMMITTED") {
 		return { ok: false, error: "Importação já foi salva no catálogo." };
 	}
+
 	try {
 		await deps.jobs.discard(jobId);
 		return { ok: true };

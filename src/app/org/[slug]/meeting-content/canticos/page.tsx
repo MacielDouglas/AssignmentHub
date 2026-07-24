@@ -1,6 +1,13 @@
 import type { Metadata } from "next";
+import { notFound } from "next/navigation";
 
-import { MeetingContentSectionStub } from "@/features/meeting-content/presentation/components/meeting-content-section-stub";
+import { listSongsPageData } from "@/features/meeting-content/application/services/list-songs-page-data";
+import { getMeetingContentAccess } from "@/features/meeting-content/application/services/meeting-content-auth";
+import { SongsSection } from "@/features/meeting-content/presentation/components/songs-section";
+
+type Props = {
+	params: Promise<{ slug: string }>;
+};
 
 export const metadata: Metadata = {
 	title: "Cânticos · Conteúdo das Reuniões",
@@ -8,12 +15,20 @@ export const metadata: Metadata = {
 	robots: { index: false, follow: false },
 };
 
-export default function CanticosPage() {
+export default async function CanticosPage({ params }: Props) {
+	const { slug } = await params;
+	const access = await getMeetingContentAccess(slug);
+	if (!access) notFound();
+
+	const { items, counts, pendingJob } = await listSongsPageData();
+
 	return (
-		<MeetingContentSectionStub
-			badge="Catálogo global"
-			title="Cânticos"
-			description="Importe o livro de cânticos (.jwpub sjj) para cadastrar número e título em português e espanhol."
+		<SongsSection
+			slug={slug}
+			canManage={access.canManage}
+			songs={items}
+			counts={counts}
+			pendingJob={pendingJob}
 		/>
 	);
 }

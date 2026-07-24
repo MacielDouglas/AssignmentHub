@@ -555,9 +555,9 @@ model CleaningAssignmentSectorAssignment {
   @@index([sectorId, position])
 }
 
-// =============================================================================
-// Conteúdo das reuniões (catálogo global — compartilhado entre organizações)
-// =============================================================================
+// =========================================================
+// Conteúdo das reuniões — catálogo global compartilhado
+// =========================================================
 
 enum ContentLocale {
   pt
@@ -579,7 +579,14 @@ enum ContentImportJobStatus {
   FAILED
 }
 
-/// Cântico (compartilhado VM + fim de semana). Número + locale únicos.
+/// Código estável da seção da apostila (meio de semana)
+enum MwbSectionCode {
+  TREASURES
+  APPLY
+  LIVING
+}
+
+/// Cântico compartilhado (VM / fim de semana / meio de semana)
 model Song {
   id        String        @id @default(uuid())
   number    Int
@@ -591,13 +598,32 @@ model Song {
   watchtowerOpening WatchtowerStudy[] @relation("WatchtowerOpeningSong")
   watchtowerClosing WatchtowerStudy[] @relation("WatchtowerClosingSong")
 
+  mwbOpening MwbWeek[] @relation("MwbOpeningSong")
+  mwbMiddle  MwbWeek[] @relation("MwbMiddleSong")
+  mwbClosing MwbWeek[] @relation("MwbClosingSong")
+
   @@unique([number, locale])
   @@index([locale])
   @@index([locale, number])
   @@map("song")
 }
 
-/// Artigo / semana de estudo de A Sentinela (reunião de fim de semana)
+/// Esboço de discurso público (S-34)
+model PublicTalk {
+  id        String        @id @default(uuid())
+  locale    ContentLocale
+  number    Int
+  title     String
+  createdAt DateTime      @default(now())
+  updatedAt DateTime      @updatedAt
+
+  @@unique([number, locale])
+  @@index([locale])
+  @@index([locale, number])
+  @@map("public_talk")
+}
+
+/// Artigo/semana de estudo de A Sentinela (reunião de fim de semana)
 model WatchtowerStudy {
   id             String        @id @default(uuid())
   locale         ContentLocale
@@ -628,14 +654,109 @@ model WatchtowerStudy {
   @@map("watchtower_study")
 }
 
+/// Edição da apostila / guia de atividades (MWB)
+model MwbIssue {
+  id         String        @id @default(uuid())
+  locale     ContentLocale
+  /// Ex: mwb26.07
+  symbol     String
+  /// Nome da apostila
+  title      String
+  coverTitle String?
+  year       Int?
+  /// Mês da edição (1-12), quando conhecido
+  month      Int?
+  createdAt  DateTime      @default(now())
+  updatedAt  DateTime      @updatedAt
+
+  weeks MwbWeek[]
+
+  @@unique([symbol, locale])
+  @@index([locale, year, month])
+  @@map("mwb_issue")
+}
+
+/// Uma semana da apostila (reunião do meio de semana)
+model MwbWeek {
+  id             String   @id @default(uuid())
+  issueId        String
+  /// Segunda-feira (somente data)
+  weekStart      DateTime @db.Date
+  /// Domingo (somente data)
+  weekEnd        DateTime @db.Date
+  weekLabelRaw   String?
+  /// Ex: "20260706-20260712"
+  dateRangeRaw   String?
+  openingSongNum Int?
+  middleSongNum  Int?
+  closingSongNum Int?
+  sortOrder      Int      @default(0)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  issue MwbIssue @relation(fields: [issueId], references: [id], onDelete: Cascade)
+
+  sections MwbSection[]
+
+  openingSongId String?
+  middleSongId  String?
+  closingSongId String?
+  openingSong   Song?   @relation("MwbOpeningSong", fields: [openingSongId], references: [id], onDelete: SetNull)
+  middleSong    Song?   @relation("MwbMiddleSong", fields: [middleSongId], references: [id], onDelete: SetNull)
+  closingSong   Song?   @relation("MwbClosingSong", fields: [closingSongId], references: [id], onDelete: SetNull)
+
+  @@unique([issueId, weekStart])
+  @@index([weekStart, weekEnd])
+  @@map("mwb_week")
+}
+
+model MwbSection {
+  id        String          @id @default(uuid())
+  weekId    String
+  /// Nome exibido (PT/ES)
+  name      String
+  code      MwbSectionCode?
+  sortOrder Int             @default(0)
+
+  week  MwbWeek   @relation(fields: [weekId], references: [id], onDelete: Cascade)
+  parts MwbPart[]
+
+  @@unique([weekId, sortOrder])
+  @@index([weekId, code])
+  @@map("mwb_section")
+}
+
+model MwbPart {
+  id          String   @id @default(uuid())
+  sectionId   String
+  sortOrder   Int
+  /// Título da parte (ex: "Busquemos perlas escondidas")
+  title       String
+  /// Tema específico da semana
+  theme       String?
+  /// Duração em minutos
+  durationMin Int?
+  /// Modalidade (DE CASA EN CASA, Discurso, etc.)
+  modality    String?
+  /// Fonte / referências
+  source      String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  section MwbSection @relation(fields: [sectionId], references: [id], onDelete: Cascade)
+
+  @@unique([sectionId, sortOrder])
+  @@map("mwb_part")
+}
+
 model ContentImportJob {
   id            String                  @id @default(uuid())
   sourceType    ContentImportSourceType
   locale        ContentLocale
   status        ContentImportJobStatus  @default(PENDING)
-  /// JSON extraído / editado na revisão (antes do commit)
+  /// JSON extraído / editado na revisão antes do commit
   extractedJson Json?
-  /// Notas da extração (ex.: origem do arquivo)
+  /// Notas da extração (origem, avisos)
   notes         String?
   errorMessage  String?
   createdAt     DateTime                @default(now())

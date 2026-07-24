@@ -161,6 +161,8 @@ model Organization {
   schedules        OrganizationSchedule[]
   cleaningLists    CleaningAssignmentList[]
 
+  publicTalkHistories PublicTalkHistory[]
+
   @@index([slug])
 }
 
@@ -213,6 +215,8 @@ model SubPerson {
   isActive          Boolean  @default(true)
   createdAt         DateTime @default(now())
   updatedAt         DateTime @updatedAt
+
+  publicTalksGiven PublicTalkHistory[] @relation("PublicTalkSubSpeaker")
 
   subOrganization SubOrganization @relation(fields: [subOrganizationId], references: [id], onDelete: Cascade)
   outlines        Outline[]
@@ -313,6 +317,8 @@ model Person {
 
   spouse    Person? @relation("PersonSpouse", fields: [spouseId], references: [id], onDelete: SetNull)
   marriedTo Person? @relation("PersonSpouse")
+
+  publicTalksGiven PublicTalkHistory[] @relation("PublicTalkSpeaker")
 
   @@index([organizationId, name])
   @@index([familyId])
@@ -610,17 +616,48 @@ model Song {
 
 /// Esboço de discurso público (S-34)
 model PublicTalk {
-  id        String        @id @default(uuid())
+  id        String        @id @default(cuid())
   locale    ContentLocale
   number    Int
   title     String
+  notes     String?
   createdAt DateTime      @default(now())
   updatedAt DateTime      @updatedAt
 
-  @@unique([number, locale])
-  @@index([locale])
+  histories PublicTalkHistory[]
+
+  @@unique([locale, number])
   @@index([locale, number])
-  @@map("public_talk")
+  @@index([locale, title])
+}
+
+model PublicTalkHistory {
+  id String @id @default(cuid())
+
+  organizationId     String
+  publicTalkId       String
+  speakerPersonId    String?
+  speakerSubPersonId String?
+
+  performedAt         DateTime
+  speakerNameSnapshot String
+  notes               String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  publicTalk PublicTalk @relation(fields: [publicTalkId], references: [id], onDelete: Restrict)
+
+  speakerPerson Person? @relation("PublicTalkSpeaker", fields: [speakerPersonId], references: [id], onDelete: SetNull)
+
+  speakerSubPerson SubPerson? @relation("PublicTalkSubSpeaker", fields: [speakerSubPersonId], references: [id], onDelete: SetNull)
+
+  @@index([organizationId, performedAt])
+  @@index([organizationId, publicTalkId, performedAt])
+  @@index([speakerPersonId])
+  @@index([speakerSubPersonId])
 }
 
 /// Artigo/semana de estudo de A Sentinela (reunião de fim de semana)

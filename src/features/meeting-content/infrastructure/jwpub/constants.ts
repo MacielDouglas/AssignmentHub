@@ -1,4 +1,4 @@
-export const MAX_UPLOAD_BYTES = 40 * 1024 * 1024;
+export const MAX_UPLOAD_BYTES = 100 * 1024 * 1024;
 export const MAX_EXPANDED_BYTES = 80 * 1024 * 1024;
 export const DEFAULT_STUDY_COLOR = "#4A6FA5";
 

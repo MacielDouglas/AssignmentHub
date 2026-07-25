@@ -21,4 +21,14 @@ export interface PublicTalkRepository {
 	listForOrganization(
 		input: ListPublicTalksInput,
 	): Promise<PublicTalkListItemDto[]>;
+	// domain
+
+	upsertMany(
+		items: Array<{
+			locale: ContentLocale;
+			number: number;
+			title: string;
+			notes: string | null;
+		}>,
+	): Promise<number>;
 }

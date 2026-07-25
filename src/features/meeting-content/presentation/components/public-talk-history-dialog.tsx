@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState, useMemo, useState } from "react";
+import { useActionState, useEffect, useMemo, useState } from "react";
 
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
@@ -28,7 +28,7 @@ type TalkHistoryDialogProps = {
 
 const initialState = {
 	success: false,
-	error: null,
+	error: null as string | null,
 };
 
 function toDateInputValue(value: Date) {
@@ -47,9 +47,11 @@ export function PublicTalkHistoryDialog({
 	eligibleSpeakers,
 }: TalkHistoryDialogProps) {
 	const [open, setOpen] = useState(false);
+	const [formInstance, setFormInstance] = useState(0);
 	const [speakerType, setSpeakerType] = useState<"PERSON" | "SUB_PERSON">(
 		"PERSON",
 	);
+
 	const [state, formAction, pending] = useActionState(
 		registerPublicTalkHistoryAction,
 		initialState,
@@ -65,39 +67,86 @@ export function PublicTalkHistoryDialog({
 		[eligibleSpeakers],
 	);
 
-	// useEffect(() => {
-	// 	if (!state.success) {
-	// 		return;
-	// 	}
+	useEffect(() => {
+		if (!state.success) return;
 
-	// 	setOpen(false);
-	// }, [state.success]);
+		const id = setTimeout(() => setOpen(false), 0);
+		return () => clearTimeout(id);
+	}, [state.success]);
+
+	function handleOpenChange(nextOpen: boolean) {
+		if (pending) return;
+
+		if (nextOpen) {
+			setFormInstance((current) => current + 1);
+			setSpeakerType("PERSON");
+		}
+
+		setOpen(nextOpen);
+	}
+
+	const formKey = `${talk.id}-${formInstance}`;
 
 	return (
-		<Dialog open={open} onOpenChange={setOpen}>
+		<Dialog open={open} onOpenChange={handleOpenChange}>
 			<DialogTrigger asChild>{trigger}</DialogTrigger>
 
-			<DialogContent className="max-w-3xl rounded-[28px] p-0">
-				<DialogHeader className="border-b border-slate-200 px-5 py-4 text-left dark:border-slate-800">
-					<DialogTitle className="text-base font-semibold text-slate-900 dark:text-slate-100">
+			<DialogContent className="max-h-[calc(100dvh-2rem)] w-[calc(100%-2rem)] max-w-xl overflow-y-auto rounded-[28px] p-0 sm:w-full">
+				<DialogHeader className="sticky top-0 z-10 border-b border-slate-200 bg-white px-5 py-4 text-left dark:border-slate-800 dark:bg-slate-950">
+					<DialogTitle className="pr-8 text-base font-semibold leading-6 text-slate-900 dark:text-slate-100">
 						Histórico · Nº {talk.number} · {talk.title}
 					</DialogTitle>
 				</DialogHeader>
 
-				<div className="grid gap-0 lg:grid-cols-[minmax(0,1fr)_360px]">
-					<div className="border-b border-slate-200 px-5 py-5 dark:border-slate-800 lg:border-b-0 lg:border-r">
-						<PublicTalkHistoryList history={talk.latestHistory} />
-					</div>
+				<div className="space-y-5 px-5 py-5">
+					<section
+						aria-labelledby={`history-list-${talk.id}`}
+						className="space-y-3"
+					>
+						<div className="flex items-center justify-between gap-3">
+							<h3
+								id={`history-list-${talk.id}`}
+								className="text-sm font-semibold text-slate-900 dark:text-slate-100"
+							>
+								Registros anteriores
+							</h3>
 
-					<form action={formAction} className="space-y-4 px-5 py-5">
+							<span className="inline-flex min-h-8 items-center rounded-full bg-slate-100 px-3 text-xs font-semibold text-slate-700 dark:bg-slate-800 dark:text-slate-300">
+								{talk.latestHistory.length}
+							</span>
+						</div>
+
+						<div className="max-h-60 overflow-y-auto pr-1">
+							<PublicTalkHistoryList
+								history={talk.latestHistory}
+								slug={slug}
+								organizationId={organizationId}
+								canDelete
+							/>
+						</div>
+					</section>
+
+					<div className="border-t border-slate-200 dark:border-slate-800" />
+
+					<form key={formKey} action={formAction} className="space-y-4">
+						<div>
+							<h3 className="text-sm font-semibold text-slate-900 dark:text-slate-100">
+								Registrar novo histórico
+							</h3>
+							<p className="mt-1 text-sm text-slate-600 dark:text-slate-400">
+								Informe quem apresentou este discurso e a data da apresentação.
+							</p>
+						</div>
+
 						<input type="hidden" name="slug" value={slug} />
 						<input type="hidden" name="organizationId" value={organizationId} />
 						<input type="hidden" name="publicTalkId" value={talk.id} />
 
 						<div className="space-y-2">
-							<Label htmlFor={`performedAt-${talk.id}`}>Data</Label>
+							<Label htmlFor={`performedAt-${formKey}`}>Data</Label>
+
 							<input
-								id={`performedAt-${talk.id}`}
+								id={`performedAt-${formKey}`}
 								type="date"
 								name="performedAt"
 								defaultValue={toDateInputValue(new Date())}
@@ -111,12 +160,13 @@ export function PublicTalkHistoryDialog({
 								Tipo de orador
 							</legend>
 
-							<div className="inline-flex rounded-2xl border border-slate-200 bg-slate-50 p-1 dark:border-slate-800 dark:bg-slate-900">
+							<div className="grid grid-cols-2 rounded-2xl border border-slate-200 bg-slate-50 p-1 dark:border-slate-800 dark:bg-slate-900">
 								<button
 									type="button"
 									onClick={() => setSpeakerType("PERSON")}
+									disabled={pending}
 									className={[
-										"min-h-10 rounded-xl px-4 text-sm font-medium transition",
+										"min-h-10 rounded-xl px-3 text-sm font-medium transition",
 										speakerType === "PERSON"
 											? "bg-white text-slate-900 shadow-sm dark:bg-slate-800 dark:text-slate-100"
 											: "text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-100",
@@ -128,8 +178,9 @@ export function PublicTalkHistoryDialog({
 								<button
 									type="button"
 									onClick={() => setSpeakerType("SUB_PERSON")}
+									disabled={pending}
 									className={[
-										"min-h-10 rounded-xl px-4 text-sm font-medium transition",
+										"min-h-10 rounded-xl px-3 text-sm font-medium transition",
 										speakerType === "SUB_PERSON"
 											? "bg-white text-slate-900 shadow-sm dark:bg-slate-800 dark:text-slate-100"
 											: "text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-100",
@@ -144,15 +195,17 @@ export function PublicTalkHistoryDialog({
 
 						{speakerType === "PERSON" ? (
 							<div className="space-y-2">
-								<Label htmlFor={`speakerPersonId-${talk.id}`}>Orador</Label>
+								<Label htmlFor={`speakerPersonId-${formKey}`}>Orador</Label>
+
 								<select
-									id={`speakerPersonId-${talk.id}`}
+									id={`speakerPersonId-${formKey}`}
 									name="speakerPersonId"
 									disabled={pending}
 									defaultValue=""
 									className="min-h-11 w-full rounded-2xl border border-slate-200 bg-white px-3 text-sm dark:border-slate-700 dark:bg-slate-900"
 								>
 									<option value="">Selecione</option>
+
 									{personSpeakers.map((speaker) => (
 										<option key={speaker.id} value={speaker.id}>
 											{speaker.name}
@@ -162,17 +215,19 @@ export function PublicTalkHistoryDialog({
 							</div>
 						) : (
 							<div className="space-y-2">
-								<Label htmlFor={`speakerSubPersonId-${talk.id}`}>
+								<Label htmlFor={`speakerSubPersonId-${formKey}`}>
 									Orador visitante
 								</Label>
+
 								<select
-									id={`speakerSubPersonId-${talk.id}`}
+									id={`speakerSubPersonId-${formKey}`}
 									name="speakerSubPersonId"
 									disabled={pending}
 									defaultValue=""
 									className="min-h-11 w-full rounded-2xl border border-slate-200 bg-white px-3 text-sm dark:border-slate-700 dark:bg-slate-900"
 								>
 									<option value="">Selecione</option>
+
 									{subPersonSpeakers.map((speaker) => (
 										<option key={speaker.id} value={speaker.id}>
 											{speaker.name} · {speaker.subOrganizationName}
@@ -183,9 +238,10 @@ export function PublicTalkHistoryDialog({
 						)}
 
 						<div className="space-y-2">
-							<Label htmlFor={`history-notes-${talk.id}`}>Notas</Label>
+							<Label htmlFor={`history-notes-${formKey}`}>Notas</Label>
+
 							<Textarea
-								id={`history-notes-${talk.id}`}
+								id={`history-notes-${formKey}`}
 								name="notes"
 								rows={4}
 								disabled={pending}
@@ -199,7 +255,7 @@ export function PublicTalkHistoryDialog({
 							</Alert>
 						) : null}
 
-						<div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
+						<div className="flex flex-col-reverse gap-2 border-t border-slate-200 pt-4 dark:border-slate-800 sm:flex-row sm:justify-end">
 							<Button
 								type="button"
 								variant="outline"
@@ -209,6 +265,7 @@ export function PublicTalkHistoryDialog({
 							>
 								Fechar
 							</Button>
+
 							<Button
 								type="submit"
 								className="min-h-11 rounded-2xl"

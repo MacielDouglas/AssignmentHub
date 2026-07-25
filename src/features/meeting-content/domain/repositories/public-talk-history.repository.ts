@@ -16,6 +16,8 @@ export interface PublicTalkHistoryRepository {
 
 	delete(input: DeletePublicTalkHistoryInput): Promise<void>;
 
+	deleteById(input: { id: string; organizationId: string }): Promise<boolean>;
+
 	listLatestByTalk(params: {
 		organizationId: string;
 		publicTalkId: string;

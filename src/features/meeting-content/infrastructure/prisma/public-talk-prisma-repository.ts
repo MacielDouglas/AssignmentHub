@@ -157,4 +157,57 @@ export class PublicTalkPrismaRepository implements PublicTalkRepository {
 
 		return mergePublicTalksByPrecedence(records.map(mapPublicTalk));
 	}
+
+	async upsertMany(
+		items: Array<{
+			locale: ContentLocale;
+			number: number;
+			title: string;
+			notes: string | null;
+		}>,
+	): Promise<number> {
+		if (items.length === 0) return 0;
+
+		const BATCH_SIZE = 20;
+
+		for (let start = 0; start < items.length; start += BATCH_SIZE) {
+			const batch = items.slice(start, start + BATCH_SIZE);
+
+			await Promise.all(
+				batch.map(async (item) => {
+					const existing = await db.publicTalk.findFirst({
+						where: {
+							organizationId: null,
+							locale: item.locale,
+							number: item.number,
+						},
+						select: { id: true },
+					});
+
+					if (existing) {
+						await db.publicTalk.update({
+							where: { id: existing.id },
+							data: {
+								title: item.title.trim(),
+								notes: item.notes,
+							},
+						});
+						return;
+					}
+
+					await db.publicTalk.create({
+						data: {
+							organizationId: null,
+							locale: item.locale,
+							number: item.number,
+							title: item.title.trim(),
+							notes: item.notes,
+						},
+					});
+				}),
+			);
+		}
+
+		return items.length;
+	}
 }

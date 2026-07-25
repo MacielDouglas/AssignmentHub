@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState, useMemo, useState } from "react";
+import { useActionState, useState } from "react";
 
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
@@ -52,33 +52,38 @@ export function PublicTalkDialog({
 	trigger,
 }: PublicTalkDialogProps) {
 	const [open, setOpen] = useState(false);
+	const [formInstance, setFormInstance] = useState(0);
+
 	const action =
 		mode === "create" ? createPublicTalkAction : updatePublicTalkAction;
+
 	const [state, formAction, pending] = useActionState(action, initialState);
 
-	// Fecha ao sucesso; reabre só se o usuário abrir de novo após um novo ciclo
-	const dialogOpen = open && !state.success;
+	// useEffect(() => {
+	//   if (!state.success) return;
 
-	const formKey = useMemo(() => {
-		if (mode === "edit" && talk) {
-			return `edit-${talk.id}-${String(talk.updatedAt ?? "")}`;
-		}
-		return `create-${dialogOpen ? "open" : "closed"}`;
-	}, [mode, dialogOpen, talk]);
+	//   setOpen(false);
+	// }, [state.success]);
 
-	function handleOpenChange(next: boolean) {
-		// Ao abrir de novo, precisamos “consumir” o success anterior.
-		// Como useActionState não tem reset nativo fácil, forçamos remount do form
-		// via formKey e só controlamos o open local.
-		if (next) {
-			setOpen(true);
-			return;
+	function handleOpenChange(nextOpen: boolean) {
+		if (pending) return;
+
+		if (nextOpen) {
+			setFormInstance((current) => current + 1);
 		}
-		setOpen(false);
+
+		setOpen(nextOpen);
 	}
 
+	const formKey = [
+		mode,
+		talk?.id ?? "new",
+		String(talk?.updatedAt ?? ""),
+		formInstance,
+	].join("-");
+
 	return (
-		<Dialog open={dialogOpen} onOpenChange={handleOpenChange}>
+		<Dialog open={open} onOpenChange={handleOpenChange}>
 			<DialogTrigger asChild>{trigger}</DialogTrigger>
 
 			<DialogContent className="max-w-lg rounded-[28px] p-0">
@@ -100,9 +105,10 @@ export function PublicTalkDialog({
 
 					{isSuperAdmin && mode === "create" ? (
 						<div className="space-y-2">
-							<Label htmlFor={`scope-${mode}`}>Destino do catálogo</Label>
+							<Label htmlFor={`scope-${formKey}`}>Destino do catálogo</Label>
+
 							<select
-								id={`scope-${mode}`}
+								id={`scope-${formKey}`}
 								name="scope"
 								defaultValue="LOCAL"
 								disabled={pending}
@@ -118,9 +124,10 @@ export function PublicTalkDialog({
 
 					<div className="grid gap-4 sm:grid-cols-[140px_minmax(0,1fr)]">
 						<div className="space-y-2">
-							<Label htmlFor={`locale-${mode}`}>Idioma</Label>
+							<Label htmlFor={`locale-${formKey}`}>Idioma</Label>
+
 							<select
-								id={`locale-${mode}`}
+								id={`locale-${formKey}`}
 								name="locale"
 								defaultValue={talk?.locale ?? "pt"}
 								disabled={pending}
@@ -132,9 +139,10 @@ export function PublicTalkDialog({
 						</div>
 
 						<div className="space-y-2">
-							<Label htmlFor={`number-${mode}`}>Número</Label>
+							<Label htmlFor={`number-${formKey}`}>Número</Label>
+
 							<Input
-								id={`number-${mode}`}
+								id={`number-${formKey}`}
 								name="number"
 								type="number"
 								min={1}
@@ -147,9 +155,10 @@ export function PublicTalkDialog({
 					</div>
 
 					<div className="space-y-2">
-						<Label htmlFor={`title-${mode}`}>Título</Label>
+						<Label htmlFor={`title-${formKey}`}>Título</Label>
+
 						<Input
-							id={`title-${mode}`}
+							id={`title-${formKey}`}
 							name="title"
 							defaultValue={talk?.title ?? ""}
 							disabled={pending}
@@ -158,9 +167,10 @@ export function PublicTalkDialog({
 					</div>
 
 					<div className="space-y-2">
-						<Label htmlFor={`notes-${mode}`}>Notas</Label>
+						<Label htmlFor={`notes-${formKey}`}>Notas</Label>
+
 						<Textarea
-							id={`notes-${mode}`}
+							id={`notes-${formKey}`}
 							name="notes"
 							defaultValue={talk?.notes ?? ""}
 							disabled={pending}
@@ -185,6 +195,7 @@ export function PublicTalkDialog({
 						>
 							Cancelar
 						</Button>
+
 						<Button
 							type="submit"
 							className="min-h-11 rounded-2xl"

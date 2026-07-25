@@ -7,7 +7,7 @@ const nextConfig: NextConfig = {
 	experimental: {
 		serverActions: {
 			// PDFs da Sentinela/MWB: 2–15 MB + overhead multipart
-			bodySizeLimit: "25mb",
+			bodySizeLimit: "200mb",
 		},
 	},
 };

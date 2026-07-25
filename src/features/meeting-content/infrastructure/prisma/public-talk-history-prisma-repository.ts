@@ -92,6 +92,20 @@ export class PublicTalkHistoryPrismaRepository
 		});
 	}
 
+	async deleteById(input: {
+		id: string;
+		organizationId: string;
+	}): Promise<boolean> {
+		const result = await db.publicTalkHistory.deleteMany({
+			where: {
+				id: input.id,
+				organizationId: input.organizationId,
+			},
+		});
+
+		return result.count > 0;
+	}
+
 	async listLatestByTalk(params: {
 		organizationId: string;
 		publicTalkId: string;

@@ -2,19 +2,21 @@ import type { PublicTalkHistoryRepository } from "../../domain/repositories/publ
 
 export async function deletePublicTalkHistoryUseCase(
 	deps: {
-		repository: PublicTalkHistoryRepository;
+		histories: PublicTalkHistoryRepository;
 	},
 	input: {
 		id: string;
 		organizationId: string;
 	},
-) {
-	await deps.repository.delete({
-		id: input.id,
-		organizationId: input.organizationId,
-	});
+): Promise<{ ok: true } | { ok: false; error: string }> {
+	const deleted = await deps.histories.deleteById(input);
 
-	return {
-		ok: true as const,
-	};
+	if (!deleted) {
+		return {
+			ok: false,
+			error: "Histórico não encontrado ou sem permissão para removê-lo.",
+		};
+	}
+
+	return { ok: true };
 }

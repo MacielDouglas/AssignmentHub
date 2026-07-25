@@ -5,7 +5,6 @@ import type {
 	CreateSongInput,
 	SongRepository,
 	UpdateSongInput,
-	UpsertSongInput,
 } from "../../domain/repositories/song.repository";
 
 type SongRow = {
@@ -117,39 +116,54 @@ export class PrismaSongRepository implements SongRepository {
 		return mapSong(row);
 	}
 
-	async upsertMany(items: UpsertSongInput[]): Promise<number> {
-		const chunkSize = 50;
+	async upsertMany(
+		items: Array<{
+			locale: ContentLocale;
+			number: number;
+			title: string;
+			notes: string | null;
+		}>,
+	): Promise<number> {
+		if (items.length === 0) return 0;
+
 		let count = 0;
 
-		for (let index = 0; index < items.length; index += chunkSize) {
-			const chunk = items.slice(index, index + chunkSize);
+		await db.$transaction(async (tx) => {
+			for (const item of items) {
+				// Se o schema NÃO tem unique locale_number, use findFirst + update/create
+				const existing = await tx.publicTalk.findFirst({
+					where: {
+						locale: item.locale,
+						number: item.number,
+						organizationId: null,
+					},
+					select: { id: true },
+				});
 
-			await db.$transaction(
-				chunk.map((song) =>
-					db.song.upsert({
-						where: {
-							number_locale: {
-								number: song.number,
-								locale: song.locale,
-							},
+				if (existing) {
+					await tx.publicTalk.update({
+						where: { id: existing.id },
+						data: { title: item.title },
+					});
+				} else {
+					await tx.publicTalk.create({
+						data: {
+							organizationId: null,
+							locale: item.locale,
+							number: item.number,
+							title: item.title,
+							notes: item.notes,
 						},
-						create: {
-							number: song.number,
-							title: song.title,
-							locale: song.locale,
-						},
-						update: {
-							title: song.title,
-						},
-					}),
-				),
-			);
+					});
+				}
 
-			count += chunk.length;
-		}
+				count += 1;
+			}
+		});
 
 		return count;
 	}
+	// }
 
 	async deleteByIds(ids: string[]): Promise<number> {
 		const result = await db.song.deleteMany({

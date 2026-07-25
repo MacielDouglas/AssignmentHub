@@ -1,18 +1,26 @@
+// src/app/org/[slug]/meeting-content/discursos/page.tsx
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
+
 import { getMeetingContentAccess } from "@/features/meeting-content/application/services/meeting-content-auth";
+// ajuste o path real do seu list:
+import { listPublicTalksPageData } from "@/features/meeting-content/application/use-cases/list-public-talks-page-data";
+// ou: from ".../queries/get-public-talks-section-data.query"
 import { PublicTalksSection } from "@/features/meeting-content/presentation/components/public-talks-section";
-import { getPublicTalksSectionData } from "@/features/meeting-content/queries/get-public-talks-section-data.query";
 
 export const metadata: Metadata = {
 	title: "Discursos públicos · Conteúdo das Reuniões",
-	description: "Esboços de discursos públicos (S-34).",
 	robots: { index: false, follow: false },
 };
 
 type Props = {
 	params: Promise<{ slug: string }>;
 };
+
+/** Converte Date → string ISO e remove valores não JSON-safe para Client Components. */
+function toClientJSON<T>(value: T): T {
+	return JSON.parse(JSON.stringify(value)) as T;
+}
 
 export default async function DiscursosPage({ params }: Props) {
 	const { slug } = await params;
@@ -22,17 +30,20 @@ export default async function DiscursosPage({ params }: Props) {
 		notFound();
 	}
 
-	const data = await getPublicTalksSectionData({
-		organizationId: access.organizationId,
-	});
+	const result = await listPublicTalksPageData(access.organizationId);
+	// adapte se a função retornar shape diferente:
+	const data = "data" in result ? result.data : result;
+	const pendingJob =
+		"pendingJob" in result ? (result.pendingJob ?? null) : null;
 
 	return (
 		<PublicTalksSection
 			slug={slug}
 			organizationId={access.organizationId}
-			data={data}
+			data={toClientJSON(data)}
 			canManage={access.canManage}
-			isSuperAdmin={access.isSuperAdmin}
+			isSuperAdmin={Boolean(access.isSuperAdmin)}
+			pendingJob={pendingJob ? toClientJSON(pendingJob) : null}
 		/>
 	);
 }

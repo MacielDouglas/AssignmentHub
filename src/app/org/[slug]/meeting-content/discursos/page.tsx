@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
-
-import { MeetingContentSectionStub } from "@/features/meeting-content/presentation/components/meeting-content-section-stub";
+import { notFound } from "next/navigation";
+import { getMeetingContentAccess } from "@/features/meeting-content/application/services/meeting-content-auth";
+import { PublicTalksSection } from "@/features/meeting-content/presentation/components/public-talks-section";
+import { getPublicTalksSectionData } from "@/features/meeting-content/queries/get-public-talks-section-data.query";
 
 export const metadata: Metadata = {
 	title: "Discursos públicos · Conteúdo das Reuniões",
@@ -8,12 +10,29 @@ export const metadata: Metadata = {
 	robots: { index: false, follow: false },
 };
 
-export default function DiscursosPage() {
+type Props = {
+	params: Promise<{ slug: string }>;
+};
+
+export default async function DiscursosPage({ params }: Props) {
+	const { slug } = await params;
+	const access = await getMeetingContentAccess(slug);
+
+	if (!access?.organizationId) {
+		notFound();
+	}
+
+	const data = await getPublicTalksSectionData({
+		organizationId: access.organizationId,
+	});
+
 	return (
-		<MeetingContentSectionStub
-			badge="Fim de semana"
-			title="Discursos públicos"
-			description="Importe o arquivo S-34 (.jwpub) para cadastrar número e tema dos discursos públicos."
+		<PublicTalksSection
+			slug={slug}
+			organizationId={access.organizationId}
+			data={data}
+			canManage={access.canManage}
+			isSuperAdmin={access.isSuperAdmin}
 		/>
 	);
 }

@@ -163,6 +163,11 @@ model Organization {
 
   publicTalkHistories PublicTalkHistory[]
 
+  localPublicTalks PublicTalk[] @relation("OrganizationLocalPublicTalks")
+  localMwbIssues   MwbIssue[]   @relation("OrganizationLocalMwbIssues")
+
+  contentImportJobs ContentImportJob[] @relation("OrganizationContentImportJobs")
+
   @@index([slug])
 }
 
@@ -213,13 +218,14 @@ model SubPerson {
   name              String
   sex               Sex      @default(MALE)
   isActive          Boolean  @default(true)
+  publicTalk        Boolean  @default(false)
   createdAt         DateTime @default(now())
   updatedAt         DateTime @updatedAt
 
-  publicTalksGiven PublicTalkHistory[] @relation("PublicTalkSubSpeaker")
-
   subOrganization SubOrganization @relation(fields: [subOrganizationId], references: [id], onDelete: Cascade)
   outlines        Outline[]
+
+  publicTalksGiven PublicTalkHistory[] @relation("PublicTalkSubSpeaker")
 
   @@index([subOrganizationId, name])
 }
@@ -616,19 +622,24 @@ model Song {
 
 /// Esboço de discurso público (S-34)
 model PublicTalk {
-  id        String        @id @default(cuid())
-  locale    ContentLocale
-  number    Int
-  title     String
-  notes     String?
-  createdAt DateTime      @default(now())
-  updatedAt DateTime      @updatedAt
+  id             String        @id @default(cuid())
+  organizationId String?
+  locale         ContentLocale
+  number         Int
+  title          String
+  notes          String?
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+
+  organization Organization? @relation("OrganizationLocalPublicTalks", fields: [organizationId], references: [id], onDelete: Cascade)
 
   histories PublicTalkHistory[]
 
-  @@unique([locale, number])
+  @@unique([organizationId, locale, number])
+  @@index([organizationId, locale, number])
   @@index([locale, number])
-  @@index([locale, title])
+  @@index([organizationId, locale, title])
+  @@map("public_talk")
 }
 
 model PublicTalkHistory {
@@ -693,22 +704,23 @@ model WatchtowerStudy {
 
 /// Edição da apostila / guia de atividades (MWB)
 model MwbIssue {
-  id         String        @id @default(uuid())
-  locale     ContentLocale
-  /// Ex: mwb26.07
-  symbol     String
-  /// Nome da apostila
-  title      String
-  coverTitle String?
-  year       Int?
-  /// Mês da edição (1-12), quando conhecido
-  month      Int?
-  createdAt  DateTime      @default(now())
-  updatedAt  DateTime      @updatedAt
+  id             String        @id @default(uuid())
+  organizationId String?
+  locale         ContentLocale
+  symbol         String
+  title          String
+  coverTitle     String?
+  year           Int?
+  month          Int?
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+
+  organization Organization? @relation("OrganizationLocalMwbIssues", fields: [organizationId], references: [id], onDelete: Cascade)
 
   weeks MwbWeek[]
 
-  @@unique([symbol, locale])
+  @@unique([organizationId, symbol, locale])
+  @@index([organizationId, locale, year, month])
   @@index([locale, year, month])
   @@map("mwb_issue")
 }
@@ -787,22 +799,23 @@ model MwbPart {
 }
 
 model ContentImportJob {
-  id            String                  @id @default(uuid())
-  sourceType    ContentImportSourceType
-  locale        ContentLocale
-  status        ContentImportJobStatus  @default(PENDING)
-  /// JSON extraído / editado na revisão antes do commit
-  extractedJson Json?
-  /// Notas da extração (origem, avisos)
-  notes         String?
-  errorMessage  String?
-  createdAt     DateTime                @default(now())
-  updatedAt     DateTime                @updatedAt
-  committedAt   DateTime?
+  id             String                  @id @default(uuid())
+  organizationId String?
+  sourceType     ContentImportSourceType
+  locale         ContentLocale
+  status         ContentImportJobStatus  @default(PENDING)
+  extractedJson  Json?
+  notes          String?
+  errorMessage   String?
+  createdAt      DateTime                @default(now())
+  updatedAt      DateTime                @updatedAt
+  committedAt    DateTime?
+
+  organization Organization? @relation("OrganizationContentImportJobs", fields: [organizationId], references: [id], onDelete: Cascade)
 
   files ContentImportFile[]
 
-  @@index([sourceType, status, createdAt])
+  @@index([organizationId, sourceType, status, createdAt])
   @@index([locale, sourceType])
   @@map("content_import_job")
 }

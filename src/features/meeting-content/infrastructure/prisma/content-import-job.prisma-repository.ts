@@ -51,14 +51,16 @@ export class PrismaContentImportJobRepository
 					create: input.fileNames.map((fileName) => ({
 						fileName,
 						mimeType: "application/jwpub",
-						storageKey: "memory:discarded",
+						storageKey: "memory-discarded",
 						sizeBytes: 0,
 					})),
 				},
 			},
 			include: {
 				files: {
-					select: { fileName: true },
+					select: {
+						fileName: true,
+					},
 				},
 			},
 		});
@@ -135,7 +137,9 @@ export class PrismaContentImportJobRepository
 			where: { id },
 			include: {
 				files: {
-					select: { fileName: true },
+					select: {
+						fileName: true,
+					},
 				},
 			},
 		});
@@ -150,7 +154,7 @@ export class PrismaContentImportJobRepository
 			where: {
 				sourceType,
 				status: {
-					in: ["AWAITING_REVIEW", "PROCESSING"],
+					in: ["PROCESSING", "AWAITING_REVIEW"],
 				},
 			},
 			orderBy: {
@@ -158,7 +162,9 @@ export class PrismaContentImportJobRepository
 			},
 			include: {
 				files: {
-					select: { fileName: true },
+					select: {
+						fileName: true,
+					},
 				},
 			},
 		});

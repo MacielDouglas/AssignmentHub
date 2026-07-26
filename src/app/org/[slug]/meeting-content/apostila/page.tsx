@@ -1,20 +1,39 @@
 import type { Metadata } from "next";
+import { notFound } from "next/navigation";
 
-import { MeetingContentSectionStub } from "@/features/meeting-content/presentation/components/meeting-content-section-stub";
+import { listMwbPageData } from "@/features/meeting-content/application/services/list-mwb-page-data";
+import { getMeetingContentAccess } from "@/features/meeting-content/application/services/meeting-content-auth";
+import { MwbSection } from "@/features/meeting-content/presentation/components/mwb-section";
+
+type Props = {
+	params: Promise<{ slug: string }>;
+};
 
 export const metadata: Metadata = {
 	title: "Apostila · Conteúdo das Reuniões",
 	description:
-		"Guia de atividades da reunião do meio de semana (segunda a sexta).",
-	robots: { index: false, follow: false },
+		"Importe e gerencie a Guia de atividades da reunião do meio de semana.",
+	robots: {
+		index: false,
+		follow: false,
+	},
 };
 
-export default function ApostilaPage() {
+export default async function ApostilaPage({ params }: Props) {
+	const { slug } = await params;
+	const access = await getMeetingContentAccess(slug);
+
+	if (!access) notFound();
+
+	const { issues, counts, pendingJob } = await listMwbPageData();
+
 	return (
-		<MeetingContentSectionStub
-			badge="Meio de semana"
-			title="Apostila"
-			description="Importe o arquivo .jwpub da Guia de atividades (mwb) para cadastrar semanas, seções, partes, tempos e cânticos."
+		<MwbSection
+			slug={slug}
+			canManage={access.canManage}
+			issues={issues}
+			counts={counts}
+			pendingJob={pendingJob}
 		/>
 	);
 }

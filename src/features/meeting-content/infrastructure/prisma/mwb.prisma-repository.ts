@@ -131,124 +131,157 @@ function mapIssue(row: MwbIssueRow): MwbIssueEntity {
 }
 
 export default class PrismaMwbRepository implements MwbRepository {
+	// src/features/meeting-content/infrastructure/prisma/mwb.prisma-repository.ts
+
 	async commitExtract(data: MwbExtract): Promise<CommitMwbResult> {
-		return db.$transaction(async (tx) => {
-			const issue = await this.upsertIssue(tx, data);
+		// Timeout maior: reimportação substitui seções/partes de várias semanas.
+		return db.$transaction(
+			async (tx) => {
+				const issue = await this.upsertIssue(tx, data);
 
-			let weeksUpserted = 0;
-			let sectionsCreated = 0;
-			let partsCreated = 0;
+				// Resolve cânticos uma vez por número (evita 3 finds × N semanas).
+				const songNumbers = new Set<number>();
+				for (const week of data.weeks) {
+					if (week.openingSongNum != null) songNumbers.add(week.openingSongNum);
+					if (week.middleSongNum != null) songNumbers.add(week.middleSongNum);
+					if (week.closingSongNum != null) songNumbers.add(week.closingSongNum);
+				}
+				const songIdByNumber = await this.findSongIdsByNumbers(
+					tx,
+					data.locale,
+					[...songNumbers],
+				);
 
-			for (const weekInput of data.weeks) {
-				const openingSongNum = weekInput.openingSongNum ?? null;
-				const middleSongNum = weekInput.middleSongNum ?? null;
-				const closingSongNum = weekInput.closingSongNum ?? null;
+				let weeksUpserted = 0;
+				let sectionsCreated = 0;
+				let partsCreated = 0;
 
-				const [openingSongId, middleSongId, closingSongId] = await Promise.all([
-					this.findSongId(tx, data.locale, openingSongNum),
-					this.findSongId(tx, data.locale, middleSongNum),
-					this.findSongId(tx, data.locale, closingSongNum),
-				]);
+				for (const weekInput of data.weeks) {
+					const openingSongNum = weekInput.openingSongNum ?? null;
+					const middleSongNum = weekInput.middleSongNum ?? null;
+					const closingSongNum = weekInput.closingSongNum ?? null;
 
-				const weekStart = asDateOnly(weekInput.weekStart);
-				const weekEnd = asDateOnly(weekInput.weekEnd);
+					const openingSongId =
+						openingSongNum != null
+							? (songIdByNumber.get(openingSongNum) ?? null)
+							: null;
+					const middleSongId =
+						middleSongNum != null
+							? (songIdByNumber.get(middleSongNum) ?? null)
+							: null;
+					const closingSongId =
+						closingSongNum != null
+							? (songIdByNumber.get(closingSongNum) ?? null)
+							: null;
 
-				const week = await tx.mwbWeek.upsert({
-					where: {
-						issueId_weekStart: {
+					const weekStart = asDateOnly(weekInput.weekStart);
+					const weekEnd = asDateOnly(weekInput.weekEnd);
+
+					const week = await tx.mwbWeek.upsert({
+						where: {
+							issueId_weekStart: {
+								issueId: issue.id,
+								weekStart,
+							},
+						},
+						create: {
 							issueId: issue.id,
 							weekStart,
+							weekEnd,
+							weekLabelRaw: weekInput.weekLabelRaw ?? null,
+							dateRangeRaw: weekInput.dateRangeRaw ?? null,
+							openingSongNum,
+							middleSongNum,
+							closingSongNum,
+							openingSongId,
+							middleSongId,
+							closingSongId,
+							sortOrder: weekInput.sortOrder,
 						},
-					},
-					create: {
-						issueId: issue.id,
-						weekStart,
-						weekEnd,
-						weekLabelRaw: weekInput.weekLabelRaw ?? null,
-						dateRangeRaw: weekInput.dateRangeRaw ?? null,
-						openingSongNum,
-						middleSongNum,
-						closingSongNum,
-						openingSongId,
-						middleSongId,
-						closingSongId,
-						sortOrder: weekInput.sortOrder,
-					},
-					update: {
-						weekEnd,
-						weekLabelRaw: weekInput.weekLabelRaw ?? null,
-						dateRangeRaw: weekInput.dateRangeRaw ?? null,
-						openingSongNum,
-						middleSongNum,
-						closingSongNum,
-						openingSongId,
-						middleSongId,
-						closingSongId,
-						sortOrder: weekInput.sortOrder,
-					},
-					select: {
-						id: true,
-					},
-				});
-
-				weeksUpserted += 1;
-
-				/*
-				 * Regra A:
-				 * Ao reimportar uma semana existente, suas seções e partes são
-				 * totalmente substituídas para espelhar o arquivo .jwpub revisado.
-				 *
-				 * A deleção das seções também remove as partes por cascade.
-				 */
-				await tx.mwbSection.deleteMany({
-					where: {
-						weekId: week.id,
-					},
-				});
-
-				for (const sectionInput of weekInput.sections) {
-					const section = await tx.mwbSection.create({
-						data: {
-							weekId: week.id,
-							name: sectionInput.name,
-							code: sectionCode(sectionInput.code),
-							sortOrder: sectionInput.sortOrder,
+						update: {
+							weekEnd,
+							weekLabelRaw: weekInput.weekLabelRaw ?? null,
+							dateRangeRaw: weekInput.dateRangeRaw ?? null,
+							openingSongNum,
+							middleSongNum,
+							closingSongNum,
+							openingSongId,
+							middleSongId,
+							closingSongId,
+							sortOrder: weekInput.sortOrder,
 						},
-						select: {
-							id: true,
-						},
+						select: { id: true },
 					});
+					weeksUpserted += 1;
 
-					sectionsCreated += 1;
+					// Regra A: substitui seções/partes da semana.
+					await tx.mwbSection.deleteMany({ where: { weekId: week.id } });
 
-					if (sectionInput.parts.length === 0) {
-						continue;
+					for (const sectionInput of weekInput.sections) {
+						const section = await tx.mwbSection.create({
+							data: {
+								weekId: week.id,
+								name: sectionInput.name,
+								code: sectionCode(sectionInput.code),
+								sortOrder: sectionInput.sortOrder,
+							},
+							select: { id: true },
+						});
+						sectionsCreated += 1;
+
+						if (sectionInput.parts.length === 0) continue;
+
+						await tx.mwbPart.createMany({
+							data: sectionInput.parts.map((part) => ({
+								sectionId: section.id,
+								sortOrder: part.sortOrder,
+								title: part.title,
+								theme: part.theme ?? null,
+								durationMin: part.durationMin ?? null,
+								modality: part.modality ?? null,
+								source: part.source ?? null,
+							})),
+						});
+						partsCreated += sectionInput.parts.length;
 					}
-
-					await tx.mwbPart.createMany({
-						data: sectionInput.parts.map((part) => ({
-							sectionId: section.id,
-							sortOrder: part.sortOrder,
-							title: part.title,
-							theme: part.theme ?? null,
-							durationMin: part.durationMin ?? null,
-							modality: part.modality ?? null,
-							source: part.source ?? null,
-						})),
-					});
-
-					partsCreated += sectionInput.parts.length;
 				}
-			}
 
-			return {
-				issueId: issue.id,
-				issuesUpserted: 1,
-				weeksUpserted,
-				sectionsCreated,
-				partsCreated,
-			};
+				return {
+					issueId: issue.id,
+					issuesUpserted: 1,
+					weeksUpserted,
+					sectionsCreated,
+					partsCreated,
+				};
+			},
+			{
+				// Default Prisma = 5000ms; commit de apostila costuma passar disso.
+				maxWait: 10_000,
+				timeout: 60_000,
+			},
+		);
+	}
+
+	private async findSongIdsByNumbers(
+		tx: Prisma.TransactionClient,
+		locale: ContentLocale,
+		numbers: number[],
+	): Promise<Map<number, string>> {
+		const map = new Map<number, string>();
+		if (numbers.length === 0) return map;
+
+		const songs = await tx.song.findMany({
+			where: {
+				locale,
+				number: { in: numbers },
+			},
+			select: { id: true, number: true },
 		});
+
+		for (const song of songs) {
+			map.set(song.number, song.id);
+		}
+		return map;
 	}
 
 	async listIssues(locale?: ContentLocale): Promise<MwbIssueEntity[]> {
@@ -392,4 +425,168 @@ export default class PrismaMwbRepository implements MwbRepository {
 
 		return song?.id ?? null;
 	}
+
+	async updateIssue(
+		data: import("../../application/dto/mwb-extract.dto").MwbIssueUpdateInput,
+	): Promise<{ ok: true } | { ok: false; error: string }> {
+		try {
+			await db.$transaction(async (tx) => {
+				const existing = await tx.mwbIssue.findUnique({
+					where: { id: data.id },
+					select: { id: true, locale: true },
+				});
+				if (!existing) throw new Error("Edição da apostila não encontrada.");
+
+				// evita colidir symbol+locale com outra edição
+				const clash = await tx.mwbIssue.findFirst({
+					where: {
+						symbol: data.symbol,
+						locale: data.locale,
+						NOT: { id: data.id },
+					},
+					select: { id: true },
+				});
+				if (clash) {
+					throw new Error(
+						"Já existe outra edição com este símbolo neste idioma.",
+					);
+				}
+
+				await tx.mwbIssue.update({
+					where: { id: data.id },
+					data: {
+						locale: data.locale,
+						symbol: data.symbol,
+						title: data.title,
+						coverTitle: data.coverTitle ?? null,
+						year: data.year ?? null,
+						month: data.month ?? null,
+					},
+				});
+
+				const keptWeekStarts = data.weeks.map((w) => asDateOnly(w.weekStart));
+
+				// remove semanas que saíram do formulário
+				await tx.mwbWeek.deleteMany({
+					where: {
+						issueId: data.id,
+						weekStart: { notIn: keptWeekStarts },
+					},
+				});
+
+				for (const weekInput of data.weeks) {
+					const openingSongNum = weekInput.openingSongNum ?? null;
+					const middleSongNum = weekInput.middleSongNum ?? null;
+					const closingSongNum = weekInput.closingSongNum ?? null;
+
+					const [openingSongId, middleSongId, closingSongId] =
+						await Promise.all([
+							this.findSongId(tx, data.locale, openingSongNum),
+							this.findSongId(tx, data.locale, middleSongNum),
+							this.findSongId(tx, data.locale, closingSongNum),
+						]);
+
+					const weekStart = asDateOnly(weekInput.weekStart);
+					const weekEnd = asDateOnly(weekInput.weekEnd);
+
+					const week = await tx.mwbWeek.upsert({
+						where: {
+							issueId_weekStart: { issueId: data.id, weekStart },
+						},
+						create: {
+							issueId: data.id,
+							weekStart,
+							weekEnd,
+							weekLabelRaw: weekInput.weekLabelRaw ?? null,
+							dateRangeRaw: weekInput.dateRangeRaw ?? null,
+							openingSongNum,
+							middleSongNum,
+							closingSongNum,
+							openingSongId,
+							middleSongId,
+							closingSongId,
+							sortOrder: weekInput.sortOrder,
+						},
+						update: {
+							weekEnd,
+							weekLabelRaw: weekInput.weekLabelRaw ?? null,
+							dateRangeRaw: weekInput.dateRangeRaw ?? null,
+							openingSongNum,
+							middleSongNum,
+							closingSongNum,
+							openingSongId,
+							middleSongId,
+							closingSongId,
+							sortOrder: weekInput.sortOrder,
+						},
+						select: { id: true },
+					});
+
+					// mesma regra A: seções/partes da semana são substituídas
+					await tx.mwbSection.deleteMany({ where: { weekId: week.id } });
+
+					for (const sectionInput of weekInput.sections) {
+						const section = await tx.mwbSection.create({
+							data: {
+								weekId: week.id,
+								name: sectionInput.name,
+								code: sectionCode(sectionInput.code),
+								sortOrder: sectionInput.sortOrder,
+							},
+							select: { id: true },
+						});
+
+						if (sectionInput.parts.length === 0) continue;
+
+						await tx.mwbPart.createMany({
+							data: sectionInput.parts.map((part) => ({
+								sectionId: section.id,
+								sortOrder: part.sortOrder,
+								title: part.title,
+								theme: part.theme ?? null,
+								durationMin: part.durationMin ?? null,
+								modality: part.modality ?? null,
+								source: part.source ?? null,
+							})),
+						});
+					}
+				}
+			});
+
+			return { ok: true };
+		} catch (error) {
+			return {
+				ok: false,
+				error:
+					error instanceof Error
+						? error.message
+						: "Não foi possível atualizar a apostila.",
+			};
+		}
+	}
 }
+
+// 	private async findSongId(
+// 		tx: Prisma.TransactionClient,
+// 		locale: ContentLocale,
+// 		songNumber: number | null,
+// 	): Promise<string | null> {
+// 		if (songNumber === null) {
+// 			return null;
+// 		}
+
+// 		const song = await tx.song.findUnique({
+// 			where: {
+// 				number_locale: {
+// 					number: songNumber,
+// 					locale,
+// 				},
+// 			},
+// 			select: {
+// 				id: true,
+// 			},
+// 		});
+
+// 		return song?.id ?? null;
+// 	}
+// }

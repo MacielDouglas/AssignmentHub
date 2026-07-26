@@ -1,4 +1,7 @@
-import type { MwbExtract } from "../../application/dto/mwb-extract.dto";
+import type {
+	MwbExtract,
+	MwbIssueUpdateInput,
+} from "../../application/dto/mwb-extract.dto";
 import type { MwbIssueEntity } from "../entities/mwb";
 import type { ContentLocale } from "../values-objects/content-locale";
 
@@ -21,4 +24,7 @@ export default interface MwbRepository {
 	countByLocale(): Promise<MwbLocaleCount[]>;
 	deleteIssue(id: string): Promise<boolean>;
 	deleteIssuesByLocale(locale: ContentLocale): Promise<number>;
+	updateIssue(
+		data: MwbIssueUpdateInput,
+	): Promise<{ ok: true } | { ok: false; error: string }>;
 }

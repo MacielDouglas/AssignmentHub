@@ -49,6 +49,35 @@ const GENERIC_PART_TYPES = new Set([
 	"Necesidades de la congregacion",
 ]);
 
+const TEACHING_MARKERS = [
+	"th ",
+	"lmd",
+	"lff",
+	"ijwbq",
+	"ijwyp",
+	"ijwfq",
+	"ijwwd",
+];
+const BIBLE_STUDY_MARKERS = [
+	"jr ",
+	"w0",
+	"w1",
+	"w2",
+	"it-",
+	"w94",
+	"w07",
+	"w08",
+	"w09",
+	"w10",
+	"w11",
+	"w13",
+	"w14",
+	"w22",
+	"w24",
+	"w25",
+];
+const CHRISTIAN_LIFE_MARKERS = ["lfb", "wcg"];
+
 const FORMAT_MARKERS = [
 	"DE CASA EN CASA",
 	"PREDICACAO INFORMAL",
@@ -286,12 +315,12 @@ function deriveAesKey(
 	year: number,
 	issueTag: string | number,
 ): { key: Buffer; iv: Buffer } {
-	let material = `${langIdx}${symbol}${year}`;
+	let material = `${langIdx}_${symbol}_${year}`;
 	const issueTagNumber =
 		typeof issueTag === "string" ? Number(issueTag) : issueTag;
 
 	if (Number.isFinite(issueTagNumber) && issueTagNumber !== 0) {
-		material += String(issueTag);
+		material += `_${issueTag}`;
 	}
 
 	const hash = createHash("sha256").update(material, "utf8").digest();
@@ -668,51 +697,60 @@ function pickSongs(weekSongs: SongRow[]): {
 	};
 }
 
+function classifyExtractSource(
+	source: string,
+): "TREASURES" | "APPLY" | "LIVING" {
+	const s = (source ?? "").toLowerCase();
+	for (const m of CHRISTIAN_LIFE_MARKERS) if (s.startsWith(m)) return "LIVING";
+	for (const m of TEACHING_MARKERS) if (s.startsWith(m)) return "APPLY";
+	for (const m of BIBLE_STUDY_MARKERS) if (s.startsWith(m)) return "TREASURES";
+	return "TREASURES";
+}
+
 function buildFallbackSections(
 	locale: ContentLocale,
 	weekExtracts: DocExtractRow[],
 	extracts: Map<number, ExtractRow>,
 ): MwbSectionExtract[] {
-	const parts = weekExtracts
-		.map((docExtract, index) => {
-			const { source, tema } = getPartSourceAndTheme(docExtract, extracts);
+	const classified: Map<string, MwbSectionExtract["parts"]> = new Map();
+	classified.set("TREASURES", []);
+	classified.set("APPLY", []);
+	classified.set("LIVING", []);
 
-			if (isSongSource(source)) return null;
+	for (const docExtract of weekExtracts) {
+		const { source, tema } = getPartSourceAndTheme(docExtract, extracts);
+		if (isSongSource(source)) continue;
 
-			const title = tema || source || `Parte ${index + 1}`;
+		const code = classifyExtractSource(source);
+		const list = classified.get(code);
+		if (!list) continue;
+		list.push({
+			title: tema || source || `Parte ${list.length + 1}`,
+			theme: tema || null,
+			durationMin: null,
+			modality: null,
+			source: source || null,
+			sortOrder: list.length,
+		});
+	}
 
-			return {
-				title,
-				theme: tema || null,
-				durationMin: null as number | null,
-				modality: null as string | null,
-				source: source || null,
-				sortOrder: index,
-			};
-		})
-		.filter(
-			(
-				part,
-			): part is {
-				title: string;
-				theme: string | null;
-				durationMin: number | null;
-				modality: string | null;
-				source: string | null;
-				sortOrder: number;
-			} => part !== null,
-		);
-
-	if (parts.length === 0) return [];
-
-	return [
-		{
-			name: sectionDisplayName("TREASURES", "Seção", locale),
-			code: "TREASURES",
-			sortOrder: 0,
+	const sections: MwbSectionExtract[] = [];
+	for (const entry of [
+		{ code: "TREASURES" as const },
+		{ code: "APPLY" as const },
+		{ code: "LIVING" as const },
+	]) {
+		const parts = classified.get(entry.code);
+		if (!parts || parts.length === 0) continue;
+		sections.push({
+			name: sectionDisplayName(entry.code, "", locale),
+			code: entry.code,
+			sortOrder: sections.length,
 			parts,
-		},
-	];
+		});
+	}
+
+	return sections;
 }
 
 function buildWeekSections(input: {
@@ -911,15 +949,45 @@ function assertMwbPublication(
 	}
 }
 
-/** FirstDateOffset/LastDateOffset do MEPS: dias desde 1970-01-01, em UTC. */
+/**
+ * Converte FirstDateOffset/LastDateOffset do MEPS para data ISO.
+ *
+ * Schema legado: dias desde Unix epoch (1970-01-01), ex.: 20700 → 2026-09-07.
+ * Schema v9+ (YYYYMMDD): inteiro no formato YYYYMMDD, ex.: 20260907 → 2026-09-07.
+ */
 export function mepsDayOffsetToIso(offset: unknown): string | null {
 	const numericOffset = typeof offset === "number" ? offset : Number(offset);
 
-	if (
-		!Number.isFinite(numericOffset) ||
-		numericOffset < 10_000 ||
-		numericOffset > 100_000
-	) {
+	if (!Number.isFinite(numericOffset)) {
+		return null;
+	}
+
+	/* Novo formato (schema >= 9): YYYYMMDD inteiro */
+	if (numericOffset > 100_000) {
+		const str = String(Math.trunc(numericOffset));
+
+		if (str.length !== 8) return null;
+
+		const year = Number.parseInt(str.slice(0, 4), 10);
+		const month = Number.parseInt(str.slice(4, 6), 10);
+		const day = Number.parseInt(str.slice(6, 8), 10);
+
+		if (
+			year < 2000 ||
+			year > 2100 ||
+			month < 1 ||
+			month > 12 ||
+			day < 1 ||
+			day > 31
+		) {
+			return null;
+		}
+
+		return `${year}-${String(month).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
+	}
+
+	/* Formato legado: dias desde Unix epoch (1970-01-01) */
+	if (numericOffset < 10_000) {
 		return null;
 	}
 

@@ -130,3 +130,40 @@ export function sanitizeMwbExtract(input: unknown): MwbExtract {
 export const JobIdSchema = z.object({
 	jobId: z.string().min(1),
 });
+
+export const MwbIssueUpdateSchema = z.object({
+	id: z.string().min(1),
+	locale: z.enum(["pt", "es"]),
+	symbol: z.string().trim().min(1).max(40),
+	title: z.string().trim().min(1).max(300),
+	coverTitle: z.string().trim().max(300).nullable().optional(),
+	year: z.coerce.number().int().min(2000).max(2100).nullable().optional(),
+	month: z.coerce.number().int().min(1).max(12).nullable().optional(),
+	weeks: z.array(MwbWeekSchema).min(1).max(10),
+});
+
+export type MwbIssueUpdateInput = z.infer<typeof MwbIssueUpdateSchema>;
+
+export function sanitizeMwbIssueUpdate(input: unknown): MwbIssueUpdateInput {
+	const parsed = MwbIssueUpdateSchema.parse(input);
+	const clean = sanitizeMwbExtract({
+		locale: parsed.locale,
+		symbol: parsed.symbol,
+		title: parsed.title,
+		coverTitle: parsed.coverTitle,
+		year: parsed.year,
+		month: parsed.month,
+		notes: null,
+		weeks: parsed.weeks,
+	});
+	return {
+		id: parsed.id,
+		locale: clean.locale,
+		symbol: clean.symbol,
+		title: clean.title,
+		coverTitle: clean.coverTitle,
+		year: clean.year,
+		month: clean.month,
+		weeks: clean.weeks,
+	};
+}

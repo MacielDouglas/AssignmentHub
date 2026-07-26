@@ -6,6 +6,7 @@ import { z } from "zod";
 import {
 	JobIdSchema,
 	MwbExtractSchema,
+	MwbIssueUpdateSchema,
 } from "../../application/dto/mwb-extract.dto";
 import { requireMeetingContentManage } from "../../application/services/meeting-content-auth";
 import { commitMwbImportUseCase } from "../../application/use-cases/commit-mwb-import.use-case";
@@ -16,6 +17,7 @@ import {
 } from "../../application/use-cases/delete-mwb-issues.use-case";
 import { discardMwbImportUseCase } from "../../application/use-cases/discard-mwb-import.use-case";
 import { updateMwbImportDraftUseCase } from "../../application/use-cases/update-mwb-import-draft.use-case";
+import { updateMwbIssueUseCase } from "../../application/use-cases/update-mwb-issue.use-case";
 import { parseContentLocale } from "../../domain/values-objects/content-locale";
 import { createMeetingContentDeps } from "../../infrastructure/composition";
 
@@ -259,6 +261,29 @@ export async function deleteAllMwbIssuesAction(
 				error instanceof Error
 					? error.message
 					: "Não foi possível excluir as edições do idioma.",
+		};
+	}
+}
+
+export async function updateMwbIssueAction(
+	slug: string,
+	payload: unknown,
+): Promise<ActionResult> {
+	try {
+		await requireMeetingContentManage(slug);
+		const data = MwbIssueUpdateSchema.parse(payload);
+		const deps = createMeetingContentDeps();
+		const result = await updateMwbIssueUseCase(deps, data);
+		if (!result.ok) return { ok: false, error: result.error };
+		revalidateMwb(slug);
+		return { ok: true, data: undefined };
+	} catch (error) {
+		return {
+			ok: false,
+			error:
+				error instanceof Error
+					? error.message
+					: "Não foi possível salvar as alterações da apostila.",
 		};
 	}
 }

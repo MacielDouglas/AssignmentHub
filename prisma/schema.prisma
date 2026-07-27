@@ -162,6 +162,7 @@ model Organization {
   cleaningLists    CleaningAssignmentList[]
 
   publicTalkHistories PublicTalkHistory[]
+  meetingPrograms     MeetingProgram[]
 
   localPublicTalks PublicTalk[] @relation("OrganizationLocalPublicTalks")
   localMwbIssues   MwbIssue[]   @relation("OrganizationLocalMwbIssues")
@@ -224,6 +225,8 @@ model SubPerson {
 
   subOrganization SubOrganization @relation(fields: [subOrganizationId], references: [id], onDelete: Cascade)
   outlines        Outline[]
+
+  meetingAssignments MeetingProgramAssignment[]
 
   publicTalksGiven PublicTalkHistory[] @relation("PublicTalkSubSpeaker")
 
@@ -304,6 +307,8 @@ model Person {
   bibleStudyReader Boolean @default(false)
   watchtowerReader Boolean @default(false)
   attendant        Boolean @default(false)
+
+  meetingAssignments MeetingProgramAssignment[]
 
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt
@@ -598,6 +603,63 @@ enum MwbSectionCode {
   LIVING
 }
 
+enum MeetingKind {
+  MIDWEEK
+  WEEKEND
+}
+
+enum MeetingProgramStatus {
+  DRAFT
+  PUBLISHED
+}
+
+enum MeetingProgramPartKind {
+  MIDWEEK_DAY
+  MIDWEEK_CHAIRMAN
+  MIDWEEK_OPENING_SONG
+  MIDWEEK_INTRODUCTION
+  MIDWEEK_TREASURES_TALK
+  MIDWEEK_SPIRITUAL_GEMS
+  MIDWEEK_BIBLE_READING
+  MIDWEEK_MINISTRY_INITIATING_CONVERSATION
+  MIDWEEK_MINISTRY_CULTIVATING_INTEREST
+  MIDWEEK_MINISTRY_MAKING_DISCIPLES
+  MIDWEEK_MINISTRY_EXPLAINING_BELIEFS
+  MIDWEEK_MINISTRY_TALK
+  MIDWEEK_MIDDLE_SONG
+  MIDWEEK_LIVING_PART
+  MIDWEEK_ORGANIZATION_ACCOMPLISHMENTS
+  MIDWEEK_BIBLE_STUDY
+  MIDWEEK_SERVICE_TALK
+  MIDWEEK_CONCLUSION
+  MIDWEEK_CLOSING_SONG_AND_PRAYER
+
+  WEEKEND_CHAIRMAN
+  WEEKEND_OPENING_SONG
+  WEEKEND_PUBLIC_TALK
+  WEEKEND_WATCHTOWER_STUDY
+  WEEKEND_CLOSING_SONG_AND_PRAYER
+  WEEKEND_CIRCUIT_OVERSEER_FINAL_TALK
+}
+
+enum MeetingProgramSectionCode {
+  TREASURES
+  MINISTRY
+  LIVING
+  PUBLIC_TALK
+  WATCHTOWER
+}
+
+enum MeetingAssignmentRole {
+  PRIMARY
+  ASSISTANT
+  READER
+  CHAIRMAN
+  PRAYER
+  SPEAKER
+  CONDUCTOR
+}
+
 /// Cântico compartilhado (VM / fim de semana / meio de semana)
 model Song {
   id        String        @id @default(uuid())
@@ -633,7 +695,8 @@ model PublicTalk {
 
   organization Organization? @relation("OrganizationLocalPublicTalks", fields: [organizationId], references: [id], onDelete: Cascade)
 
-  histories PublicTalkHistory[]
+  histories           PublicTalkHistory[]
+  meetingProgramParts MeetingProgramPart[]
 
   @@unique([organizationId, locale, number])
   @@index([organizationId, locale, number])
@@ -691,10 +754,11 @@ model WatchtowerStudy {
   createdAt      DateTime      @default(now())
   updatedAt      DateTime      @updatedAt
 
-  openingSongId String?
-  closingSongId String?
-  openingSong   Song?   @relation("WatchtowerOpeningSong", fields: [openingSongId], references: [id], onDelete: SetNull)
-  closingSong   Song?   @relation("WatchtowerClosingSong", fields: [closingSongId], references: [id], onDelete: SetNull)
+  openingSongId   String?
+  closingSongId   String?
+  openingSong     Song?            @relation("WatchtowerOpeningSong", fields: [openingSongId], references: [id], onDelete: SetNull)
+  closingSong     Song?            @relation("WatchtowerClosingSong", fields: [closingSongId], references: [id], onDelete: SetNull)
+  meetingPrograms MeetingProgram[] @relation("MeetingProgramWatchtowerStudy")
 
   @@unique([weekStart, locale])
   @@index([locale, weekStart])
@@ -747,12 +811,13 @@ model MwbWeek {
 
   sections MwbSection[]
 
-  openingSongId String?
-  middleSongId  String?
-  closingSongId String?
-  openingSong   Song?   @relation("MwbOpeningSong", fields: [openingSongId], references: [id], onDelete: SetNull)
-  middleSong    Song?   @relation("MwbMiddleSong", fields: [middleSongId], references: [id], onDelete: SetNull)
-  closingSong   Song?   @relation("MwbClosingSong", fields: [closingSongId], references: [id], onDelete: SetNull)
+  openingSongId   String?
+  middleSongId    String?
+  closingSongId   String?
+  openingSong     Song?            @relation("MwbOpeningSong", fields: [openingSongId], references: [id], onDelete: SetNull)
+  middleSong      Song?            @relation("MwbMiddleSong", fields: [middleSongId], references: [id], onDelete: SetNull)
+  closingSong     Song?            @relation("MwbClosingSong", fields: [closingSongId], references: [id], onDelete: SetNull)
+  meetingPrograms MeetingProgram[] @relation("MeetingProgramMwbWeek")
 
   @@unique([issueId, weekStart])
   @@index([weekStart, weekEnd])
@@ -794,8 +859,143 @@ model MwbPart {
 
   section MwbSection @relation(fields: [sectionId], references: [id], onDelete: Cascade)
 
+  meetingProgramParts MeetingProgramPart[] @relation("MeetingProgramPartMwbPart")
+
   @@unique([sectionId, sortOrder])
   @@map("mwb_part")
+}
+
+model MeetingProgram {
+  id             String               @id @default(uuid())
+  organizationId String
+  weekStart      DateTime             @db.Date
+  weekEnd        DateTime             @db.Date
+  kind           MeetingKind
+  status         MeetingProgramStatus @default(DRAFT)
+
+  /// Identidade do conteúdo usado como base de geração.
+  sourceMwbWeekId         String?
+  sourceWatchtowerStudyId String?
+
+  /// Dados resolvidos da agenda configurada.
+  scheduledAt   DateTime?
+  scheduledTime String?
+  locale        ContentLocale
+
+  /// Bloqueios e contexto de eventos especiais.
+  isCancelled          Boolean   @default(false)
+  cancellationReason   String?
+  specialEventTitle    String?
+  specialEventDate     DateTime? @db.Date
+  specialEventTime     String?
+  specialEventLocation String?
+  specialEventNotes    String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  sourceMwbWeek MwbWeek? @relation("MeetingProgramMwbWeek", fields: [sourceMwbWeekId], references: [id], onDelete: SetNull)
+
+  sourceWatchtowerStudy WatchtowerStudy? @relation("MeetingProgramWatchtowerStudy", fields: [sourceWatchtowerStudyId], references: [id], onDelete: SetNull)
+
+  parts MeetingProgramPart[]
+
+  @@unique([organizationId, weekStart, kind])
+  @@index([organizationId, weekStart])
+  @@index([organizationId, kind, weekStart])
+  @@index([sourceMwbWeekId])
+  @@index([sourceWatchtowerStudyId])
+  @@map("meeting_program")
+}
+
+model MeetingProgramPart {
+  id               String  @id @default(uuid())
+  meetingProgramId String
+  parentPartId     String?
+
+  kind        MeetingProgramPartKind
+  sectionCode MeetingProgramSectionCode?
+  sortOrder   Int
+
+  title       String
+  theme       String?
+  durationMin Int?
+
+  /// Pode ser usada para "Demonstração", "Discurso", "De casa em casa" etc.
+  modality String?
+  source   String?
+
+  /// Para identificar visualmente cânticos e mostrar número/nome.
+  songNumber Int?
+  songTitle  String?
+
+  /// Tema editável de discurso especial ou de visita.
+  customTitle String?
+
+  /// Sem conteúdo de origem em partes de UI, como introdução e conclusão.
+  sourceMwbPartId String?
+
+  /// Seleção do discurso público.
+  publicTalkId String?
+
+  /// Evita que o card seja exibido como programável quando a reunião foi bloqueada.
+  isDisabled Boolean @default(false)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  meetingProgram MeetingProgram @relation(fields: [meetingProgramId], references: [id], onDelete: Cascade)
+
+  parentPart MeetingProgramPart? @relation("MeetingProgramPartChildren", fields: [parentPartId], references: [id], onDelete: Cascade)
+
+  children MeetingProgramPart[] @relation("MeetingProgramPartChildren")
+
+  sourceMwbPart MwbPart? @relation("MeetingProgramPartMwbPart", fields: [sourceMwbPartId], references: [id], onDelete: SetNull)
+
+  publicTalk PublicTalk? @relation(fields: [publicTalkId], references: [id], onDelete: SetNull)
+
+  assignments MeetingProgramAssignment[]
+
+  @@unique([meetingProgramId, sortOrder])
+  @@index([meetingProgramId, sectionCode, sortOrder])
+  @@index([kind])
+  @@index([sourceMwbPartId])
+  @@index([publicTalkId])
+  @@map("meeting_program_part")
+}
+
+model MeetingProgramAssignment {
+  id                   String                @id @default(uuid())
+  meetingProgramPartId String
+  role                 MeetingAssignmentRole @default(PRIMARY)
+  sortOrder            Int                   @default(0)
+
+  /// Uma designação pode apontar para uma pessoa local ou visitante.
+  personId    String?
+  subPersonId String?
+
+  /// Mantém o nome legível caso a pessoa seja removida/inativada depois.
+  assigneeNameSnapshot String
+
+  /// Para visitante/orador externo e superintendente inserido manualmente.
+  externalName String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  meetingProgramPart MeetingProgramPart @relation(fields: [meetingProgramPartId], references: [id], onDelete: Cascade)
+
+  person Person? @relation(fields: [personId], references: [id], onDelete: SetNull)
+
+  subPerson SubPerson? @relation(fields: [subPersonId], references: [id], onDelete: SetNull)
+
+  @@unique([meetingProgramPartId, role, sortOrder])
+  @@index([personId, createdAt])
+  @@index([subPersonId, createdAt])
+  @@index([meetingProgramPartId, role])
+  @@map("meeting_program_assignment")
 }
 
 model ContentImportJob {

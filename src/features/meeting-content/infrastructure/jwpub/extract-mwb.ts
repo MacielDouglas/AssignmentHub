@@ -578,23 +578,18 @@ function buildTimingAndModalityMaps(elements: HtmlElement[]): {
 } {
 	const timingMap = new Map<number, number | null>();
 	const modalityMap = new Map<number, string | null>();
-	let lastTiming: number | null = null;
 
 	for (const element of elements) {
 		const pid = getPid(element);
 		if (pid == null) continue;
 
 		const duration = parseDurationMin(element.text);
-		if (duration != null) {
-			lastTiming = duration;
-		}
+		timingMap.set(pid, duration);
 
 		const modality = extractModalidade(element.text);
 		if (modality) {
 			modalityMap.set(pid, modality);
 		}
-
-		timingMap.set(pid, lastTiming);
 	}
 
 	return { timingMap, modalityMap };

@@ -430,128 +430,156 @@ export default class PrismaMwbRepository implements MwbRepository {
 		data: import("../../application/dto/mwb-extract.dto").MwbIssueUpdateInput,
 	): Promise<{ ok: true } | { ok: false; error: string }> {
 		try {
-			await db.$transaction(async (tx) => {
-				const existing = await tx.mwbIssue.findUnique({
-					where: { id: data.id },
-					select: { id: true, locale: true },
-				});
-				if (!existing) throw new Error("Edição da apostila não encontrada.");
+			await db.$transaction(
+				async (tx) => {
+					const existing = await tx.mwbIssue.findUnique({
+						where: { id: data.id },
+						select: { id: true, locale: true },
+					});
+					if (!existing) throw new Error("Edição da apostila não encontrada.");
 
-				// evita colidir symbol+locale com outra edição
-				const clash = await tx.mwbIssue.findFirst({
-					where: {
-						symbol: data.symbol,
-						locale: data.locale,
-						NOT: { id: data.id },
-					},
-					select: { id: true },
-				});
-				if (clash) {
-					throw new Error(
-						"Já existe outra edição com este símbolo neste idioma.",
-					);
-				}
-
-				await tx.mwbIssue.update({
-					where: { id: data.id },
-					data: {
-						locale: data.locale,
-						symbol: data.symbol,
-						title: data.title,
-						coverTitle: data.coverTitle ?? null,
-						year: data.year ?? null,
-						month: data.month ?? null,
-					},
-				});
-
-				const keptWeekStarts = data.weeks.map((w) => asDateOnly(w.weekStart));
-
-				// remove semanas que saíram do formulário
-				await tx.mwbWeek.deleteMany({
-					where: {
-						issueId: data.id,
-						weekStart: { notIn: keptWeekStarts },
-					},
-				});
-
-				for (const weekInput of data.weeks) {
-					const openingSongNum = weekInput.openingSongNum ?? null;
-					const middleSongNum = weekInput.middleSongNum ?? null;
-					const closingSongNum = weekInput.closingSongNum ?? null;
-
-					const [openingSongId, middleSongId, closingSongId] =
-						await Promise.all([
-							this.findSongId(tx, data.locale, openingSongNum),
-							this.findSongId(tx, data.locale, middleSongNum),
-							this.findSongId(tx, data.locale, closingSongNum),
-						]);
-
-					const weekStart = asDateOnly(weekInput.weekStart);
-					const weekEnd = asDateOnly(weekInput.weekEnd);
-
-					const week = await tx.mwbWeek.upsert({
+					// evita colidir symbol+locale com outra edição
+					const clash = await tx.mwbIssue.findFirst({
 						where: {
-							issueId_weekStart: { issueId: data.id, weekStart },
-						},
-						create: {
-							issueId: data.id,
-							weekStart,
-							weekEnd,
-							weekLabelRaw: weekInput.weekLabelRaw ?? null,
-							dateRangeRaw: weekInput.dateRangeRaw ?? null,
-							openingSongNum,
-							middleSongNum,
-							closingSongNum,
-							openingSongId,
-							middleSongId,
-							closingSongId,
-							sortOrder: weekInput.sortOrder,
-						},
-						update: {
-							weekEnd,
-							weekLabelRaw: weekInput.weekLabelRaw ?? null,
-							dateRangeRaw: weekInput.dateRangeRaw ?? null,
-							openingSongNum,
-							middleSongNum,
-							closingSongNum,
-							openingSongId,
-							middleSongId,
-							closingSongId,
-							sortOrder: weekInput.sortOrder,
+							symbol: data.symbol,
+							locale: data.locale,
+							NOT: { id: data.id },
 						},
 						select: { id: true },
 					});
+					if (clash) {
+						throw new Error(
+							"Já existe outra edição com este símbolo neste idioma.",
+						);
+					}
 
-					// mesma regra A: seções/partes da semana são substituídas
-					await tx.mwbSection.deleteMany({ where: { weekId: week.id } });
+					await tx.mwbIssue.update({
+						where: { id: data.id },
+						data: {
+							locale: data.locale,
+							symbol: data.symbol,
+							title: data.title,
+							coverTitle: data.coverTitle ?? null,
+							year: data.year ?? null,
+							month: data.month ?? null,
+						},
+					});
 
-					for (const sectionInput of weekInput.sections) {
-						const section = await tx.mwbSection.create({
-							data: {
-								weekId: week.id,
-								name: sectionInput.name,
-								code: sectionCode(sectionInput.code),
-								sortOrder: sectionInput.sortOrder,
+					const keptWeekStarts = data.weeks.map((w) => asDateOnly(w.weekStart));
+
+					// remove semanas que saíram do formulário
+					await tx.mwbWeek.deleteMany({
+						where: {
+							issueId: data.id,
+							weekStart: { notIn: keptWeekStarts },
+						},
+					});
+
+					// Otimização: resolve cânticos uma vez antes de iterar semanas
+					const songNumbers = new Set<number>();
+					for (const weekInput of data.weeks) {
+						if (weekInput.openingSongNum != null)
+							songNumbers.add(weekInput.openingSongNum);
+						if (weekInput.middleSongNum != null)
+							songNumbers.add(weekInput.middleSongNum);
+						if (weekInput.closingSongNum != null)
+							songNumbers.add(weekInput.closingSongNum);
+					}
+					const songIdByNumber = await this.findSongIdsByNumbers(
+						tx,
+						data.locale,
+						[...songNumbers],
+					);
+
+					for (const weekInput of data.weeks) {
+						const openingSongNum = weekInput.openingSongNum ?? null;
+						const middleSongNum = weekInput.middleSongNum ?? null;
+						const closingSongNum = weekInput.closingSongNum ?? null;
+
+						const openingSongId =
+							openingSongNum != null
+								? (songIdByNumber.get(openingSongNum) ?? null)
+								: null;
+						const middleSongId =
+							middleSongNum != null
+								? (songIdByNumber.get(middleSongNum) ?? null)
+								: null;
+						const closingSongId =
+							closingSongNum != null
+								? (songIdByNumber.get(closingSongNum) ?? null)
+								: null;
+
+						const weekStart = asDateOnly(weekInput.weekStart);
+						const weekEnd = asDateOnly(weekInput.weekEnd);
+
+						const week = await tx.mwbWeek.upsert({
+							where: {
+								issueId_weekStart: { issueId: data.id, weekStart },
+							},
+							create: {
+								issueId: data.id,
+								weekStart,
+								weekEnd,
+								weekLabelRaw: weekInput.weekLabelRaw ?? null,
+								dateRangeRaw: weekInput.dateRangeRaw ?? null,
+								openingSongNum,
+								middleSongNum,
+								closingSongNum,
+								openingSongId,
+								middleSongId,
+								closingSongId,
+								sortOrder: weekInput.sortOrder,
+							},
+							update: {
+								weekEnd,
+								weekLabelRaw: weekInput.weekLabelRaw ?? null,
+								dateRangeRaw: weekInput.dateRangeRaw ?? null,
+								openingSongNum,
+								middleSongNum,
+								closingSongNum,
+								openingSongId,
+								middleSongId,
+								closingSongId,
+								sortOrder: weekInput.sortOrder,
 							},
 							select: { id: true },
 						});
 
-						if (sectionInput.parts.length === 0) continue;
+						// mesma regra A: seções/partes da semana são substituídas
+						await tx.mwbSection.deleteMany({ where: { weekId: week.id } });
 
-						await tx.mwbPart.createMany({
-							data: sectionInput.parts.map((part) => ({
-								sectionId: section.id,
-								sortOrder: part.sortOrder,
-								title: part.title,
-								theme: part.theme ?? null,
-								durationMin: part.durationMin ?? null,
-								modality: part.modality ?? null,
-								source: part.source ?? null,
-							})),
-						});
+						for (const sectionInput of weekInput.sections) {
+							const section = await tx.mwbSection.create({
+								data: {
+									weekId: week.id,
+									name: sectionInput.name,
+									code: sectionCode(sectionInput.code),
+									sortOrder: sectionInput.sortOrder,
+								},
+								select: { id: true },
+							});
+
+							if (sectionInput.parts.length === 0) continue;
+
+							await tx.mwbPart.createMany({
+								data: sectionInput.parts.map((part) => ({
+									sectionId: section.id,
+									sortOrder: part.sortOrder,
+									title: part.title,
+									theme: part.theme ?? null,
+									durationMin: part.durationMin ?? null,
+									modality: part.modality ?? null,
+									source: part.source ?? null,
+								})),
+							});
+						}
 					}
-				}
-			});
+				},
+				{
+					maxWait: 10_000,
+					timeout: 60_000,
+				},
+			);
 
 			return { ok: true };
 		} catch (error) {

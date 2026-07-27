@@ -164,6 +164,53 @@ function parseOptionalSongNumber(raw: string): number | null {
 	return value;
 }
 
+function patchSection(
+	draft: MwbReviewDraft,
+	weekIndex: number,
+	sectionIndex: number,
+	patch: Partial<MwbReviewSection>,
+): MwbReviewDraft {
+	return {
+		...draft,
+		weeks: draft.weeks.map((week, wIndex) =>
+			wIndex === weekIndex
+				? {
+						...week,
+						sections: week.sections.map((section, sIndex) =>
+							sIndex === sectionIndex ? { ...section, ...patch } : section,
+						),
+					}
+				: week,
+		),
+	};
+}
+
+function patchPart(
+	draft: MwbReviewDraft,
+	weekIndex: number,
+	sectionIndex: number,
+	partIndex: number,
+	patch: Partial<MwbReviewPart>,
+): MwbReviewDraft {
+	const weeks = draft.weeks.map((week, wIndex) => {
+		if (wIndex !== weekIndex) return week;
+
+		const sections = week.sections.map((section, sIndex) => {
+			if (sIndex !== sectionIndex) return section;
+
+			const parts = section.parts.map((part, pIndex) =>
+				pIndex === partIndex ? { ...part, ...patch } : part,
+			);
+
+			return { ...section, parts };
+		});
+
+		return { ...week, sections };
+	});
+
+	return { ...draft, weeks };
+}
+
 export function MwbSection({
 	slug,
 	canManage,
@@ -816,30 +863,85 @@ function MwbReviewCard({
 							))}
 						</div>
 
-						<p className="mt-3 text-xs font-semibold tracking-wide text-slate-500 uppercase">
-							{week.sections.length} seção(ões) ·{" "}
-							{week.sections.reduce(
-								(total, section) => total + section.parts.length,
-								0,
-							)}{" "}
-							parte(s)
-						</p>
+						<div className="mt-3 space-y-3">
+							{week.sections.map((section, sectionIndex) => (
+								<div
+									key={section.clientKey}
+									className="rounded-xl border border-slate-100 bg-white p-3 dark:border-slate-800 dark:bg-slate-900"
+								>
+									<input
+										type="text"
+										value={section.name}
+										disabled={pending}
+										aria-label={`Nome da seção ${sectionIndex + 1}`}
+										onChange={(event) =>
+											onChange(
+												patchSection(draft, weekIndex, sectionIndex, {
+													name: event.target.value,
+												}),
+											)
+										}
+										className="mb-2 min-h-9 w-full rounded-lg border border-slate-200 px-2 text-xs font-semibold tracking-wide uppercase dark:border-slate-700 dark:bg-slate-950"
+									/>
 
-						<ul className="mt-2 space-y-1">
-							{week.sections.flatMap((section) =>
-								section.parts.map((part) => (
-									<li
-										key={part.clientKey}
-										className="text-sm text-slate-700 dark:text-slate-200"
-									>
-										<span className="font-medium">{part.title}</span>
-										{part.durationMin != null
-											? ` · ${part.durationMin} min`
-											: ""}
-									</li>
-								)),
-							)}
-						</ul>
+									{section.parts.map((part, partIndex) => (
+										<div
+											key={part.clientKey}
+											className="mb-1 grid gap-1.5 sm:grid-cols-[1fr_5rem]"
+										>
+											<input
+												type="text"
+												value={part.title}
+												disabled={pending}
+												aria-label={`Título da parte ${partIndex + 1}`}
+												onChange={(event) =>
+													onChange(
+														patchPart(
+															draft,
+															weekIndex,
+															sectionIndex,
+															partIndex,
+															{ title: event.target.value },
+														),
+													)
+												}
+												className="min-h-9 rounded-lg border border-slate-200 px-2 text-sm dark:border-slate-700 dark:bg-slate-950"
+											/>
+
+											<input
+												type="number"
+												min={0}
+												max={180}
+												value={part.durationMin ?? ""}
+												disabled={pending}
+												placeholder="Min."
+												aria-label="Duração em minutos"
+												onChange={(event) => {
+													const raw = event.target.value;
+													const value =
+														raw === ""
+															? null
+															: Number.isFinite(Number(raw))
+																? Number(raw)
+																: null;
+
+													onChange(
+														patchPart(
+															draft,
+															weekIndex,
+															sectionIndex,
+															partIndex,
+															{ durationMin: value },
+														),
+													);
+												}}
+												className="min-h-9 rounded-lg border border-slate-200 px-2 text-sm dark:border-slate-700 dark:bg-slate-950"
+											/>
+										</div>
+									))}
+								</div>
+							))}
+						</div>
 					</div>
 				))}
 			</div>

@@ -3,6 +3,7 @@
 import { Building2, ChevronRight } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useTranslations } from "next-intl";
 
 import { getOrgNavItems } from "@/components/org/org-nav-items";
 
@@ -13,7 +14,8 @@ type OrgSidebarProps = {
 
 export function OrgSidebar({ currentSlug, organizationName }: OrgSidebarProps) {
 	const pathname = usePathname();
-	const items = getOrgNavItems(currentSlug);
+	const t = useTranslations("OrganizationNavigation");
+	const items = getOrgNavItems(currentSlug, t);
 
 	return (
 		<aside className="hidden border-r bg-background/80 lg:sticky lg:top-0 lg:block lg:h-screen">
@@ -24,20 +26,19 @@ export function OrgSidebar({ currentSlug, organizationName }: OrgSidebarProps) {
 						className="flex items-center gap-3 rounded-md"
 					>
 						<div className="flex h-10 w-10 items-center justify-center rounded-xl border bg-muted">
-							<Building2 className="h-5 w-5" />
+							<Building2 className="h-5 w-5" aria-hidden="true" />
 						</div>
 
 						<div className="min-w-0">
-							<p className="text-xs text-muted-foreground">Organização</p>
+							<p className="text-xs text-muted-foreground">
+								{t("organization")}
+							</p>
 							<p className="truncate font-medium">{organizationName}</p>
 						</div>
 					</Link>
 				</div>
 
-				<nav
-					className="flex-1 space-y-1 p-3"
-					aria-label="Menu lateral da organização"
-				>
+				<nav className="flex-1 space-y-1 p-3" aria-label={t("sidebarAria")}>
 					{items.map((item) => {
 						const Icon = item.icon;
 						const isActive = item.exact
@@ -48,6 +49,7 @@ export function OrgSidebar({ currentSlug, organizationName }: OrgSidebarProps) {
 							<Link
 								key={item.href}
 								href={item.href}
+								aria-current={isActive ? "page" : undefined}
 								className={`flex items-center justify-between rounded-lg px-3 py-2.5 text-sm transition-colors ${
 									isActive
 										? "bg-foreground text-background"
@@ -55,11 +57,14 @@ export function OrgSidebar({ currentSlug, organizationName }: OrgSidebarProps) {
 								}`}
 							>
 								<span className="flex items-center gap-3">
-									<Icon className="h-4 w-4" />
+									<Icon className="h-4 w-4" aria-hidden="true" />
 									<span>{item.label}</span>
 								</span>
 
-								<ChevronRight className="h-4 w-4 opacity-70" />
+								<ChevronRight
+									className="h-4 w-4 opacity-70"
+									aria-hidden="true"
+								/>
 							</Link>
 						);
 					})}

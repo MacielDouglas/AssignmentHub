@@ -11,6 +11,27 @@
 		"language": "Idioma",
 		"errorGeneric": "Algo salió mal. Inténtalo de nuevo."
 	},
+	"OrganizationNavigation": {
+		"organization": "Organización",
+		"currentOrganization": "Organización actual",
+		"menu": "Menú",
+		"openMenu": "Abrir menú",
+		"closeMenu": "Cerrar menú",
+		"sidebarAria": "Menú lateral de la organización",
+		"mobileMenuAria": "Menú móvil de la organización",
+		"searchPlaceholder": "Buscar en la aplicación...",
+		"noEmail": "Sin correo electrónico",
+		"otherOrganizations": "Otras organizaciones",
+		"overview": "Resumen",
+		"meetings": "Reuniones",
+		"people": "Personas",
+		"groups": "Grupos",
+		"meetingContent": "Contenido de reuniones",
+		"families": "Familias",
+		"cleaning": "Asignación de limpieza",
+		"outlines": "Discursos",
+		"settings": "Configuración"
+	},
 	"LocaleSwitcher": {
 		"label": "Idioma",
 		"pt": "Portugués",

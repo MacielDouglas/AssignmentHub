@@ -1,6 +1,7 @@
 import type { LucideIcon } from "lucide-react";
 import {
 	BrushCleaning,
+	CalendarDays,
 	FolderKanban,
 	Home,
 	NotebookPen,
@@ -17,47 +18,54 @@ export type OrgNavItem = {
 	exact?: boolean;
 };
 
-export function getOrgNavItems(slug: string): OrgNavItem[] {
+type Translate = (key: string) => string;
+
+export function getOrgNavItems(slug: string, t: Translate): OrgNavItem[] {
 	return [
 		{
 			href: `/org/${slug}`,
-			label: "Visão geral",
+			label: t("overview"),
 			icon: Home,
 			exact: true,
 		},
 		{
+			href: `/org/${slug}/meetings`,
+			label: t("meetings"),
+			icon: CalendarDays,
+		},
+		{
 			href: `/org/${slug}/people`,
-			label: "Pessoas",
+			label: t("people"),
 			icon: Users,
 		},
 		{
 			href: `/org/${slug}/groups`,
-			label: "Grupos",
+			label: t("groups"),
 			icon: FolderKanban,
 		},
 		{
 			href: `/org/${slug}/meeting-content`,
-			label: "Conteúdo das Reuniões",
+			label: t("meetingContent"),
 			icon: NotebookPen,
 		},
 		{
 			href: `/org/${slug}/families`,
-			label: "Famílias",
+			label: t("families"),
 			icon: UsersRound,
 		},
 		{
 			href: `/org/${slug}/cleaning`,
-			label: "Designação Limpeza",
+			label: t("cleaning"),
 			icon: BrushCleaning,
 		},
 		{
 			href: `/org/${slug}/outlines`,
-			label: "Discursos",
+			label: t("outlines"),
 			icon: ScrollText,
 		},
 		{
 			href: `/org/${slug}/settings`,
-			label: "Configurações",
+			label: t("settings"),
 			icon: Settings,
 		},
 	];

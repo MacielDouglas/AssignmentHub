@@ -10,8 +10,8 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useTranslations } from "next-intl";
 import { useState } from "react";
-
 import { getOrgNavItems } from "@/components/org/org-nav-items";
 import { LogoutButton } from "../auth/logout-button";
 
@@ -42,7 +42,9 @@ export function OrgMobileDrawer({
 }: OrgMobileDrawerProps) {
 	const pathname = usePathname();
 	const [open, setOpen] = useState(false);
-	const items = getOrgNavItems(currentOrganization.slug);
+	const t = useTranslations("OrganizationNavigation");
+	// const locale = useLocale();
+	const items = getOrgNavItems(currentOrganization.slug, t);
 
 	return (
 		<>
@@ -51,13 +53,13 @@ export function OrgMobileDrawer({
 					type="button"
 					onClick={() => setOpen(true)}
 					className="inline-flex h-10 w-10 items-center justify-center rounded-lg border bg-background"
-					aria-label="Abrir menu"
+					aria-label={t("openMenu")}
 				>
 					<Menu className="h-5 w-5" />
 				</button>
 
 				<div className="min-w-0 flex-1">
-					<p className="text-xs text-muted-foreground">Organização</p>
+					<p className="text-xs text-muted-foreground">{t("organization")}</p>
 					<p className="truncate text-sm font-medium">
 						{currentOrganization.name}
 					</p>
@@ -71,14 +73,14 @@ export function OrgMobileDrawer({
 					<button
 						type="button"
 						className="absolute inset-0 bg-black/50"
-						aria-label="Fechar menu"
+						aria-label={t("closeMenu")}
 						onClick={() => setOpen(false)}
 					/>
 
 					<div className="absolute left-0 top-0 flex h-full w-[88%] max-w-sm flex-col bg-background shadow-xl">
 						<div className="flex items-center justify-between border-b p-4">
 							<div className="min-w-0">
-								<p className="text-xs text-muted-foreground">Menu</p>
+								<p className="text-xs text-muted-foreground">{t("menu")}</p>
 								<p className="truncate font-medium">
 									{currentOrganization.name}
 								</p>
@@ -88,7 +90,7 @@ export function OrgMobileDrawer({
 								type="button"
 								onClick={() => setOpen(false)}
 								className="inline-flex h-10 w-10 items-center justify-center rounded-lg border"
-								aria-label="Fechar menu"
+								aria-label={t("closeMenu")}
 							>
 								<X className="h-5 w-5" />
 							</button>
@@ -107,7 +109,7 @@ export function OrgMobileDrawer({
 
 									<div className="min-w-0">
 										<p className="text-xs text-muted-foreground">
-											Organização atual
+											{t("currentOrganization")}
 										</p>
 										<div className="flex items-center gap-2">
 											<p className="truncate font-medium">
@@ -122,15 +124,12 @@ export function OrgMobileDrawer({
 							<div className="relative">
 								<Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
 								<input
-									placeholder="Buscar dentro do app..."
+									placeholder={t("searchPlaceholder")}
 									className="w-full rounded-lg border py-2 pl-9 pr-3 text-sm"
 								/>
 							</div>
 
-							<nav
-								className="space-y-1"
-								aria-label="Menu mobile da organização"
-							>
+							<nav className="space-y-1" aria-label={t("mobileMenuAria")}>
 								{items.map((item) => {
 									const Icon = item.icon;
 									const isActive = item.exact

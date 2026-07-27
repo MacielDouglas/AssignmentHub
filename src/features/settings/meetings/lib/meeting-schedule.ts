@@ -20,7 +20,7 @@ export type MeetingSlot = {
 	weekday: Weekday;
 	time: string; // HH:mm
 	scheduleId: string;
-	source: "weekly" | "suppressed_by_visit";
+	source: "weekly" | "weekly_with_visit";
 };
 
 export type MeetingSlotsResult = {
@@ -46,7 +46,8 @@ function isInRange(day: Date, from: Date, to: Date | null | undefined) {
 /**
  * Fonte da verdade para horários de reunião de congregação em uma data.
  * - Escolhe o schedule MEETINGS cuja vigência cobre a data.
- * - Se houver Visita do Viajante cobrindo a data, oculta slots semanais.
+ * - A Visita do Viajante é retornada como contexto, mas não remove os slots.
+ *   A página de reuniões aplica a programação especial da visita.
  */
 export async function getMeetingSlotsForDate(
 	organizationId: string,
@@ -75,19 +76,12 @@ export async function getMeetingSlotsForDate(
 					OR: [{ endDate: null }, { endDate: { gte: day } }],
 				},
 				take: 1,
-				select: { id: true },
+				select: {
+					id: true,
+				},
 			},
 		},
 	});
-
-	if (visit && visit.occurrences.length > 0) {
-		return {
-			date: day,
-			slots: [],
-			suppressedByVisit: true,
-			visitTitle: visit.title,
-		};
-	}
 
 	const meetings = await db.organizationSchedule.findMany({
 		where: {
@@ -101,48 +95,57 @@ export async function getMeetingSlotsForDate(
 			effectiveFrom: true,
 			effectiveUntil: true,
 			weeklyRules: {
-				orderBy: { sortOrder: "asc" },
-				select: { weekday: true, time: true },
+				orderBy: {
+					sortOrder: "asc",
+				},
+				select: {
+					weekday: true,
+					time: true,
+				},
 			},
 		},
 	});
 
-	const covering = meetings.filter((s) => {
-		const from = s.effectiveFrom ?? startOfCivilYear(1970);
-		return isInRange(day, from, s.effectiveUntil);
+	const covering = meetings.filter((schedule) => {
+		const from = schedule.effectiveFrom ?? startOfCivilYear(1970);
+
+		return isInRange(day, from, schedule.effectiveUntil);
 	});
 
-	// Preferir a vigência mais específica (effectiveFrom mais recente)
 	covering.sort((a, b) => {
-		const af = a.effectiveFrom?.getTime() ?? 0;
-		const bf = b.effectiveFrom?.getTime() ?? 0;
-		return bf - af;
+		const aEffectiveFrom = a.effectiveFrom?.getTime() ?? 0;
+		const bEffectiveFrom = b.effectiveFrom?.getTime() ?? 0;
+
+		return bEffectiveFrom - aEffectiveFrom;
 	});
 
 	const chosen = covering[0];
+
 	if (!chosen) {
 		return {
 			date: day,
 			slots: [],
 			suppressedByVisit: false,
-			visitTitle: null,
+			visitTitle: visit?.occurrences.length ? visit.title : null,
 		};
 	}
 
 	const slots: MeetingSlot[] = chosen.weeklyRules
-		.filter((r) => r.weekday === weekday)
-		.map((r) => ({
-			weekday: r.weekday,
-			time: r.time,
+		.filter((rule) => rule.weekday === weekday)
+		.map((rule) => ({
+			weekday: rule.weekday,
+			time: rule.time,
 			scheduleId: chosen.id,
-			source: "weekly" as const,
+			source: visit?.occurrences.length
+				? ("weekly_with_visit" as const)
+				: ("weekly" as const),
 		}));
 
 	return {
 		date: day,
 		slots,
 		suppressedByVisit: false,
-		visitTitle: null,
+		visitTitle: visit?.occurrences.length ? visit.title : null,
 	};
 }
 

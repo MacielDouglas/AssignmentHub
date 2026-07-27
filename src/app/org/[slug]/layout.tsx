@@ -25,7 +25,20 @@ export default async function OrganizationLayout({
 		headers: await headers(),
 	});
 
-	if (!session?.user) {
+	if (!session?.user?.id) {
+		notFound();
+	}
+
+	const user = await db.user.findUnique({
+		where: {
+			id: session.user.id,
+		},
+		select: {
+			systemRole: true,
+		},
+	});
+
+	if (!user) {
 		notFound();
 	}
 
@@ -50,18 +63,38 @@ export default async function OrganizationLayout({
 		},
 	});
 
-	const currentMembership = memberships.find(
+	const membershipForCurrentOrganization = memberships.find(
 		(membership) => membership.organization.slug === slug,
 	);
 
-	if (!currentMembership) {
+	const currentOrganization = membershipForCurrentOrganization
+		? membershipForCurrentOrganization.organization
+		: user.systemRole === "SUPER_ADMIN"
+			? await db.organization.findUnique({
+					where: {
+						slug,
+					},
+					select: {
+						id: true,
+						name: true,
+						slug: true,
+					},
+				})
+			: null;
+
+	if (!currentOrganization) {
 		notFound();
 	}
 
-	const currentOrganization = currentMembership.organization;
 	const organizations = memberships.map(
 		(membership) => membership.organization,
 	);
+
+	const organizationsForHeader = organizations.some(
+		(organization) => organization.id === currentOrganization.id,
+	)
+		? organizations
+		: [currentOrganization, ...organizations];
 
 	const breadcrumbLabels: Record<string, string> = {
 		org: "Organizações",
@@ -71,6 +104,7 @@ export default async function OrganizationLayout({
 		families: "Famílias",
 		"sub-organizations": "Suborganizações",
 		outlines: "Discursos",
+		meetings: "Reuniões",
 		settings: "Configurações",
 	};
 
@@ -82,6 +116,7 @@ export default async function OrganizationLayout({
 		[`/org/${currentOrganization.slug}/families`]: "Famílias",
 		[`/org/${currentOrganization.slug}/sub-organizations`]: "Suborganizações",
 		[`/org/${currentOrganization.slug}/outlines`]: "Discursos",
+		[`/org/${currentOrganization.slug}/meetings`]: "Reuniões",
 		[`/org/${currentOrganization.slug}/settings`]: "Configurações",
 	};
 
@@ -96,7 +131,7 @@ export default async function OrganizationLayout({
 				<div className="flex min-h-screen flex-col">
 					<OrgHeader
 						currentOrganization={currentOrganization}
-						organizations={organizations}
+						organizations={organizationsForHeader}
 						userName={session.user.name ?? "Usuário"}
 						userEmail={session.user.email}
 					/>
@@ -105,7 +140,7 @@ export default async function OrganizationLayout({
 						<div className="mx-auto flex w-full max-w-7xl flex-col gap-4 md:gap-6">
 							<OrgMobileDrawer
 								currentOrganization={currentOrganization}
-								organizations={organizations}
+								organizations={organizationsForHeader}
 								userName={session.user.name ?? "Usuário"}
 								userEmail={session.user.email}
 							/>

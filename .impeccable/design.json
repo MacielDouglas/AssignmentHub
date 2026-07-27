@@ -1,0 +1,166 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-07-27T00:00:00.000Z",
+  "title": "Design System: AssignmentHub",
+  "extensions": {
+    "colorMeta": {
+      "almost-black": {
+        "role": "primary",
+        "displayName": "Almost Black",
+        "canonical": "oklch(0.145 0 0)",
+        "tonalRamp": ["oklch(0.04 0 0)", "oklch(0.08 0 0)", "oklch(0.145 0 0)", "oklch(0.25 0 0)", "oklch(0.35 0 0)", "oklch(0.50 0 0)", "oklch(0.70 0 0)", "oklch(0.85 0 0)"]
+      },
+      "pure-white": {
+        "role": "neutral",
+        "displayName": "Pure White",
+        "canonical": "oklch(1 0 0)",
+        "tonalRamp": ["oklch(0.92 0 0)", "oklch(0.94 0 0)", "oklch(0.96 0 0)", "oklch(0.97 0 0)", "oklch(0.98 0 0)", "oklch(0.99 0 0)", "oklch(0.995 0 0)", "oklch(1 0 0)"]
+      },
+      "cloud": {
+        "role": "neutral",
+        "displayName": "Cloud",
+        "canonical": "oklch(0.97 0 0)",
+        "tonalRamp": ["oklch(0.87 0 0)", "oklch(0.90 0 0)", "oklch(0.93 0 0)", "oklch(0.95 0 0)", "oklch(0.97 0 0)", "oklch(0.98 0 0)", "oklch(0.99 0 0)", "oklch(1 0 0)"]
+      },
+      "stone": {
+        "role": "neutral",
+        "displayName": "Stone",
+        "canonical": "oklch(0.922 0 0)",
+        "tonalRamp": ["oklch(0.80 0 0)", "oklch(0.84 0 0)", "oklch(0.88 0 0)", "oklch(0.90 0 0)", "oklch(0.922 0 0)", "oklch(0.94 0 0)", "oklch(0.96 0 0)", "oklch(0.98 0 0)"]
+      },
+      "smoke": {
+        "role": "neutral",
+        "displayName": "Smoke",
+        "canonical": "oklch(0.556 0 0)",
+        "tonalRamp": ["oklch(0.25 0 0)", "oklch(0.30 0 0)", "oklch(0.35 0 0)", "oklch(0.45 0 0)", "oklch(0.556 0 0)", "oklch(0.65 0 0)", "oklch(0.75 0 0)", "oklch(0.85 0 0)"]
+      },
+      "ember": {
+        "role": "semantic",
+        "displayName": "Ember",
+        "canonical": "oklch(0.577 0.245 27.325)",
+        "tonalRamp": ["oklch(0.20 0.15 27)", "oklch(0.30 0.18 27)", "oklch(0.40 0.20 27)", "oklch(0.50 0.22 27)", "oklch(0.577 0.245 27)", "oklch(0.65 0.20 27)", "oklch(0.75 0.15 27)", "oklch(0.88 0.08 27)"]
+      }
+    },
+    "typographyMeta": {
+      "display": { "displayName": "Display", "purpose": "Page titles and major section headers. Scales with viewport." },
+      "headline": { "displayName": "Headline", "purpose": "Card titles, dialog headings, major section labels." },
+      "title": { "displayName": "Title", "purpose": "Section headings inside cards, sidebar item labels." },
+      "body": { "displayName": "Body", "purpose": "Primary reading text, table cells, form labels. Default text size at 14px." },
+      "label": { "displayName": "Label", "purpose": "Badges, timestamps, metadata, category labels. Small and uppercase when needed." }
+    },
+    "shadows": [
+      { "name": "card-rest", "value": "0 4px 6px -1px rgb(0 0 0 / 10%), 0 2px 4px -2px rgb(0 0 0 / 10%)", "purpose": "Default card elevation. Surfaces at rest." },
+      { "name": "dialog-modal", "value": "0 20px 25px -5px rgb(0 0 0 / 10%), 0 8px 10px -6px rgb(0 0 0 / 10%)", "purpose": "Modal dialogs and popovers. Highest elevation." },
+      { "name": "card-ring", "value": "0 0 0 1px oklch(0.922 0 0)", "purpose": "Subtle edge ring on cards to anchor shadow." }
+    ],
+    "motion": [
+      { "name": "ease-standard", "value": "cubic-bezier(0.4, 0, 0.2, 1)", "purpose": "Default easing for state transitions (color, background)." },
+      { "name": "duration-default", "value": "200ms", "purpose": "Standard transition duration for interactive elements." },
+      { "name": "duration-dialog", "value": "100ms", "purpose": "Dialog overlay and content animation duration." }
+    ],
+    "breakpoints": [
+      { "name": "sm", "value": "640px" },
+      { "name": "md", "value": "768px" },
+      { "name": "lg", "value": "1024px" },
+      { "name": "xl", "value": "1280px" },
+      { "name": "2xl", "value": "1536px" }
+    ]
+  },
+  "components": [
+    {
+      "name": "Primary Button",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "Primary call-to-action. Almost-black background, white text, full 26px radius.",
+      "html": "<button class=\"ds-btn-primary\">Designar</button>",
+      "css": ".ds-btn-primary { background: oklch(0.145 0 0); color: oklch(1 0 0); font-family: Inter, ui-sans-serif, system-ui, sans-serif; font-size: 0.75rem; font-weight: 500; line-height: 1.25; letter-spacing: 0.025em; padding: 8px 12px; border: 1px solid transparent; border-radius: 26px; cursor: pointer; transition: background 0.2s, transform 0.2s; display: inline-flex; align-items: center; justify-content: center; white-space: nowrap; } .ds-btn-primary:hover { background: color-mix(in oklch, oklch(0.145 0 0), transparent 20%); } .ds-btn-primary:active { transform: translateY(1px); } .ds-btn-primary:focus-visible { outline: none; border-color: oklch(0.708 0 0); box-shadow: 0 0 0 3px color-mix(in oklch, oklch(0.708 0 0), transparent 70%); }"
+    },
+    {
+      "name": "Outline Button",
+      "kind": "button",
+      "refersTo": "button-outline",
+      "description": "Secondary action. Transparent with stone border, cloud hover.",
+      "html": "<button class=\"ds-btn-outline\">Trocar</button>",
+      "css": ".ds-btn-outline { background: transparent; color: oklch(0.145 0 0); font-family: Inter, ui-sans-serif, system-ui, sans-serif; font-size: 0.75rem; font-weight: 500; line-height: 1.25; letter-spacing: 0.025em; padding: 8px 12px; border: 1px solid oklch(0.922 0 0); border-radius: 26px; cursor: pointer; transition: background 0.2s, transform 0.2s; display: inline-flex; align-items: center; justify-content: center; white-space: nowrap; } .ds-btn-outline:hover { background: oklch(0.97 0 0); } .ds-btn-outline:active { transform: translateY(1px); } .ds-btn-outline:focus-visible { outline: none; border-color: oklch(0.708 0 0); box-shadow: 0 0 0 3px color-mix(in oklch, oklch(0.708 0 0), transparent 70%); }"
+    },
+    {
+      "name": "Text Input",
+      "kind": "input",
+      "refersTo": "input-default",
+      "description": "Default text input. Pill-shaped, subtle stone background, focus ring.",
+      "html": "<input class=\"ds-input\" placeholder=\"Buscar dentro do app...\" />",
+      "css": ".ds-input { height: 36px; width: 100%; min-width: 0; border: 1px solid transparent; border-radius: 22px; background: color-mix(in oklch, oklch(0.922 0 0), transparent 50%); padding: 4px 12px; font-family: Inter, ui-sans-serif, system-ui, sans-serif; font-size: 0.875rem; line-height: 1.5; color: oklch(0.145 0 0); transition: color 0.2s, box-shadow 0.2s, background-color 0.2s; outline: none; } .ds-input::placeholder { color: oklch(0.556 0 0); } .ds-input:focus { border-color: oklch(0.922 0 0); box-shadow: 0 0 0 3px color-mix(in oklch, oklch(0.922 0 0), transparent 70%); } .ds-input:disabled { opacity: 0.5; pointer-events: none; }"
+    },
+    {
+      "name": "Default Card",
+      "kind": "card",
+      "refersTo": "card-default",
+      "description": "Standard content card. White, 26px radius, soft shadow, ring edge.",
+      "html": "<div class=\"ds-card\"><div class=\"ds-card-header\"><div class=\"ds-card-title\">Card Title</div></div><div class=\"ds-card-content\">Card content with body text at 14px.</div></div>",
+      "css": ".ds-card { background: oklch(1 0 0); border-radius: 26px; padding: 24px; box-shadow: 0 4px 6px -1px rgb(0 0 0 / 10%), 0 2px 4px -2px rgb(0 0 0 / 10%); display: flex; flex-direction: column; gap: 24px; font-family: Inter, ui-sans-serif, system-ui, sans-serif; font-size: 0.875rem; line-height: 1.5; position: relative; } .ds-card::before { content: ''; position: absolute; inset: 0; border-radius: 26px; pointer-events: none; box-shadow: 0 0 0 1px oklch(0.922 0 0); } .ds-card-header { display: grid; grid-auto-rows: min-content; align-items: start; gap: 6px; } .ds-card-title { font-family: Inter, ui-sans-serif, system-ui, sans-serif; font-size: 1rem; font-weight: 600; line-height: 1.4; } .ds-card-content { }"
+    },
+    {
+      "name": "Default Badge",
+      "kind": "chip",
+      "refersTo": "badge-default",
+      "description": "Compact label badge. Almost-black pill, white text, 20px height.",
+      "html": "<span class=\"ds-badge\">Ativo</span>",
+      "css": ".ds-badge { display: inline-flex; height: 20px; align-items: center; justify-content: center; gap: 4px; padding: 0 8px; border-radius: 22px; background: oklch(0.145 0 0); color: oklch(1 0 0); font-family: Inter, ui-sans-serif, system-ui, sans-serif; font-size: 0.75rem; font-weight: 500; line-height: 1.25; letter-spacing: 0.025em; white-space: nowrap; border: 1px solid transparent; }"
+    },
+    {
+      "name": "Sidebar Nav Item",
+      "kind": "nav",
+      "refersTo": "nav-item",
+      "description": "Sidebar navigation link. Inverted active state with full background swap.",
+      "html": "<nav class=\"ds-nav\"><a class=\"ds-nav-item\" href=\"#\"><svg width=\"16\" height=\"16\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\"><rect x=\"3\" y=\"4\" width=\"18\" height=\"18\" rx=\"2\"/><line x1=\"3\" y1=\"10\" x2=\"21\" y2=\"10\"/></svg><span>Reuniões</span><svg width=\"16\" height=\"16\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\"><path d=\"m9 18 6-6-6-6\"/></svg></a></nav>",
+      "css": ".ds-nav { display: flex; flex-direction: column; gap: 4px; } .ds-nav-item { display: flex; align-items: center; justify-content: space-between; padding: 10px 12px; border-radius: 10px; font-family: Inter, ui-sans-serif, system-ui, sans-serif; font-size: 0.875rem; font-weight: 500; line-height: 1.4; color: oklch(0.556 0 0); text-decoration: none; transition: background 0.2s, color 0.2s; } .ds-nav-item:hover { background: oklch(0.97 0 0); color: oklch(0.145 0 0); } .ds-nav-item.active { background: oklch(0.145 0 0); color: oklch(1 0 0); } .ds-nav-item svg { width: 16px; height: 16px; flex-shrink: 0; } .ds-nav-item span { display: flex; align-items: center; gap: 12px; }"
+    },
+    {
+      "name": "Dialog / Modal",
+      "kind": "custom",
+      "refersTo": "dialog",
+      "description": "Modal dialog overlay with centered content. 26px radius, elevated shadow, backdrop blur.",
+      "html": "<div class=\"ds-dialog-overlay\"><div class=\"ds-dialog\"><div class=\"ds-dialog-header\"><div class=\"ds-dialog-title\">Dialog Title</div></div><div class=\"ds-dialog-body\">Dialog body content here.</div><div class=\"ds-dialog-footer\"><button class=\"ds-btn-outline\">Cancelar</button><button class=\"ds-btn-primary\">Salvar</button></div></div></div>",
+      "css": ".ds-dialog-overlay { position: fixed; inset: 0; z-index: 50; display: flex; align-items: center; justify-content: center; background: rgb(0 0 0 / 30%); backdrop-filter: blur(4px); } .ds-dialog { background: oklch(1 0 0); border-radius: 26px; padding: 32px; box-shadow: 0 20px 25px -5px rgb(0 0 0 / 10%), 0 8px 10px -6px rgb(0 0 0 / 10%); width: 100%; max-width: 448px; display: grid; gap: 24px; font-family: Inter, ui-sans-serif, system-ui, sans-serif; font-size: 0.875rem; position: relative; } .ds-dialog::before { content: ''; position: absolute; inset: 0; border-radius: 26px; pointer-events: none; box-shadow: 0 0 0 1px oklch(0.922 0 0); } .ds-dialog-header { display: flex; flex-direction: column; gap: 6px; } .ds-dialog-title { font-family: Inter, ui-sans-serif, system-ui, sans-serif; font-size: 1rem; font-weight: 600; line-height: 1.4; } .ds-dialog-body { line-height: 1.5; color: oklch(0.556 0 0); } .ds-dialog-footer { display: flex; flex-direction: row-reverse; gap: 8px; justify-content: flex-end; }"
+    },
+    {
+      "name": "Select / Dropdown",
+      "kind": "input",
+      "refersTo": "select",
+      "description": "Form select with pill shape, consistent with text inputs.",
+      "html": "<select class=\"ds-select\"><option>Opção 1</option><option>Opção 2</option></select>",
+      "css": ".ds-select { height: 36px; width: 100%; min-width: 0; border: 1px solid transparent; border-radius: 22px; background: color-mix(in oklch, oklch(0.922 0 0), transparent 50%); padding: 4px 12px; font-family: Inter, ui-sans-serif, system-ui, sans-serif; font-size: 0.875rem; line-height: 1.5; color: oklch(0.145 0 0); transition: color 0.2s, box-shadow 0.2s, background-color 0.2s; outline: none; cursor: pointer; appearance: none; background-image: url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='oklch(0.556 0 0)' stroke-width='2'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E\"); background-repeat: no-repeat; background-position: right 12px center; padding-right: 36px; } .ds-select:focus { border-color: oklch(0.922 0 0); box-shadow: 0 0 0 3px color-mix(in oklch, oklch(0.922 0 0), transparent 70%); }"
+    }
+  ],
+  "narrative": {
+    "northStar": "A Estante Organizada",
+    "overview": "AssignmentHub's visual language is built on the metaphor of a well-organized shelf — everything has its rightful place, surfaces are clean and uncluttered, and finding what you need is effortless. The interface recedes so the data can lead. The palette is intentionally restrained: a near-monochrome scale of charcoal, white, and warm grays, with a single accent of deep blue appearing in dark-mode sidebar navigation and a clear red reserved exclusively for destructive actions. Cards float on soft shadows (shadow-md), creating a subtle sense of depth that distinguishes surfaces without competing for attention. Every corner is generously rounded (rounded-4xl at 26px maximum), giving the UI a friendly, approachable feel that balances the gravity of the subject matter.",
+    "keyCharacteristics": [
+      "Generous rounded corners (26px max) create a soft, approachable silhouette",
+      "Near-monochrome palette keeps visual noise low; color carries meaning (blue = navigation, red = destructive)",
+      "Soft shadows provide depth without drama",
+      "Consistent 4px spacing grid with 24px as the primary rhythm",
+      "Modern, clear, and welcoming — not cold or clinical"
+    ],
+    "rules": [
+      { "name": "The Neutral-Discipline Rule", "body": "Color appears only when it carries meaning. Backgrounds, borders, and text are grayscale by default; chromatic color is reserved for navigation state (blue) and destructive actions (red). Adding color for decoration violates the system's contract.", "section": "colors" },
+      { "name": "The Single-Family Rule", "body": "Inter is used throughout. No secondary font family. Hierarchy is expressed through weight, size, and spacing alone.", "section": "typography" },
+      { "name": "The Soft-Rest Rule", "body": "Surfaces sit at rest with a soft shadow. Shadows darken only at modal elevation. Hover states use background tint (hover:bg-muted), not shadow changes.", "section": "elevation" }
+    ],
+    "dos": [
+      "Do use the full 26px radius (rounded-4xl) on cards, dialogs, and buttons — it defines the system",
+      "Do keep the palette neutral; let content carry the visual weight",
+      "Do use shadow-md for card elevation and shadow-xl only for modals",
+      "Do use ring-1 ring-foreground/5 to anchor shadow edges",
+      "Do use hover:bg-muted for interactive surface feedback",
+      "Do use transition-colors duration-200 on interactive elements"
+    ],
+    "donts": [
+      "Don't add chromatic color for decoration — color is semantic only",
+      "Don't use shadow-lg or shadow-2xl — the system has only two shadow levels",
+      "Don't mix border-radius strategies — all surfaces use the same family",
+      "Don't place text larger than 14px (text-sm) in body content without a hierarchy reason",
+      "Don't add font families beyond Inter"
+    ]
+  }
+}

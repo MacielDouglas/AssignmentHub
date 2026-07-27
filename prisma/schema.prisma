@@ -995,6 +995,8 @@ model MeetingProgramAssignment {
   @@index([personId, createdAt])
   @@index([subPersonId, createdAt])
   @@index([meetingProgramPartId, role])
+  @@index([personId, meetingProgramPartId])
+  @@index([subPersonId, meetingProgramPartId])
   @@map("meeting_program_assignment")
 }
 

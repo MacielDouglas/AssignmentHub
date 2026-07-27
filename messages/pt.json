@@ -351,5 +351,13 @@
 				"color": "Cor"
 			}
 		}
+	},
+	"Meetings": {
+		"title": "Reuniões",
+		"midweek": "Meio de semana",
+		"weekend": "Fim de semana",
+		"assign": "Designar",
+		"replace": "Trocar",
+		"noAssignment": "Sem designação"
 	}
 }

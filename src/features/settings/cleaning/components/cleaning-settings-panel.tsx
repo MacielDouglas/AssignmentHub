@@ -14,7 +14,7 @@ export function CleaningSettingsPanel({
 }: Props) {
 	return (
 		<div className="space-y-6">
-			<div className="rounded-[24px] border border-slate-200 bg-white p-4 text-sm text-slate-600 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-300">
+			<div className="rounded-[24px] border border-border bg-card p-4 text-sm text-muted-foreground">
 				Configure os três tipos de limpeza. Setores padrão são criados na
 				primeira visita; você pode editar, desativar ou restaurar os que
 				faltarem. Designações de pessoas/famílias/grupos ficam na tela de

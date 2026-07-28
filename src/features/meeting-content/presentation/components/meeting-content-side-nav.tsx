@@ -51,11 +51,11 @@ export function MeetingContentSideNav({ slug }: Props) {
 								href={href}
 								aria-current={active ? "page" : undefined}
 								className={cn(
-									"flex min-h-12 items-center gap-3 rounded-2xl px-3 py-2.5 text-sm font-medium transition-colors",
-									"focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500",
+									"flex min-h-12 items-center gap-3 rounded-4xl px-3 py-2.5 text-sm font-medium transition-colors",
+									"focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/30",
 									active
-										? "bg-blue-600 text-white shadow-lg shadow-blue-600/25"
-										: "text-slate-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-900",
+										? "bg-primary text-primary-foreground"
+										: "text-muted-foreground hover:bg-muted hover:text-foreground",
 								)}
 							>
 								<Icon aria-hidden className="h-5 w-5 shrink-0" />
@@ -65,8 +65,8 @@ export function MeetingContentSideNav({ slug }: Props) {
 										className={cn(
 											"mt-0.5 block text-xs font-normal",
 											active
-												? "text-blue-100"
-												: "text-slate-400 dark:text-slate-500",
+												? "text-primary-foreground/80"
+												: "text-muted-foreground",
 										)}
 									>
 										{section.description}

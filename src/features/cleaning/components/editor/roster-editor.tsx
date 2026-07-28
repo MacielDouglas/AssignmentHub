@@ -76,18 +76,16 @@ export function RosterEditor({ draft, onChange }: Props) {
 				return (
 					<article
 						key={day.date}
-						className="overflow-hidden rounded-[24px] border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-950"
+						className="overflow-hidden rounded-[24px] border border-border bg-card shadow-sm"
 					>
-						<header className="border-b border-slate-100 bg-slate-50 px-4 py-3 dark:border-slate-800 dark:bg-slate-900/60">
-							<p className="text-base font-semibold text-slate-900 dark:text-slate-50">
-								{formatBr(day.date)}
-							</p>
+						<header className="border-b border-border bg-muted px-4 py-3">
+							<p className="text-title text-foreground">{formatBr(day.date)}</p>
 							{day.label ? (
-								<p className="text-xs text-slate-500">{day.label}</p>
+								<p className="text-xs text-muted-foreground">{day.label}</p>
 							) : null}
 						</header>
 
-						<ul className="divide-y divide-slate-100 dark:divide-slate-800">
+						<ul className="divide-y divide-border">
 							{visibleSectors.map((sector) => {
 								const slots = day.slots
 									.filter((s) => s.sectorId === sector.id)
@@ -97,11 +95,11 @@ export function RosterEditor({ draft, onChange }: Props) {
 									<li key={sector.id} className="space-y-2 px-4 py-3">
 										<div className="flex items-start justify-between gap-2">
 											<div>
-												<p className="text-sm font-medium text-slate-900 dark:text-slate-50">
+												<p className="text-sm font-medium text-foreground">
 													{sector.name}
 												</p>
 												{sector.description ? (
-													<p className="line-clamp-2 text-xs text-slate-500">
+													<p className="line-clamp-2 text-xs text-muted-foreground">
 														{sector.description}
 													</p>
 												) : null}
@@ -132,7 +130,7 @@ export function RosterEditor({ draft, onChange }: Props) {
 															onChange={(e) =>
 																changePerson(day.date, slot.key, e.target.value)
 															}
-															className="h-10 w-full rounded-xl border border-slate-200 bg-white px-2 text-sm dark:border-slate-700 dark:bg-slate-950"
+															className="h-10 w-full rounded-xl border border-border bg-card px-2 text-sm"
 														>
 															{draft.people.map((p) => (
 																<option key={p.id} value={p.id}>

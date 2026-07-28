@@ -40,7 +40,7 @@ export function PersonFormDialog({
 		>
 			<DialogTrigger asChild>
 				{trigger ?? (
-					<Button className="h-12 rounded-2xl bg-linear-to-r from-blue-600 to-violet-600 px-4 text-white shadow-lg shadow-blue-600/20">
+					<Button className="h-12 rounded-4xl bg-primary px-4 text-primary-foreground shadow-md">
 						{mode === "create" ? (
 							<HiOutlinePlus className="mr-2 h-4 w-4" />
 						) : (
@@ -58,8 +58,7 @@ export function PersonFormDialog({
     w-[calc(100vw-1rem)] max-w-[calc(100vw-1rem)]
     -translate-x-1/2 -translate-y-1/2
     flex-col overflow-hidden
-    rounded-[28px] border-0 bg-slate-50 p-0 shadow-2xl
-    dark:bg-slate-950
+    rounded-[28px] border-0 bg-card p-0 shadow-2xl
     sm:w-[calc(100vw-2rem)] sm:max-w-[calc(100vw-2rem)]
     lg:w-[min(1200px,calc(100vw-3rem))] lg:max-w-[min(1200px,calc(100vw-3rem))]
   "

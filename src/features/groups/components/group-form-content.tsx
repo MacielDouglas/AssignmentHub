@@ -39,7 +39,7 @@ const initialState: GroupActionState = {
 };
 
 const fieldClassName =
-	"h-11 w-full rounded-2xl border border-slate-200 bg-white px-3 text-sm text-slate-900 outline-none ring-blue-500/30 focus:ring-4 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-50";
+	"h-11 w-full rounded-4xl border border-border bg-card px-3 text-sm text-foreground outline-none ring-primary/30 focus:ring-4";
 
 export function GroupFormContent({
 	mode,
@@ -230,16 +230,16 @@ export function GroupFormContent({
 				/>
 			))}
 
-			<header className="shrink-0 border-b border-slate-200 px-5 py-4 dark:border-slate-800 sm:px-6">
+			<header className="shrink-0 border-b border-border px-5 py-4 sm:px-6">
 				<div className="flex items-start gap-3">
-					<div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-linear-to-br from-blue-600 to-violet-600 text-white shadow-lg shadow-blue-600/20">
+					<div className="flex h-11 w-11 items-center justify-center rounded-4xl bg-primary text-primary-foreground shadow-md">
 						<HiOutlineUserGroup className="h-5 w-5" />
 					</div>
 					<div className="min-w-0 space-y-1">
-						<h2 className="text-lg font-semibold text-slate-900 dark:text-slate-50">
+						<h2 className="text-headline text-foreground">
 							{mode === "create" ? "Novo grupo" : "Editar grupo"}
 						</h2>
-						<p className="text-sm text-slate-500 dark:text-slate-400">
+						<p className="text-sm text-muted-foreground">
 							Superintendente e ajudante devem ser homens adultos batizados e
 							pessoas diferentes.
 						</p>
@@ -252,7 +252,7 @@ export function GroupFormContent({
 					<div className="space-y-2 md:col-span-2">
 						<label
 							htmlFor="group-name"
-							className="text-sm font-medium text-slate-800 dark:text-slate-200"
+							className="text-sm font-medium text-foreground"
 						>
 							Nome
 						</label>
@@ -266,7 +266,7 @@ export function GroupFormContent({
 							autoComplete="off"
 						/>
 						{state.fieldErrors?.name?.[0] ? (
-							<p className="text-sm text-red-600 dark:text-red-400">
+							<p className="text-sm text-destructive">
 								{state.fieldErrors.name[0]}
 							</p>
 						) : null}
@@ -276,7 +276,7 @@ export function GroupFormContent({
 						<button
 							type="button"
 							onClick={() => setSlugAdvancedOpen((v) => !v)}
-							className="inline-flex items-center gap-2 text-sm font-medium text-slate-600 dark:text-slate-300"
+							className="inline-flex items-center gap-2 text-sm font-medium text-muted-foreground"
 						>
 							<HiOutlineChevronDown
 								className={`h-4 w-4 transition ${slugAdvancedOpen ? "rotate-180" : ""}`}
@@ -285,10 +285,10 @@ export function GroupFormContent({
 						</button>
 
 						{slugAdvancedOpen ? (
-							<div className="space-y-2 rounded-[20px] border border-slate-200 bg-slate-50 p-4 dark:border-slate-800 dark:bg-slate-900/60">
+							<div className="space-y-2 rounded-3xl border border-border bg-muted p-4">
 								<label
 									htmlFor="group-slug"
-									className="text-sm font-medium text-slate-800 dark:text-slate-200"
+									className="text-sm font-medium text-foreground"
 								>
 									Slug
 								</label>
@@ -303,12 +303,12 @@ export function GroupFormContent({
 									placeholder="grupo-centro"
 									autoComplete="off"
 								/>
-								<p className="text-xs text-slate-500 dark:text-slate-400">
+								<p className="text-xs text-muted-foreground">
 									Gerado automaticamente a partir do nome. Edite só se precisar
 									de um identificador específico.
 								</p>
 								{state.fieldErrors?.slug?.[0] ? (
-									<p className="text-sm text-red-600 dark:text-red-400">
+									<p className="text-sm text-destructive">
 										{state.fieldErrors.slug[0]}
 									</p>
 								) : null}
@@ -321,7 +321,7 @@ export function GroupFormContent({
 					<div className="space-y-2">
 						<label
 							htmlFor="group-superintendent"
-							className="text-sm font-medium text-slate-800 dark:text-slate-200"
+							className="text-sm font-medium text-foreground"
 						>
 							Superintendente
 						</label>
@@ -343,7 +343,7 @@ export function GroupFormContent({
 							))}
 						</select>
 						{state.fieldErrors?.superintendentId?.[0] ? (
-							<p className="text-sm text-red-600 dark:text-red-400">
+							<p className="text-sm text-destructive">
 								{state.fieldErrors.superintendentId[0]}
 							</p>
 						) : null}
@@ -352,7 +352,7 @@ export function GroupFormContent({
 					<div className="space-y-2">
 						<label
 							htmlFor="group-assistant"
-							className="text-sm font-medium text-slate-800 dark:text-slate-200"
+							className="text-sm font-medium text-foreground"
 						>
 							Ajudante
 						</label>
@@ -374,7 +374,7 @@ export function GroupFormContent({
 							))}
 						</select>
 						{state.fieldErrors?.assistantId?.[0] ? (
-							<p className="text-sm text-red-600 dark:text-red-400">
+							<p className="text-sm text-destructive">
 								{state.fieldErrors.assistantId[0]}
 							</p>
 						) : null}
@@ -383,15 +383,13 @@ export function GroupFormContent({
 
 				<section className="space-y-3">
 					<div>
-						<h3 className="text-sm font-semibold text-slate-900 dark:text-slate-50">
-							Membros
-						</h3>
-						<p className="text-xs text-slate-500 dark:text-slate-400">
+						<h3 className="text-title text-foreground">Membros</h3>
+						<p className="text-xs text-muted-foreground">
 							Selecione pessoas da organização. Em chefes de família, você pode
 							levar a família junto.
 						</p>
 						{state.fieldErrors?.memberIds?.[0] ? (
-							<p className="mt-1 text-sm text-red-600 dark:text-red-400">
+							<p className="mt-1 text-sm text-destructive">
 								{state.fieldErrors.memberIds[0]}
 							</p>
 						) : null}
@@ -407,7 +405,7 @@ export function GroupFormContent({
 							return (
 								<div
 									key={person.id}
-									className="rounded-[20px] border border-slate-200 bg-slate-50/80 p-3 dark:border-slate-800 dark:bg-slate-900/50"
+									className="rounded-3xl border border-border bg-muted/80 p-3"
 								>
 									<div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
 										<div className="space-y-2">
@@ -416,10 +414,10 @@ export function GroupFormContent({
 													type="checkbox"
 													checked={selected}
 													onChange={() => toggleMember(person.id)}
-													className="h-4 w-4 rounded border-slate-300"
+													className="h-4 w-4 rounded border-border"
 												/>
-												<span className="inline-flex items-center gap-2 text-sm font-medium text-slate-900 dark:text-slate-50">
-													<HiOutlineUser className="h-4 w-4 text-slate-400" />
+												<span className="inline-flex items-center gap-2 text-sm font-medium text-foreground">
+													<HiOutlineUser className="h-4 w-4 text-muted-foreground" />
 													{person.name}
 												</span>
 											</label>
@@ -459,12 +457,12 @@ export function GroupFormContent({
 										</div>
 
 										{isHead ? (
-											<label className="inline-flex items-center gap-2 text-xs text-slate-600 dark:text-slate-300">
+											<label className="inline-flex items-center gap-2 text-xs text-muted-foreground">
 												<input
 													type="checkbox"
 													checked={includeFamiliesByHeadIds.includes(person.id)}
 													onChange={() => toggleIncludeFamily(person.id)}
-													className="h-4 w-4 rounded border-slate-300"
+													className="h-4 w-4 rounded border-border"
 												/>
 												<HiOutlineUsers className="h-4 w-4" />
 												Levar família junto
@@ -505,20 +503,20 @@ export function GroupFormContent({
 								return (
 									<div
 										key={person.id}
-										className="space-y-3 rounded-[16px] border border-amber-200 bg-white p-3 dark:border-amber-900 dark:bg-slate-950"
+										className="space-y-3 rounded-2xl border border-amber-200 bg-card p-3 dark:border-amber-900"
 									>
 										<label className="flex items-start gap-3">
 											<input
 												type="checkbox"
 												checked={confirmed}
 												onChange={() => toggleConflictOverride(person.id)}
-												className="mt-1 h-4 w-4 rounded border-slate-300"
+												className="mt-1 h-4 w-4 rounded border-border"
 											/>
 											<div className="text-sm">
-												<p className="font-medium text-slate-900 dark:text-slate-50">
+												<p className="font-medium text-foreground">
 													{person.name}
 												</p>
-												<p className="text-slate-600 dark:text-slate-300">
+												<p className="text-muted-foreground">
 													Está no grupo{" "}
 													<strong>{person.currentGroupName}</strong>. Tem
 													certeza de que deseja mover para este grupo?
@@ -538,9 +536,9 @@ export function GroupFormContent({
 															e.target.checked,
 														)
 													}
-													className="mt-1 h-4 w-4 rounded border-slate-300"
+													className="mt-1 h-4 w-4 rounded border-border"
 												/>
-												<span className="text-slate-700 dark:text-slate-200">
+												<span className="text-muted-foreground">
 													{person.isFamilyHead
 														? `Mover toda a família ${person.familyName} junto`
 														: `Esta pessoa pertence à família ${person.familyName}. Mover a família inteira?`}
@@ -567,12 +565,12 @@ export function GroupFormContent({
 				) : null}
 			</div>
 
-			<footer className="shrink-0 border-t border-slate-200 px-5 py-4 dark:border-slate-800 sm:px-6">
+			<footer className="shrink-0 border-t border-border px-5 py-4 sm:px-6">
 				<div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
 					<Button
 						type="button"
 						variant="outline"
-						className="h-11 rounded-2xl"
+						className="h-11 rounded-4xl"
 						onClick={onCancel}
 						disabled={pending}
 					>
@@ -581,7 +579,7 @@ export function GroupFormContent({
 					<Button
 						type="submit"
 						disabled={pending}
-						className="h-11 rounded-2xl bg-linear-to-r from-blue-600 to-violet-600 text-white shadow-lg shadow-blue-600/20"
+						className="h-11 rounded-4xl bg-primary text-primary-foreground shadow-md"
 					>
 						<HiOutlineCheckBadge className="mr-2 h-4 w-4" />
 						{pending

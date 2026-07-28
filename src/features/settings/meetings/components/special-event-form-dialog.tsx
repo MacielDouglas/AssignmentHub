@@ -26,7 +26,7 @@ import {
 const initialState: SettingsActionState = { success: false, message: "" };
 
 const fieldClassName =
-	"h-11 w-full rounded-2xl border border-slate-200 bg-white px-3 text-sm outline-none ring-blue-500/30 focus:ring-4 dark:border-slate-800 dark:bg-slate-950";
+	"h-11 w-full rounded-4xl border border-border bg-card px-3 text-sm outline-none ring-primary/30 focus:ring-4";
 
 const PREFIXES = ["Viajante: ", "Superintendente: "] as const;
 
@@ -78,14 +78,14 @@ export function SpecialEventFormDialog({
 						{t("edit")}
 					</Button>
 				) : (
-					<Button className="h-11 rounded-2xl bg-linear-to-r from-blue-600 to-violet-600 text-white">
+					<Button className="h-11 rounded-4xl bg-primary text-primary-foreground">
 						<HiOutlinePlus className="mr-2 h-4 w-4" />
 						{t("newEvent")}
 					</Button>
 				)}
 			</DialogTrigger>
 
-			<DialogContent className="max-h-[90vh] overflow-y-auto rounded-[28px] sm:max-w-lg">
+			<DialogContent className="max-h-[90vh] overflow-y-auto rounded-4xl sm:max-w-lg">
 				<DialogHeader>
 					<DialogTitle>{event ? t("editTitle") : t("newTitle")}</DialogTitle>
 				</DialogHeader>
@@ -241,7 +241,7 @@ function SpecialEventFormFields({
 						name="notes"
 						defaultValue={notesDefault}
 						rows={3}
-						className="w-full rounded-2xl border border-slate-200 bg-white px-3 py-2 text-sm outline-none ring-blue-500/30 focus:ring-4 dark:border-slate-800 dark:bg-slate-950"
+						className="w-full rounded-4xl border border-border bg-card px-3 py-2 text-sm outline-none ring-primary/30 focus:ring-4"
 					/>
 				</div>
 			) : null}
@@ -262,7 +262,7 @@ function SpecialEventFormFields({
 				<Button
 					type="submit"
 					disabled={pending}
-					className="h-11 rounded-2xl bg-linear-to-r from-blue-600 to-violet-600 text-white"
+					className="h-11 rounded-4xl bg-primary text-primary-foreground"
 				>
 					{pending ? t("saving") : t("save")}
 				</Button>

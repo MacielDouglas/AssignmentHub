@@ -66,18 +66,18 @@ export function WeekNavigation({ slug, weekStart, weekEnd, locale }: Props) {
 	return (
 		<div className="flex items-center justify-between gap-4">
 			<div className="min-w-0">
-				<h2 className="text-sm font-semibold text-gray-900 sm:text-base">
+				<h2 className="text-title text-foreground sm:text-base">
 					Semana de {range}
 				</h2>
 				{isCurrentWeek ? (
-					<p className="mt-0.5 text-xs text-blue-600">Semana atual</p>
+					<p className="mt-0.5 text-xs text-primary">Semana atual</p>
 				) : null}
 			</div>
 
 			<div className="flex shrink-0 items-center gap-1">
 				<Link
 					href={`/org/${slug}/meetings?week=${prev}`}
-					className="flex h-9 w-9 items-center justify-center rounded-xl border border-gray-200 text-gray-600 transition hover:border-gray-300 hover:bg-gray-50 hover:text-gray-900"
+					className="flex h-9 w-9 items-center justify-center rounded-xl border border-border text-muted-foreground transition hover:border-border hover:bg-muted hover:text-foreground"
 					aria-label="Semana anterior"
 				>
 					<HiChevronLeft className="h-4 w-4" />
@@ -85,7 +85,7 @@ export function WeekNavigation({ slug, weekStart, weekEnd, locale }: Props) {
 
 				<Link
 					href={`/org/${slug}/meetings`}
-					className="flex h-7 items-center rounded-lg px-2.5 text-[11px] font-medium text-gray-500 transition hover:bg-gray-100 hover:text-gray-700"
+					className="flex h-7 items-center rounded-lg px-2.5 text-caption text-muted-foreground transition hover:bg-muted hover:text-foreground"
 					aria-label="Voltar para semana atual"
 				>
 					Hoje
@@ -93,7 +93,7 @@ export function WeekNavigation({ slug, weekStart, weekEnd, locale }: Props) {
 
 				<Link
 					href={`/org/${slug}/meetings?week=${next}`}
-					className="flex h-9 w-9 items-center justify-center rounded-xl border border-gray-200 text-gray-600 transition hover:border-gray-300 hover:bg-gray-50 hover:text-gray-900"
+					className="flex h-9 w-9 items-center justify-center rounded-xl border border-border text-muted-foreground transition hover:border-border hover:bg-muted hover:text-foreground"
 					aria-label="Próxima semana"
 				>
 					<HiChevronRight className="h-4 w-4" />

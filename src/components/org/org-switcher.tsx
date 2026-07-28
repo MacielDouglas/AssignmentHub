@@ -55,7 +55,7 @@ export function OrgSwitcher({
 				onClick={() => setOpen((value) => !value)}
 				className="inline-flex min-h-11 max-w-full items-center gap-3 border border-border bg-card px-4 py-2 text-left hover:bg-muted"
 			>
-				<span className="flex h-9 w-9 shrink-0 items-center justify-center bg-blue-50 text-blue-600">
+				<span className="flex h-9 w-9 shrink-0 items-center justify-center bg-muted text-muted-foreground">
 					<HiOutlineBuildingOffice2 className="h-5 w-5" aria-hidden="true" />
 				</span>
 
@@ -74,7 +74,7 @@ export function OrgSwitcher({
 			{open ? (
 				<div className="absolute left-0 top-full z-20 mt-2 min-w-70 max-w-[90vw] border border-border bg-background shadow-sm">
 					<div className="border-b border-border px-4 py-3">
-						<p className="text-xs font-semibold uppercase tracking-[0.12em] text-muted-foreground">
+						<p className="text-label uppercase text-muted-foreground">
 							Trocar organização
 						</p>
 					</div>
@@ -101,7 +101,7 @@ export function OrgSwitcher({
 										</p>
 									</div>
 
-									<span className="shrink-0 text-xs font-medium text-blue-700">
+									<span className="shrink-0 text-label text-muted-foreground">
 										{isPending
 											? "Entrando..."
 											: isCurrent

@@ -52,7 +52,7 @@ export function OrgSidebar({ currentSlug, organizationName }: OrgSidebarProps) {
 								aria-current={isActive ? "page" : undefined}
 								className={`flex items-center justify-between rounded-lg px-3 py-2.5 text-sm transition-colors ${
 									isActive
-										? "bg-foreground text-background"
+										? "bg-primary text-primary-foreground"
 										: "text-muted-foreground hover:bg-muted hover:text-foreground"
 								}`}
 							>

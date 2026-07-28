@@ -15,10 +15,10 @@ export function MeetingsPageContent({ data }: Props) {
 
 	return (
 		<div className="mx-auto w-full max-w-7xl space-y-5 pb-24 md:pb-10">
-			<header className="overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-xs">
-				<div className="bg-linear-to-br from-blue-600 via-blue-700 to-violet-700 px-5 py-4 text-white sm:px-6 sm:py-5">
+			<header className="overflow-hidden rounded-4xl border border-border bg-card shadow-md ring-1 ring-border/30">
+				<div className="border-b border-border bg-muted px-5 py-4 sm:px-6 sm:py-5">
 					<div className="flex items-center gap-3">
-						<div className="flex h-9 w-9 items-center justify-center rounded-xl bg-white/15 backdrop-blur-sm">
+						<div className="flex h-9 w-9 items-center justify-center rounded-3xl bg-muted text-muted-foreground">
 							<svg
 								viewBox="0 0 24 24"
 								fill="none"
@@ -34,10 +34,10 @@ export function MeetingsPageContent({ data }: Props) {
 							</svg>
 						</div>
 						<div className="min-w-0">
-							<p className="text-xs font-medium text-blue-100/90">
+							<p className="text-label text-muted-foreground">
 								{data.organizationName}
 							</p>
-							<h1 className="text-base font-semibold tracking-tight sm:text-lg">
+							<h1 className="text-headline text-foreground sm:text-lg">
 								Reuniões
 							</h1>
 						</div>
@@ -55,15 +55,15 @@ export function MeetingsPageContent({ data }: Props) {
 			</header>
 
 			{/* Mobile tabs */}
-			<div className="flex rounded-xl border border-gray-200 bg-gray-100 p-0.5 sm:hidden">
+			<div className="flex rounded-4xl border border-border bg-muted p-0.5 sm:hidden">
 				<button
 					type="button"
 					onClick={() => setMobileTab("midweek")}
 					className={[
-						"min-h-9 flex-1 rounded-[10px] text-sm font-medium transition-all",
+						"min-h-9 flex-1 rounded-lg text-sm font-medium transition-all",
 						mobileTab === "midweek"
-							? "bg-white text-gray-900 shadow-xs"
-							: "text-gray-500 hover:text-gray-700",
+							? "bg-card text-foreground shadow-xs"
+							: "text-muted-foreground hover:text-foreground",
 					].join(" ")}
 				>
 					Meio de semana
@@ -72,10 +72,10 @@ export function MeetingsPageContent({ data }: Props) {
 					type="button"
 					onClick={() => setMobileTab("weekend")}
 					className={[
-						"min-h-9 flex-1 rounded-[10px] text-sm font-medium transition-all",
+						"min-h-9 flex-1 rounded-lg text-sm font-medium transition-all",
 						mobileTab === "weekend"
-							? "bg-white text-gray-900 shadow-xs"
-							: "text-gray-500 hover:text-gray-700",
+							? "bg-card text-foreground shadow-xs"
+							: "text-muted-foreground hover:text-foreground",
 					].join(" ")}
 				>
 					Fim de semana

@@ -33,15 +33,12 @@ export function GroupFormDialog({
 
 	const defaultTrigger =
 		mode === "create" ? (
-			<Button className="h-11 rounded-2xl bg-linear-to-r from-blue-600 to-violet-600 px-4 text-white shadow-lg shadow-blue-600/20 hover:from-blue-600 hover:to-violet-500">
+			<Button className="h-11 rounded-4xl bg-primary px-4 text-primary-foreground shadow-md">
 				<HiOutlinePlus className="mr-2 h-4 w-4" />
 				Novo grupo
 			</Button>
 		) : (
-			<Button
-				variant="outline"
-				className="h-11 rounded-2xl border-slate-200 dark:border-slate-800"
-			>
+			<Button variant="outline" className="h-11 rounded-4xl border-border">
 				<HiOutlinePencilSquare className="mr-2 h-4 w-4" />
 				Editar
 			</Button>
@@ -50,7 +47,7 @@ export function GroupFormDialog({
 	return (
 		<Dialog open={open} onOpenChange={setOpen}>
 			<DialogTrigger asChild>{trigger ?? defaultTrigger}</DialogTrigger>
-			<DialogContent className="flex h-[94dvh] max-h-[94dvh] w-[min(96vw,56rem)] max-w-none flex-col gap-0 overflow-hidden rounded-[28px] border-slate-200 p-0 dark:border-slate-800 sm:h-auto sm:max-h-[90vh]">
+			<DialogContent className="flex h-[94dvh] max-h-[94dvh] w-[min(96vw,56rem)] max-w-none flex-col gap-0 overflow-hidden rounded-4xl border-border p-0 sm:h-auto sm:max-h-[90vh]">
 				<GroupFormContent
 					mode={mode}
 					organizationSlug={organizationSlug}

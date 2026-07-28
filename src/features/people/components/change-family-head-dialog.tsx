@@ -71,7 +71,7 @@ export function ChangeFamilyHeadDialog({
 
 	return (
 		<Dialog open={open} onOpenChange={handleOpenChange}>
-			<DialogContent className="max-h-[90vh] overflow-y-auto rounded-[28px]">
+			<DialogContent className="max-h-[90vh] overflow-y-auto rounded-4xl">
 				<form action={formAction} className="grid gap-6">
 					<input type="hidden" name="slug" value={slug} />
 					<input type="hidden" name="personId" value={personId} />
@@ -96,25 +96,25 @@ export function ChangeFamilyHeadDialog({
 							}
 							className="grid gap-3"
 						>
-							<Label className="flex items-start gap-3 rounded-2xl border border-slate-200 p-4 dark:border-slate-800">
+							<Label className="flex items-start gap-3 rounded-2xl border border-border p-4">
 								<RadioGroupItem value="REASSIGN" id="decision-reassign" />
 								<div>
-									<p className="text-sm font-medium text-slate-900 dark:text-slate-100">
+									<p className="text-sm font-medium text-foreground">
 										Designar novo chefe
 									</p>
-									<p className="text-xs text-slate-500 dark:text-slate-400">
+									<p className="text-xs text-muted-foreground">
 										Escolha outra pessoa da mesma família.
 									</p>
 								</div>
 							</Label>
 
-							<Label className="flex items-start gap-3 rounded-2xl border border-slate-200 p-4 dark:border-slate-800">
+							<Label className="flex items-start gap-3 rounded-2xl border border-border p-4">
 								<RadioGroupItem value="DISSOLVE" id="decision-dissolve" />
 								<div>
-									<p className="text-sm font-medium text-slate-900 dark:text-slate-100">
+									<p className="text-sm font-medium text-foreground">
 										Eliminar família
 									</p>
-									<p className="text-xs text-slate-500 dark:text-slate-400">
+									<p className="text-xs text-muted-foreground">
 										Todos os membros ficarão sem família.
 									</p>
 								</div>
@@ -168,7 +168,7 @@ export function ChangeFamilyHeadDialog({
 						</Button>
 						<Button
 							type="submit"
-							className="bg-linear-to-r from-blue-600 to-violet-600 text-white"
+							className="bg-primary text-primary-foreground"
 						>
 							Confirmar
 						</Button>

@@ -159,14 +159,14 @@ export function PublicTalksSection({
 
 	return (
 		<section className="space-y-4">
-			<header className="rounded-[28px] border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-950 sm:p-5">
+			<header className="rounded-4xl border border-border bg-card p-4 shadow-sm sm:p-5">
 				<div className="flex flex-col gap-4">
 					<div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
 						<div className="space-y-1">
-							<h2 className="text-lg font-semibold tracking-tight text-slate-900 dark:text-slate-100">
+							<h2 className="text-headline text-foreground">
 								Discursos públicos
 							</h2>
-							<p className="text-sm text-slate-600 dark:text-slate-400">
+							<p className="text-sm text-muted-foreground">
 								Gerencie o catálogo e o histórico dos últimos discursos por
 								organização.
 							</p>
@@ -175,7 +175,7 @@ export function PublicTalksSection({
 						<div className="flex flex-wrap gap-2">
 							{canManage ? (
 								<>
-									<label className="inline-flex min-h-11 cursor-pointer items-center justify-center rounded-2xl border border-slate-200 bg-white px-4 text-sm font-semibold dark:border-slate-700 dark:bg-slate-900">
+									<label className="inline-flex min-h-11 cursor-pointer items-center justify-center rounded-4xl border border-border bg-card px-4 text-sm font-semibold">
 										Importar S-34 .jwpub
 										<input
 											type="file"
@@ -206,15 +206,15 @@ export function PublicTalksSection({
 					</div>
 
 					<div className="flex flex-col gap-3 sm:flex-row">
-						<div className="inline-flex rounded-2xl border border-slate-200 bg-slate-50 p-1 dark:border-slate-800 dark:bg-slate-900">
+						<div className="inline-flex rounded-4xl border border-border bg-muted p-1">
 							<button
 								type="button"
 								onClick={() => setLocale("pt")}
 								className={[
 									"min-h-10 rounded-xl px-4 text-sm font-medium transition",
 									locale === "pt"
-										? "bg-white text-slate-900 shadow-sm dark:bg-slate-800 dark:text-slate-100"
-										: "text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-100",
+										? "bg-card text-foreground shadow-sm"
+										: "text-muted-foreground hover:text-foreground",
 								].join(" ")}
 							>
 								Português
@@ -225,8 +225,8 @@ export function PublicTalksSection({
 								className={[
 									"min-h-10 rounded-xl px-4 text-sm font-medium transition",
 									locale === "es"
-										? "bg-white text-slate-900 shadow-sm dark:bg-slate-800 dark:text-slate-100"
-										: "text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-100",
+										? "bg-card text-foreground shadow-sm"
+										: "text-muted-foreground hover:text-foreground",
 								].join(" ")}
 							>
 								Español
@@ -234,7 +234,7 @@ export function PublicTalksSection({
 						</div>
 
 						<div className="relative flex-1">
-							<HiOutlineMagnifyingGlass className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+							<HiOutlineMagnifyingGlass className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
 							<Input
 								value={search}
 								onChange={(event) => setSearch(event.target.value)}
@@ -255,7 +255,7 @@ export function PublicTalksSection({
 						</p>
 					) : null}
 					{pending ? (
-						<p className="text-sm text-slate-500" aria-live="polite">
+						<p className="text-sm text-muted-foreground" aria-live="polite">
 							Processando…
 						</p>
 					) : null}
@@ -277,7 +277,7 @@ export function PublicTalksSection({
 
 			<div className="grid gap-4">
 				{filteredTalks.length === 0 ? (
-					<div className="rounded-[28px] border border-dashed border-slate-300 bg-white p-6 text-sm text-slate-600 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-400">
+					<div className="rounded-4xl border border-dashed border-border bg-card p-6 text-sm text-muted-foreground">
 						Nenhum discurso encontrado para esse filtro.
 					</div>
 				) : (
@@ -294,29 +294,29 @@ export function PublicTalksSection({
 						return (
 							<article
 								key={talk.id}
-								className="rounded-[28px] border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-950 sm:p-5"
+								className="rounded-4xl border border-border bg-card p-4 shadow-sm sm:p-5"
 							>
 								<div className="flex flex-col gap-4">
 									<div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
 										<div className="min-w-0 space-y-2">
 											<div className="flex flex-wrap items-center gap-2">
-												<span className="inline-flex min-h-8 items-center rounded-full bg-slate-100 px-3 text-xs font-semibold uppercase tracking-wide text-slate-700 dark:bg-slate-800 dark:text-slate-300">
+												<span className="inline-flex min-h-8 items-center rounded-full bg-muted px-3 text-label uppercase text-muted-foreground">
 													{talk.locale === "pt" ? "PT" : "ES"}
 												</span>
-												<span className="inline-flex min-h-8 items-center rounded-full bg-teal-50 px-3 text-xs font-semibold text-teal-700 dark:bg-teal-950/40 dark:text-teal-300">
+												<span className="inline-flex min-h-8 items-center rounded-full bg-muted px-3 text-label text-muted-foreground">
 													Nº {talk.number}
 												</span>
-												<span className="inline-flex min-h-8 items-center rounded-full bg-violet-50 px-3 text-xs font-semibold text-violet-700 dark:bg-violet-950/40 dark:text-violet-300">
+												<span className="inline-flex min-h-8 items-center rounded-full bg-muted px-3 text-label text-muted-foreground">
 													{historyCount} registros
 												</span>
 											</div>
 
 											<div className="space-y-1">
-												<h3 className="text-base font-semibold text-slate-900 dark:text-slate-100">
+												<h3 className="text-title text-foreground">
 													{talk.title}
 												</h3>
 												{talk.notes ? (
-													<p className="text-sm text-slate-600 dark:text-slate-400">
+													<p className="text-sm text-muted-foreground">
 														{talk.notes}
 													</p>
 												) : null}
@@ -397,23 +397,20 @@ function PublicTalksReviewCard({
 	return (
 		<section
 			aria-labelledby="talks-review-title"
-			className="space-y-3 rounded-[28px] border border-amber-200 bg-amber-50/60 p-4 dark:border-amber-900/50 dark:bg-amber-950/20 sm:p-5"
+			className="space-y-3 rounded-4xl border border-amber-200 bg-amber-50/60 p-4 dark:border-amber-900/50 dark:bg-amber-950/20 sm:p-5"
 		>
 			<div>
-				<h3
-					id="talks-review-title"
-					className="text-base font-semibold text-slate-900 dark:text-slate-50"
-				>
+				<h3 id="talks-review-title" className="text-title text-foreground">
 					Revisar importação S-34
 				</h3>
-				<p className="mt-1 text-sm text-slate-600 dark:text-slate-400">
+				<p className="mt-1 text-sm text-muted-foreground">
 					{draft.talks.length} discursos
 					{job.fileNames?.length ? ` · ${job.fileNames.join(", ")}` : ""}
 					{job.notes ? ` · ${job.notes}` : ""}
 				</p>
 			</div>
 
-			<ul className="max-h-72 space-y-2 overflow-y-auto rounded-2xl border border-slate-200 bg-white p-3 dark:border-slate-800 dark:bg-slate-950">
+			<ul className="max-h-72 space-y-2 overflow-y-auto rounded-2xl border border-border bg-card p-3">
 				{draft.talks.map((talk) => {
 					const rowKey = `${draft.locale}-${talk.number}-${talk.title}`;
 					return (
@@ -437,7 +434,7 @@ function PublicTalksReviewCard({
 									);
 									onChange({ ...draft, talks });
 								}}
-								className="min-h-10 rounded-xl border border-slate-200 px-2 text-sm dark:border-slate-700 dark:bg-slate-900"
+								className="min-h-10 rounded-xl border border-border px-2 text-sm"
 							/>
 							<input
 								type="text"
@@ -453,7 +450,7 @@ function PublicTalksReviewCard({
 									);
 									onChange({ ...draft, talks });
 								}}
-								className="min-h-10 rounded-xl border border-slate-200 px-3 text-sm dark:border-slate-700 dark:bg-slate-900"
+								className="min-h-10 rounded-xl border border-border px-3 text-sm"
 							/>
 							<button
 								type="button"
@@ -481,7 +478,7 @@ function PublicTalksReviewCard({
 					type="button"
 					disabled={pending}
 					onClick={onSave}
-					className="min-h-11 rounded-2xl border border-slate-300 px-4 text-sm font-medium dark:border-slate-600"
+					className="min-h-11 rounded-4xl border border-border px-4 text-sm font-medium"
 				>
 					Salvar rascunho
 				</button>
@@ -489,7 +486,7 @@ function PublicTalksReviewCard({
 					type="button"
 					disabled={pending}
 					onClick={onCommit}
-					className="min-h-11 rounded-2xl bg-blue-600 px-4 text-sm font-semibold text-white"
+					className="min-h-11 rounded-4xl bg-primary px-4 text-sm font-semibold text-primary-foreground"
 				>
 					Confirmar e salvar no catálogo
 				</button>
@@ -497,7 +494,7 @@ function PublicTalksReviewCard({
 					type="button"
 					disabled={pending}
 					onClick={onDiscard}
-					className="min-h-11 rounded-2xl px-4 text-sm font-medium text-red-600"
+					className="min-h-11 rounded-4xl px-4 text-sm font-medium text-destructive"
 				>
 					Descartar
 				</button>

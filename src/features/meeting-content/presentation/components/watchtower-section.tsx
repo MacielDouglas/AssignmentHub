@@ -29,16 +29,14 @@ export function WatchtowerSection({
 
 	return (
 		<div className="space-y-6">
-			<header className="overflow-hidden rounded-[32px] bg-linear-to-br from-blue-600 to-violet-600 p-6 text-white shadow-xl shadow-blue-600/20">
+			<header className="overflow-hidden rounded-4xl bg-primary p-6 text-primary-foreground shadow-md">
 				<div className="flex items-start gap-4">
 					<div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-white/15">
 						<HiOutlineBookOpen className="h-6 w-6" />
 					</div>
 					<div>
-						<h1 className="text-xl font-semibold tracking-tight">
-							{t("heroTitle")}
-						</h1>
-						<p className="mt-1 max-w-2xl text-sm text-white/85">
+						<h1 className="text-headline">{t("heroTitle")}</h1>
+						<p className="mt-1 max-w-2xl text-sm text-primary-foreground/85">
 							{t("heroDescription")}
 						</p>
 					</div>

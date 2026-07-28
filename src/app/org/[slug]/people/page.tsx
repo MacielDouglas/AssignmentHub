@@ -1,12 +1,6 @@
 import { headers } from "next/headers";
 import { notFound } from "next/navigation";
-import {
-	HiOutlineHeart,
-	HiOutlineShieldCheck,
-	HiOutlineSparkles,
-	HiOutlineUser,
-	HiOutlineUsers,
-} from "react-icons/hi2";
+import { HiOutlineUser } from "react-icons/hi2";
 
 import { PersonActionsMenu } from "@/features/people/components/person-actions-menu";
 import { PersonFormDialog } from "@/features/people/components/person-form-dialog";
@@ -20,32 +14,6 @@ import { db } from "@/lib/db";
 type PeoplePageProps = {
 	params: Promise<{ slug: string }>;
 };
-
-function Badge({
-	label,
-	tone = "neutral",
-}: {
-	label: string;
-	tone?: "neutral" | "blue" | "violet" | "emerald";
-}) {
-	const tones = {
-		neutral:
-			"border-slate-200 bg-white text-slate-700 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-200",
-		blue: "border-blue-200 bg-blue-50 text-blue-700 dark:border-blue-900 dark:bg-blue-950/40 dark:text-blue-300",
-		violet:
-			"border-violet-200 bg-violet-50 text-violet-700 dark:border-violet-900 dark:bg-violet-950/40 dark:text-violet-300",
-		emerald:
-			"border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-900 dark:bg-emerald-950/40 dark:text-emerald-300",
-	};
-
-	return (
-		<span
-			className={`inline-flex items-center rounded-full border px-3 py-1 text-xs font-medium ${tones[tone]}`}
-		>
-			{label}
-		</span>
-	);
-}
 
 export default async function PeoplePage({ params }: PeoplePageProps) {
 	const { slug } = await params;
@@ -200,60 +168,61 @@ export default async function PeoplePage({ params }: PeoplePageProps) {
 
 	return (
 		<main className="space-y-6">
-			<section className="overflow-hidden rounded-[32px] border border-slate-200 bg-linear-to-br from-blue-600 via-blue-600 to-violet-600 text-white shadow-xl shadow-blue-600/20 dark:border-slate-800">
-				<div className="grid gap-6 p-5 sm:p-6 lg:grid-cols-[1.2fr_0.8fr] lg:p-8">
+			<section className="rounded-4xl border border-border bg-muted p-5 sm:p-6 lg:p-8">
+				<div className="grid gap-6 lg:grid-cols-[1.2fr_0.8fr]">
 					<header className="space-y-3">
-						<div className="inline-flex w-fit items-center gap-2 rounded-full bg-white/10 px-3 py-1 text-xs font-medium tracking-wide text-white/90 backdrop-blur">
-							<HiOutlineSparkles className="h-4 w-4" />
-							Gestão de pessoas
-						</div>
-						<h1 className="text-2xl font-semibold tracking-tight sm:text-3xl">
+						<h1 className="text-display text-foreground sm:text-3xl">
 							Pessoas e designações.
 						</h1>
-						<p className="max-w-2xl text-sm leading-6 text-white/85 sm:text-base">
+						<p className="max-w-2xl text-sm leading-6 text-muted-foreground sm:text-base">
 							Cadastre pessoas, organize famílias, controle privilégios e
 							designações.
 						</p>
 					</header>
 
 					<div className="grid grid-cols-3 gap-3">
-						<article className="rounded-[24px] bg-white/10 p-4 backdrop-blur">
-							<p className="text-xs text-white/70">Pessoas</p>
-							<p className="mt-2 text-2xl font-semibold">{totalPeople}</p>
+						<article className="rounded-3xl border border-border bg-card p-4">
+							<p className="text-label text-muted-foreground">Pessoas</p>
+							<p className="mt-2 text-display text-foreground">{totalPeople}</p>
 						</article>
-						<article className="rounded-[24px] bg-white/10 p-4 backdrop-blur">
-							<p className="text-xs text-white/70">Ativas</p>
-							<p className="mt-2 text-2xl font-semibold">{activePeople}</p>
+						<article className="rounded-3xl border border-border bg-card p-4">
+							<p className="text-label text-muted-foreground">Ativas</p>
+							<p className="mt-2 text-display text-foreground">
+								{activePeople}
+							</p>
 						</article>
-						<article className="rounded-[24px] bg-white/10 p-4 backdrop-blur">
-							<p className="text-xs text-white/70">Famílias</p>
-							<p className="mt-2 text-2xl font-semibold">{familyHeads}</p>
+						<article className="rounded-3xl border border-border bg-card p-4">
+							<p className="text-label text-muted-foreground">Famílias</p>
+							<p className="mt-2 text-display text-foreground">{familyHeads}</p>
 						</article>
-						<article className="rounded-[24px] bg-white/10 p-4 backdrop-blur">
-							<p className="text-xs text-white/70">Homens</p>
-							<p className="mt-2 text-2xl font-semibold">{malePeople}</p>
+						<article className="rounded-3xl border border-border bg-card p-4">
+							<p className="text-label text-muted-foreground">Homens</p>
+							<p className="mt-2 text-display text-foreground">{malePeople}</p>
 						</article>
-						<article className="rounded-[24px] bg-white/10 p-4 backdrop-blur">
-							<p className="text-xs text-white/70">Mulheres</p>
-							<p className="mt-2 text-2xl font-semibold">{femalePeople}</p>
+						<article className="rounded-3xl border border-border bg-card p-4">
+							<p className="text-label text-muted-foreground">Mulheres</p>
+							<p className="mt-2 text-display text-foreground">
+								{femalePeople}
+							</p>
 						</article>
-						<article className="rounded-[24px] bg-white/10 p-4 backdrop-blur">
-							<p className="text-xs text-white/70">Privilégios de Serviço</p>
-							<p className="mt-2 text-2xl font-semibold">{servicePeople}</p>
+						<article className="rounded-3xl border border-border bg-card p-4">
+							<p className="text-label text-muted-foreground">
+								Privilégios de Serviço
+							</p>
+							<p className="mt-2 text-display text-foreground">
+								{servicePeople}
+							</p>
 						</article>
 					</div>
 				</div>
 			</section>
 
-			<section className="flex flex-col gap-4 rounded-[28px] border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-950 sm:p-5">
+			<section className="flex flex-col gap-4 rounded-4xl border border-border bg-card p-4 shadow-md ring-1 ring-border/30 sm:p-5">
 				<div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
 					<header className="space-y-1">
-						<h2 className="text-lg font-semibold text-slate-900 dark:text-slate-50">
+						<h2 className="text-headline text-foreground">
 							Cadastro de pessoas
 						</h2>
-						<p className="text-sm text-slate-500 dark:text-slate-400">
-							Interface mobile first, semântica melhor e ações seguras.
-						</p>
 					</header>
 
 					{canManagePeople ? (
@@ -267,14 +236,24 @@ export default async function PeoplePage({ params }: PeoplePageProps) {
 				</div>
 
 				{renderedPeople.length === 0 ? (
-					<article className="rounded-[24px] border border-dashed border-slate-300 bg-slate-50 p-8 text-center dark:border-slate-700 dark:bg-slate-900">
-						<div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-2xl bg-blue-50 text-blue-600 dark:bg-blue-950/50 dark:text-blue-300">
-							<HiOutlineUsers className="h-6 w-6" />
+					<article className="rounded-4xl border border-dashed border-border bg-muted/50 p-8 text-center">
+						<div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-3xl bg-muted text-muted-foreground">
+							<svg
+								viewBox="0 0 24 24"
+								fill="none"
+								className="h-6 w-6"
+								stroke="currentColor"
+								strokeWidth={1.8}
+								aria-hidden="true"
+							>
+								<path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
+								<circle cx="9" cy="7" r="4" />
+							</svg>
 						</div>
-						<h3 className="text-base font-semibold text-slate-900 dark:text-slate-50">
+						<h3 className="text-title text-foreground">
 							Nenhuma pessoa cadastrada
 						</h3>
-						<p className="mt-2 text-sm text-slate-500 dark:text-slate-400">
+						<p className="mt-2 text-sm text-muted-foreground">
 							Comece adicionando a primeira pessoa da organização.
 						</p>
 					</article>
@@ -293,89 +272,110 @@ export default async function PeoplePage({ params }: PeoplePageProps) {
 							return (
 								<article
 									key={person.id}
-									className="rounded-[28px] border border-slate-200 bg-slate-50/80 p-4 shadow-sm transition hover:border-blue-200 hover:bg-white dark:border-slate-800 dark:bg-slate-900/80 dark:hover:border-blue-900 dark:hover:bg-slate-950 sm:p-5"
+									className="rounded-4xl border border-border bg-muted/50 p-4 shadow-sm transition hover:bg-card sm:p-5"
 								>
 									<div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
 										<div className="space-y-4">
 											<header className="space-y-3">
 												<div className="flex flex-wrap items-center gap-2">
-													<div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-linear-to-br from-blue-600 to-violet-600 text-white shadow-lg shadow-blue-600/20">
+													<div className="flex h-11 w-11 items-center justify-center rounded-3xl bg-muted text-muted-foreground">
 														<HiOutlineUser className="h-5 w-5" />
 													</div>
 
 													<div className="min-w-0">
-														<h3 className="truncate text-base font-semibold text-slate-900 dark:text-slate-50">
+														<h3 className="truncate text-title text-foreground">
 															{person.name}
 														</h3>
-														<p className="text-xs text-slate-500 dark:text-slate-400">
+														<p className="text-xs text-muted-foreground">
 															{person.sex === "MALE" ? "Masculino" : "Feminino"}
 														</p>
 													</div>
 												</div>
 
 												<div className="flex flex-wrap gap-2">
-													<Badge
-														label={person.isActive ? "Ativo" : "Inativo"}
-														tone={person.isActive ? "emerald" : "neutral"}
-													/>
-													<Badge label={person.young ? "Jovem" : "Adulto"} />
+													<span className="inline-flex items-center rounded-full border border-border bg-muted px-3 py-1 text-label text-muted-foreground">
+														{person.isActive ? "Ativo" : "Inativo"}
+													</span>
+													<span className="inline-flex items-center rounded-full border border-border bg-muted px-3 py-1 text-label text-muted-foreground">
+														{person.young ? "Jovem" : "Adulto"}
+													</span>
 													{person.isStudent ? (
-														<Badge label="Estudante" />
+														<span className="inline-flex items-center rounded-full border border-border bg-muted px-3 py-1 text-label text-muted-foreground">
+															Estudante
+														</span>
 													) : null}
 													{person.baptized ? (
-														<Badge label="Batizado(a)" tone="blue" />
+														<span className="inline-flex items-center rounded-full border border-border bg-muted px-3 py-1 text-label text-muted-foreground">
+															Batizado(a)
+														</span>
 													) : null}
 													{person.isMarried ? (
-														<Badge
-															label={
-																person.spouse
-																	? `Casado(a) com ${person.spouse.name}`
-																	: "Casado(a)"
-															}
-															tone="violet"
-														/>
+														<span className="inline-flex items-center rounded-full border border-border bg-muted px-3 py-1 text-label text-muted-foreground">
+															{person.spouse
+																? `Casado(a) com ${person.spouse.name}`
+																: "Casado(a)"}
+														</span>
 													) : null}
 													{groupLabel ? (
-														<Badge
-															label={
-																isHead
-																	? `Chefe · ${groupLabel}`
-																	: `Família · ${groupLabel}`
-															}
-															tone="blue"
-														/>
+														<span className="inline-flex items-center rounded-full border border-border bg-muted px-3 py-1 text-label text-muted-foreground">
+															{isHead
+																? `Chefe · ${groupLabel}`
+																: `Família · ${groupLabel}`}
+														</span>
 													) : null}
 													{person.user ? (
-														<Badge label="Com usuário vinculado" />
+														<span className="inline-flex items-center rounded-full border border-border bg-muted px-3 py-1 text-label text-muted-foreground">
+															Com usuário vinculado
+														</span>
 													) : null}
 												</div>
 											</header>
 
 											<div className="flex flex-wrap gap-2">
 												{person.servicePrivilege?.elder ? (
-													<Badge label="Ancião" tone="violet" />
+													<span className="inline-flex items-center rounded-full border border-border bg-muted px-3 py-1 text-label text-muted-foreground">
+														Ancião
+													</span>
 												) : null}
 												{person.servicePrivilege?.spiritualGems ? (
-													<Badge label="Jóias espirituais" tone="violet" />
+													<span className="inline-flex items-center rounded-full border border-border bg-muted px-3 py-1 text-label text-muted-foreground">
+														Jóias espirituais
+													</span>
 												) : null}
-
 												{person.servicePrivilege?.treasuresFromGodsWordTalk ? (
-													<Badge
-														label="Discurso Tesouros da Palavra de Deus"
-														tone="violet"
-													/>
+													<span className="inline-flex items-center rounded-full border border-border bg-muted px-3 py-1 text-label text-muted-foreground">
+														Discurso Tesouros da Palavra de Deus
+													</span>
 												) : null}
 												{person.servicePrivilege?.publicTalk ? (
-													<Badge label="Discurso público" tone="violet" />
+													<span className="inline-flex items-center rounded-full border border-border bg-muted px-3 py-1 text-label text-muted-foreground">
+														Discurso público
+													</span>
 												) : null}
 												{person.bibleReading ? (
-													<Badge label="Leitura da Bíblia" />
+													<span className="inline-flex items-center rounded-full border border-border bg-muted px-3 py-1 text-label text-muted-foreground">
+														Leitura da Bíblia
+													</span>
 												) : null}
-												{person.sound ? <Badge label="Som" /> : null}
-												{person.video ? <Badge label="Vídeo" /> : null}
-												{person.cleaning ? <Badge label="Limpeza" /> : null}
+												{person.sound ? (
+													<span className="inline-flex items-center rounded-full border border-border bg-muted px-3 py-1 text-label text-muted-foreground">
+														Som
+													</span>
+												) : null}
+												{person.video ? (
+													<span className="inline-flex items-center rounded-full border border-border bg-muted px-3 py-1 text-label text-muted-foreground">
+														Vídeo
+													</span>
+												) : null}
+												{person.cleaning ? (
+													<span className="inline-flex items-center rounded-full border border-border bg-muted px-3 py-1 text-label text-muted-foreground">
+														Limpeza
+													</span>
+												) : null}
 												{person.privilegePrayer ? (
-													<Badge label="Oração" />
+													<span className="inline-flex items-center rounded-full border border-border bg-muted px-3 py-1 text-label text-muted-foreground">
+														Oração
+													</span>
 												) : null}
 											</div>
 										</div>
@@ -401,7 +401,7 @@ export default async function PeoplePage({ params }: PeoplePageProps) {
 														trigger={
 															<button
 																type="button"
-																className="inline-flex h-11 items-center justify-center gap-2 rounded-2xl border border-slate-200 bg-white px-4 text-sm font-medium text-slate-700 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-200"
+																className="inline-flex h-11 items-center justify-center gap-2 rounded-4xl border border-border bg-card px-4 text-sm font-medium text-foreground"
 															>
 																Editar
 															</button>
@@ -416,47 +416,6 @@ export default async function PeoplePage({ params }: PeoplePageProps) {
 						})}
 					</div>
 				)}
-			</section>
-
-			<section className="grid gap-4 md:grid-cols-3">
-				<article className="rounded-[24px] border border-slate-200 bg-white p-5 dark:border-slate-800 dark:bg-slate-950">
-					<div className="mb-3 flex h-11 w-11 items-center justify-center rounded-2xl bg-blue-50 text-blue-600 dark:bg-blue-950/50 dark:text-blue-300">
-						<HiOutlineUsers className="h-5 w-5" />
-					</div>
-					<h3 className="text-sm font-semibold text-slate-900 dark:text-slate-50">
-						Semântica
-					</h3>
-					<p className="mt-2 text-sm leading-6 text-slate-500 dark:text-slate-400">
-						Layout estruturado com main, section, article e header para leitura
-						e manutenção melhores.
-					</p>
-				</article>
-
-				<article className="rounded-[24px] border border-slate-200 bg-white p-5 dark:border-slate-800 dark:bg-slate-950">
-					<div className="mb-3 flex h-11 w-11 items-center justify-center rounded-2xl bg-violet-50 text-violet-600 dark:bg-violet-950/50 dark:text-violet-300">
-						<HiOutlineShieldCheck className="h-5 w-5" />
-					</div>
-					<h3 className="text-sm font-semibold text-slate-900 dark:text-slate-50">
-						Segurança
-					</h3>
-					<p className="mt-2 text-sm leading-6 text-slate-500 dark:text-slate-400">
-						Todas as ações sensíveis passam por sessão, Zod, checagem de
-						organização e transação Prisma.
-					</p>
-				</article>
-
-				<article className="rounded-[24px] border border-slate-200 bg-white p-5 dark:border-slate-800 dark:bg-slate-950">
-					<div className="mb-3 flex h-11 w-11 items-center justify-center rounded-2xl bg-emerald-50 text-emerald-600 dark:bg-emerald-950/50 dark:text-emerald-300">
-						<HiOutlineHeart className="h-5 w-5" />
-					</div>
-					<h3 className="text-sm font-semibold text-slate-900 dark:text-slate-50">
-						Regras familiares
-					</h3>
-					<p className="mt-2 text-sm leading-6 text-slate-500 dark:text-slate-400">
-						Casamento exige família válida, duas pessoas adultas e de sexos
-						diferentes na mesma família, com vínculo calculado automaticamente.
-					</p>
-				</article>
 			</section>
 		</main>
 	);

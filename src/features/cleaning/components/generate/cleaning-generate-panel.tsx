@@ -229,7 +229,7 @@ export function CleaningGeneratePanel({
 	if (draft) {
 		return (
 			<div className="space-y-4">
-				<div className="flex flex-wrap items-center justify-between gap-2 rounded-[22px] border border-emerald-200 bg-emerald-50 px-4 py-3 dark:border-emerald-900 dark:bg-emerald-950/40">
+				<div className="flex flex-wrap items-center justify-between gap-2 rounded-3xl border border-emerald-200 bg-emerald-50 px-4 py-3 dark:border-emerald-900 dark:bg-emerald-950/40">
 					<div className="flex items-center gap-2 text-sm text-emerald-800 dark:text-emerald-200">
 						<HiOutlineCheckCircle className="h-5 w-5 shrink-0" />
 						<span>{t("previewBanner")}</span>
@@ -253,7 +253,7 @@ export function CleaningGeneratePanel({
 							type="button"
 							disabled={pending}
 							onClick={handleSave}
-							className="h-10 rounded-2xl bg-linear-to-r from-blue-600 to-violet-600 text-white"
+							className="h-10 rounded-4xl bg-primary text-primary-foreground"
 						>
 							{pending ? t("saving") : t("saveTable")}
 						</Button>
@@ -270,9 +270,7 @@ export function CleaningGeneratePanel({
 	return (
 		<div className="space-y-5">
 			<section className="space-y-3">
-				<h2 className="text-sm font-semibold text-slate-900 dark:text-slate-50">
-					{t("typeSection")}
-				</h2>
+				<h2 className="text-title text-foreground">{t("typeSection")}</h2>
 				<div className="grid gap-2">
 					{data.cleaningSettings.types.map((row) => {
 						const on = type === row.type;
@@ -284,19 +282,19 @@ export function CleaningGeneratePanel({
 								type="button"
 								disabled={!ok}
 								onClick={() => setType(row.type)}
-								className={`rounded-[22px] border p-4 text-left transition ${
+								className={`rounded-3xl border border-border p-4 text-left transition ${
 									on
-										? "border-transparent bg-linear-to-r from-blue-600 to-violet-600 text-white shadow-md"
+										? "border-transparent bg-primary text-primary-foreground shadow-md"
 										: ok
-											? "border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-950"
-											: "cursor-not-allowed border-slate-100 bg-slate-50 opacity-60 dark:border-slate-900 dark:bg-slate-950"
+											? "border-border bg-card"
+											: "cursor-not-allowed border-border bg-muted opacity-60"
 								}`}
 							>
 								<div className="flex items-start justify-between gap-2">
 									<div>
 										<p className="font-semibold">{tTypes(row.type)}</p>
 										<p
-											className={`mt-1 text-xs ${on ? "text-white/80" : "text-slate-500"}`}
+											className={`mt-1 text-xs ${on ? "text-white/80" : "text-muted-foreground"}`}
 										>
 											{ok
 												? t("sectorsMode", {
@@ -317,10 +315,10 @@ export function CleaningGeneratePanel({
 				</div>
 			</section>
 
-			<section className="space-y-3 rounded-[24px] border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-950">
+			<section className="space-y-3 rounded-3xl border border-border bg-card p-4 shadow-sm">
 				<div className="flex items-center gap-2">
-					<HiOutlineCalendarDays className="h-5 w-5 text-blue-600" />
-					<h2 className="text-sm font-semibold">{t("period")}</h2>
+					<HiOutlineCalendarDays className="h-5 w-5 text-primary" />
+					<h2 className="text-title">{t("period")}</h2>
 				</div>
 
 				<div className="flex flex-wrap gap-2">
@@ -329,7 +327,7 @@ export function CleaningGeneratePanel({
 							key={id}
 							type="button"
 							onClick={() => applyPreset(id)}
-							className="rounded-full border border-slate-200 px-3 py-1.5 text-xs font-medium dark:border-slate-700"
+							className="rounded-full border border-border px-3 py-1.5 text-xs font-medium"
 						>
 							{presetLabel(id)}
 						</button>
@@ -343,7 +341,7 @@ export function CleaningGeneratePanel({
 							type="date"
 							value={from}
 							onChange={(e) => setFrom(e.target.value)}
-							className="h-11 w-full rounded-2xl border border-slate-200 bg-white px-3 text-sm dark:border-slate-800 dark:bg-slate-950"
+							className="h-11 w-full rounded-2xl border border-border bg-card px-3 text-sm"
 						/>
 					</div>
 					<div className="space-y-1.5">
@@ -352,23 +350,27 @@ export function CleaningGeneratePanel({
 							type="date"
 							value={to}
 							onChange={(e) => setTo(e.target.value)}
-							className="h-11 w-full rounded-2xl border border-slate-200 bg-white px-3 text-sm dark:border-slate-800 dark:bg-slate-950"
+							className="h-11 w-full rounded-2xl border border-border bg-card px-3 text-sm"
 						/>
 					</div>
 				</div>
 			</section>
 
 			{type === "MEETING" ? (
-				<div className="rounded-[22px] border border-slate-200 bg-white p-4 text-sm dark:border-slate-800 dark:bg-slate-950">
+				<div className="rounded-3xl border border-border bg-card p-4 text-sm">
 					<p className="font-medium">{t("familyTitle")}</p>
-					<p className="mt-0.5 text-xs text-slate-500">{t("familyBody")}</p>
+					<p className="mt-0.5 text-xs text-muted-foreground">
+						{t("familyBody")}
+					</p>
 				</div>
 			) : null}
 
 			{type === "GENERAL" && generalOptions.length > 0 ? (
-				<section className="space-y-2 rounded-[22px] border border-slate-200 bg-white p-4 dark:border-slate-800 dark:bg-slate-950">
-					<h3 className="text-sm font-semibold">{t("generalDatesTitle")}</h3>
-					<p className="text-xs text-slate-500">{t("generalDatesHint")}</p>
+				<section className="space-y-2 rounded-3xl border border-border bg-card p-4">
+					<h3 className="text-title">{t("generalDatesTitle")}</h3>
+					<p className="text-xs text-muted-foreground">
+						{t("generalDatesHint")}
+					</p>
 					<ul className="space-y-2">
 						{generalOptions.map((d) => {
 							const on = selectedGeneral.includes(d.date);
@@ -394,7 +396,7 @@ export function CleaningGeneratePanel({
 				</section>
 			) : null}
 
-			<div className="flex items-center gap-2 rounded-[18px] bg-slate-50 px-3 py-2 text-xs text-slate-600 dark:bg-slate-900 dark:text-slate-300">
+			<div className="flex items-center gap-2 rounded-2xl bg-muted px-3 py-2 text-xs text-muted-foreground">
 				<HiOutlineUsers className="h-4 w-4 shrink-0" />
 				{t("eligibleSummary", {
 					people: data.people.length,
@@ -408,7 +410,7 @@ export function CleaningGeneratePanel({
 			<Button
 				type="button"
 				onClick={handleGenerate}
-				className="h-12 w-full rounded-2xl bg-linear-to-r from-blue-600 to-violet-600 text-base text-white shadow-lg"
+				className="h-12 w-full rounded-4xl bg-primary text-base text-primary-foreground shadow-md"
 			>
 				{t("createTable")}
 			</Button>

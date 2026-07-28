@@ -1,7 +1,6 @@
 "use client";
 
 import {
-	HiOutlineClock,
 	HiOutlineCog6Tooth,
 	HiOutlineEllipsisHorizontal,
 	HiOutlineMusicalNote,
@@ -20,6 +19,7 @@ import { AssignmentDialog } from "./assignment-dialog";
 type Props = {
 	slug: string;
 	part: MeetingPartDto;
+	startTime: string | null;
 	canManage: boolean;
 };
 
@@ -42,7 +42,7 @@ function roleLabel(role: MeetingAssignmentRole) {
 	}
 }
 
-export function MeetingPartRow({ slug, part, canManage }: Props) {
+export function MeetingPartRow({ slug, part, startTime, canManage }: Props) {
 	const assignable = isAssignableMeetingPart(part.kind) && !part.isDisabled;
 	const meta = getMeetingPartMeta(part.kind);
 	const roles = meta?.roles ?? [];
@@ -52,103 +52,52 @@ export function MeetingPartRow({ slug, part, canManage }: Props) {
 	);
 
 	return (
-		<div className="rounded-xl border border-gray-100 bg-white transition hover:border-gray-200">
-			{/* 
-				Mobile: 2-col grid (time | info), assignments full-width below 
-				Desktop: 3-col grid (time | info | assignments) 
-			*/}
-			<div className="grid grid-cols-[auto_1fr] gap-x-3 gap-y-0 p-3 sm:grid-cols-[auto_1fr_auto] sm:gap-3 sm:p-3.5">
-				{/* Column 1: time/icon */}
-				<div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-gray-100 text-gray-500 sm:mt-0.5">
-					{part.durationMin != null ? (
-						<span className="text-xs font-bold">{part.durationMin}</span>
+		<div className="group rounded-2xl border border-border/60 bg-card px-3 py-2.5 transition-all hover:border-border hover:bg-secondary/40 hover:shadow-sm sm:px-3.5 sm:py-3">
+			<div className="grid grid-cols-[auto_1fr_auto] items-start gap-x-3 gap-y-1.5">
+				{/* Column 1: start time badge */}
+				<div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-xs font-semibold text-primary sm:h-8 sm:w-8 sm:rounded-[14px] sm:text-sm">
+					{startTime ? (
+						<span>{startTime}</span>
 					) : (
-						<HiOutlineEllipsisHorizontal className="h-4 w-4" />
+						<HiOutlineEllipsisHorizontal className="h-3.5 w-3.5" />
 					)}
 				</div>
 
 				{/* Column 2: info */}
-				<div className="min-w-0">
+				<div className="min-w-0 space-y-1">
 					<div className="flex flex-wrap items-center gap-1.5">
-						{part.durationMin != null ? (
-							<span className="inline-flex items-center gap-1 rounded-full bg-gray-100 px-2 py-0.5 text-[10px] font-medium text-gray-500">
-								<HiOutlineClock className="h-2.5 w-2.5" />
-								{part.durationMin} min
-							</span>
-						) : null}
-						{part.modality ? (
-							<span className="rounded-full bg-gray-100 px-2 py-0.5 text-[10px] font-medium text-gray-500">
-								{part.modality}
-							</span>
-						) : null}
 						{part.songNumber ? (
-							<span className="inline-flex items-center gap-1 rounded-full bg-blue-50 px-2 py-0.5 text-[10px] font-medium text-blue-700">
+							<span className="inline-flex items-center gap-1 rounded-full bg-primary/8 px-2 py-0.5 text-caption font-medium text-primary">
 								<HiOutlineMusicalNote className="h-2.5 w-2.5" />
 								{part.songNumber}
 							</span>
 						) : null}
+						{part.durationMin != null ? (
+							<span className="inline-flex items-center gap-1 rounded-full bg-muted px-2 py-0.5 text-caption text-muted-foreground">
+								{part.durationMin} min
+							</span>
+						) : null}
+						{part.modality ? (
+							<span className="rounded-full bg-muted px-2 py-0.5 text-caption text-muted-foreground">
+								{part.modality}
+							</span>
+						) : null}
 					</div>
-					<h4 className="mt-0.5 text-sm font-semibold text-gray-900">
-						{part.title}
-					</h4>
+					<h4 className="text-title text-foreground">{part.title}</h4>
 					{part.theme ? (
-						<p className="text-xs text-gray-500">{part.theme}</p>
+						<p className="text-body-sm text-muted-foreground">{part.theme}</p>
 					) : null}
 					{part.songTitle && part.songNumber ? (
-						<p className="text-[11px] text-gray-400">{part.songTitle}</p>
-					) : null}
-
-					{/* Assignments (mobile only) */}
-					{assignable && roles.length > 0 ? (
-						<div className="mt-2 space-y-1.5 border-t border-gray-100 pt-2 sm:hidden">
-							{roles.map((role) => {
-								const assignment = assignmentsByRole.get(role);
-								const hasName = Boolean(assignment?.assigneeName);
-
-								return (
-									<div
-										key={role}
-										className="flex items-center justify-between gap-2"
-									>
-										<div className="min-w-0 flex-1">
-											<p className="text-[10px] font-semibold tracking-wide text-gray-400 uppercase">
-												{roleLabel(role)}
-											</p>
-											<p className="flex items-center gap-1 truncate text-xs font-medium text-gray-700">
-												<HiOutlineUser className="h-3 w-3 shrink-0 text-gray-400" />
-												{assignment?.assigneeName || (
-													<span className="text-gray-400">Sem designação</span>
-												)}
-											</p>
-										</div>
-										{canManage ? (
-											<AssignmentDialog
-												slug={slug}
-												partId={part.id}
-												partTitle={part.title}
-												role={role}
-												trigger={
-													<Button
-														type="button"
-														variant={hasName ? "outline" : "default"}
-														className="min-h-7 shrink-0 rounded-lg text-[11px]"
-													>
-														{hasName ? "Trocar" : "Designar"}
-													</Button>
-												}
-											/>
-										) : null}
-									</div>
-								);
-							})}
-						</div>
+						<p className="text-caption text-muted-foreground/70">
+							{part.songTitle}
+						</p>
 					) : null}
 				</div>
 
-				{/* Column 3: assignments (desktop only) */}
-				<div className="hidden sm:block">
+				{/* Column 3: assignments */}
+				<div className="col-span-full row-start-2 col-start-2 sm:col-span-1 sm:row-start-1 sm:col-start-3 sm:pt-0.5">
 					{assignable && roles.length > 0 ? (
-						<div className="space-y-1.5">
+						<div className="flex flex-wrap gap-1.5 sm:flex-col">
 							{roles.map((role) => {
 								const assignment = assignmentsByRole.get(role);
 								const hasName = Boolean(assignment?.assigneeName);
@@ -156,16 +105,18 @@ export function MeetingPartRow({ slug, part, canManage }: Props) {
 								return (
 									<div
 										key={role}
-										className="flex items-center justify-between gap-2 rounded-lg border border-gray-100 bg-gray-50/70 px-2.5 py-1.5"
+										className="flex items-center gap-2 rounded-xl border border-border/60 bg-muted/30 px-2.5 py-1.5 transition-colors hover:border-border"
 									>
-										<div className="min-w-0 flex-1">
-											<p className="text-[10px] font-semibold tracking-wide text-gray-400 uppercase">
+										<div className="min-w-0 max-w-24 sm:max-w-28">
+											<p className="text-caption font-medium tracking-wide text-muted-foreground uppercase leading-tight">
 												{roleLabel(role)}
 											</p>
-											<p className="flex items-center gap-1 truncate text-xs font-medium text-gray-700">
-												<HiOutlineUser className="h-3 w-3 shrink-0 text-gray-400" />
+											<p className="flex items-center gap-1.5 truncate text-label text-foreground">
+												<HiOutlineUser className="h-3 w-3 shrink-0 text-muted-foreground" />
 												{assignment?.assigneeName || (
-													<span className="text-gray-400">Sem designação</span>
+													<span className="text-muted-foreground/60">
+														Sem designação
+													</span>
 												)}
 											</p>
 										</div>
@@ -179,7 +130,7 @@ export function MeetingPartRow({ slug, part, canManage }: Props) {
 													<Button
 														type="button"
 														variant={hasName ? "outline" : "default"}
-														className="min-h-7 shrink-0 rounded-lg text-[11px]"
+														className="min-h-7 shrink-0 rounded-lg px-2.5 text-caption"
 													>
 														{hasName ? "Trocar" : "Designar"}
 													</Button>
@@ -193,17 +144,19 @@ export function MeetingPartRow({ slug, part, canManage }: Props) {
 					) : (
 						<>
 							{!assignable && part.assignments.length > 0 ? (
-								<div className="flex items-center gap-1.5 rounded-lg border border-gray-100 bg-gray-50/70 px-2.5 py-1.5">
-									<HiOutlineUser className="h-3.5 w-3.5 shrink-0 text-gray-400" />
-									<span className="truncate text-xs font-medium text-gray-600">
+								<div className="flex items-center gap-1.5 rounded-xl border border-border/60 bg-muted/30 px-2.5 py-1.5">
+									<HiOutlineUser className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
+									<span className="truncate text-label text-foreground">
 										{part.assignments.map((a) => a.assigneeName).join(", ")}
 									</span>
 								</div>
 							) : null}
 							{!assignable && part.assignments.length === 0 && !canManage ? (
-								<div className="flex items-center gap-1.5 rounded-lg border border-dashed border-gray-200 bg-gray-50/50 px-2.5 py-1.5">
-									<HiOutlineCog6Tooth className="h-3.5 w-3.5 text-gray-300" />
-									<span className="text-xs text-gray-400">Sem programação</span>
+								<div className="flex items-center gap-1.5 rounded-xl border border-dashed border-border/40 bg-muted/20 px-2.5 py-1.5">
+									<HiOutlineCog6Tooth className="h-3.5 w-3.5 text-muted-foreground" />
+									<span className="text-caption text-muted-foreground">
+										Sem programação
+									</span>
 								</div>
 							) : null}
 						</>

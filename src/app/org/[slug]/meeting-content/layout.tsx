@@ -28,7 +28,7 @@ export default async function MeetingContentLayout({
 
 			<div className="grid gap-5 md:grid-cols-[260px_minmax(0,1fr)] md:items-start">
 				<aside className="md:sticky md:top-4">
-					<div className="rounded-[28px] border border-slate-200 bg-white p-3 shadow-sm dark:border-slate-800 dark:bg-slate-950">
+					<div className="rounded-[28px] border border-border bg-card p-3 shadow-sm">
 						<MeetingContentSideNav slug={slug} />
 					</div>
 				</aside>

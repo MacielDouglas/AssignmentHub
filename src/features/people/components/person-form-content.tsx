@@ -50,7 +50,7 @@ function SubmitButton({ mode }: { mode: "create" | "edit" }) {
 		<Button
 			type="submit"
 			disabled={pending}
-			className="h-11 rounded-2xl bg-linear-to-r from-blue-600 to-violet-600 px-5 text-white shadow-lg shadow-blue-600/20"
+			className="h-11 rounded-4xl bg-primary px-5 text-primary-foreground shadow-md"
 		>
 			{pending
 				? "Salvando..."
@@ -79,18 +79,14 @@ function SwitchField({
 	return (
 		<div
 			className={cn(
-				"flex items-center justify-between gap-4 rounded-2xl border border-slate-200 bg-white px-4 py-3 dark:border-slate-800 dark:bg-slate-900",
+				"flex items-center justify-between gap-4 rounded-4xl border border-border bg-card px-4 py-3",
 				disabled && "opacity-60",
 			)}
 		>
 			<div className="min-w-0">
-				<p className="text-sm font-medium text-slate-900 dark:text-slate-100">
-					{label}
-				</p>
+				<p className="text-sm font-medium text-foreground">{label}</p>
 				{description ? (
-					<p className="text-xs text-slate-500 dark:text-slate-400">
-						{description}
-					</p>
+					<p className="text-xs text-muted-foreground">{description}</p>
 				) : null}
 			</div>
 
@@ -118,17 +114,15 @@ function SectionCard({
 	children: React.ReactNode;
 }) {
 	return (
-		<section className="rounded-[28px] border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-950 sm:p-5">
+		<section className="rounded-4xl border border-border bg-card p-4 shadow-sm sm:p-5">
 			<header className="mb-4 flex items-start gap-3">
-				<div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-linear-to-br from-blue-600 to-violet-600 text-white shadow-lg shadow-blue-600/20">
+				<div className="flex h-11 w-11 items-center justify-center rounded-4xl bg-primary text-primary-foreground shadow-md">
 					{icon}
 				</div>
 
 				<div className="min-w-0">
-					<h3 className="text-sm font-semibold text-slate-900 dark:text-slate-50">
-						{title}
-					</h3>
-					<p className="text-xs leading-5 text-slate-500 dark:text-slate-400">
+					<h3 className="text-title text-foreground">{title}</h3>
+					<p className="text-xs leading-5 text-muted-foreground">
 						{description}
 					</p>
 				</div>
@@ -358,17 +352,17 @@ export default function PersonFormContent({
 			<HiddenBoolean name="bibleStudyConductor" value={bibleStudyConductor} />
 			<HiddenBoolean name="watchtowerConductor" value={watchtowerConductor} />
 
-			<DialogHeader className="shrink-0 border-b border-slate-200 bg-white px-5 py-5 dark:border-slate-800 dark:bg-slate-950 sm:px-6">
-				<DialogTitle className="text-left text-xl font-semibold text-slate-900 dark:text-slate-50">
+			<DialogHeader className="shrink-0 border-b border-border bg-card px-5 py-5 sm:px-6">
+				<DialogTitle className="text-left text-headline text-foreground">
 					{mode === "create" ? "Nova pessoa" : "Editar pessoa"}
 				</DialogTitle>
-				<p className="text-left text-sm text-slate-500 dark:text-slate-400">
+				<p className="text-left text-sm text-muted-foreground">
 					Fluxo mobile first, semântica melhor, segurança no servidor e
 					casamento automático por família.
 				</p>
 			</DialogHeader>
 
-			<div className="min-h-0 flex-1 overflow-y-auto overscroll-contain bg-slate-50 dark:bg-slate-950">
+			<div className="min-h-0 flex-1 overflow-y-auto overscroll-contain bg-card">
 				<div className="grid gap-4 p-4 sm:p-5 lg:grid-cols-[1.12fr_0.88fr]">
 					<div className="grid gap-4">
 						<SectionCard
@@ -702,16 +696,16 @@ export default function PersonFormContent({
 								</div>
 							</SectionCard>
 						) : (
-							<section className="rounded-[28px] border border-dashed border-slate-300 bg-white p-5 dark:border-slate-700 dark:bg-slate-950">
+							<section className="rounded-4xl border border-dashed border-border bg-card p-5">
 								<div className="flex items-center gap-2">
-									<Badge className="rounded-full bg-blue-50 text-blue-700 hover:bg-blue-50 dark:bg-blue-950/50 dark:text-blue-300">
+									<Badge className="rounded-full bg-primary/10 text-primary hover:bg-primary/10">
 										Reativo
 									</Badge>
-									<Badge className="rounded-full bg-violet-50 text-violet-700 hover:bg-violet-50 dark:bg-violet-950/50 dark:text-violet-300">
+									<Badge className="rounded-full bg-muted text-muted-foreground hover:bg-muted">
 										Seguro
 									</Badge>
 								</div>
-								<p className="mt-3 text-sm leading-6 text-slate-500 dark:text-slate-400">
+								<p className="mt-3 text-sm leading-6 text-muted-foreground">
 									Os privilégios avançados aparecem apenas quando sexo e batismo
 									permitem, reduzindo erro de preenchimento e mantendo o front
 									mais limpo.
@@ -722,7 +716,7 @@ export default function PersonFormContent({
 				</div>
 			</div>
 
-			<div className="shrink-0 border-t border-slate-200 bg-white px-4 py-4 dark:border-slate-800 dark:bg-slate-950 sm:px-6">
+			<div className="shrink-0 border-t border-border bg-card px-4 py-4 sm:px-6">
 				<div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
 					<div className="min-h-5">
 						{state.message ? (

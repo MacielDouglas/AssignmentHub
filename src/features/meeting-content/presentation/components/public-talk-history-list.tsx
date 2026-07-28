@@ -118,7 +118,7 @@ export function PublicTalkHistoryList({
 
 	if (history.length === 0) {
 		return (
-			<div className="rounded-2xl border border-dashed border-slate-300 bg-slate-50 p-4 text-sm text-slate-600 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-400">
+			<div className="rounded-2xl border border-dashed border-border bg-muted p-4 text-sm text-muted-foreground">
 				Ainda não há histórico para este discurso nesta organização.
 			</div>
 		);
@@ -137,21 +137,21 @@ export function PublicTalkHistoryList({
 					{history.map((item) => (
 						<li
 							key={item.id}
-							className="rounded-2xl border border-slate-200 bg-slate-50 p-4 dark:border-slate-800 dark:bg-slate-900"
+							className="rounded-2xl border border-border bg-muted p-4"
 						>
 							<div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
 								<div className="min-w-0 space-y-1">
-									<p className="text-sm font-medium text-slate-900 dark:text-slate-100">
+									<p className="text-sm font-medium text-foreground">
 										{resolveSpeaker(item)}
 									</p>
 
-									<p className="text-xs text-slate-500 dark:text-slate-400">
+									<p className="text-xs text-muted-foreground">
 										{formatDate(item.performedAt)}
 									</p>
 								</div>
 
 								<div className="flex flex-wrap items-center gap-2">
-									<span className="inline-flex min-h-8 items-center rounded-full bg-slate-200 px-3 text-xs font-medium text-slate-700 dark:bg-slate-800 dark:text-slate-300">
+									<span className="inline-flex min-h-8 items-center rounded-full bg-muted px-3 text-label text-foreground">
 										Histórico
 									</span>
 
@@ -171,7 +171,7 @@ export function PublicTalkHistoryList({
 							</div>
 
 							{item.notes ? (
-								<p className="mt-3 text-sm text-slate-600 dark:text-slate-400">
+								<p className="mt-3 text-sm text-muted-foreground">
 									{item.notes}
 								</p>
 							) : null}

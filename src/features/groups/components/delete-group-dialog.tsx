@@ -51,7 +51,7 @@ export function DeleteGroupDialog({
 
 	return (
 		<Dialog open={open} onOpenChange={onOpenChange}>
-			<DialogContent className="max-w-md rounded-[28px] border-slate-200 dark:border-slate-800">
+			<DialogContent className="max-w-md rounded-[28px] border-border">
 				<DialogHeader>
 					<div className="mb-2 flex h-11 w-11 items-center justify-center rounded-2xl bg-red-50 text-red-600 dark:bg-red-950/40 dark:text-red-300">
 						<HiOutlineExclamationTriangle className="h-5 w-5" />
@@ -59,10 +59,8 @@ export function DeleteGroupDialog({
 					<DialogTitle>Excluir grupo</DialogTitle>
 					<DialogDescription>
 						Tem certeza de que deseja excluir o grupo{" "}
-						<strong className="text-slate-900 dark:text-slate-50">
-							{groupName}
-						</strong>
-						? Os membros serão desvinculados (ficarão sem grupo).
+						<strong className="text-foreground">{groupName}</strong>? Os membros
+						serão desvinculados (ficarão sem grupo).
 					</DialogDescription>
 				</DialogHeader>
 

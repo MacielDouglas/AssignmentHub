@@ -34,7 +34,7 @@ export default async function WelcomePage() {
 			<section className="mx-auto flex min-h-screen w-full max-w-7xl flex-col px-4 py-6 sm:px-6 lg:px-8">
 				<header className="flex items-center justify-between border-b border-border py-4">
 					<div className="flex items-center gap-3">
-						<div className="flex h-11 w-11 items-center justify-center rounded-none bg-linear-to-br from-blue-600 to-violet-600 text-white shadow-sm">
+						<div className="flex h-11 w-11 items-center justify-center rounded-none bg-primary text-primary-foreground shadow-sm">
 							<HiOutlineSquares2X2 className="h-5 w-5" aria-hidden="true" />
 						</div>
 						<div>
@@ -58,13 +58,13 @@ export default async function WelcomePage() {
 
 				<section className="grid flex-1 gap-8 py-10 lg:grid-cols-[1.2fr_0.8fr] lg:items-center">
 					<div className="space-y-6">
-						<div className="inline-flex items-center gap-2 border border-blue-100 bg-blue-50 px-3 py-1.5 text-xs font-semibold uppercase tracking-[0.12em] text-blue-700">
+						<div className="inline-flex items-center gap-2 border border-primary/20 bg-primary/10 px-3 py-1.5 text-label uppercase text-primary">
 							<HiOutlineCheckBadge className="h-4 w-4" aria-hidden="true" />
 							Acesso autenticado com sucesso
 						</div>
 
 						<div className="space-y-4">
-							<h1 className="max-w-3xl text-3xl font-semibold leading-tight tracking-tight text-foreground sm:text-4xl lg:text-5xl">
+							<h1 className="max-w-3xl text-display text-foreground sm:text-4xl lg:text-5xl">
 								Seu acesso foi reconhecido, mas ainda falta o vínculo com uma
 								organização.
 							</h1>
@@ -84,12 +84,10 @@ export default async function WelcomePage() {
 
 						<div className="grid gap-3 sm:grid-cols-3">
 							<div className="border border-border bg-card p-4">
-								<div className="mb-3 flex h-10 w-10 items-center justify-center bg-blue-50 text-blue-600">
+								<div className="mb-3 flex h-10 w-10 items-center justify-center bg-muted text-muted-foreground">
 									<HiOutlineCheckBadge className="h-5 w-5" aria-hidden="true" />
 								</div>
-								<h2 className="text-sm font-semibold text-foreground">
-									Confiança
-								</h2>
+								<h2 className="text-title text-foreground">Confiança</h2>
 								<p className="mt-2 text-sm leading-6 text-muted-foreground">
 									Estrutura pensada para reduzir erros e aumentar precisão nas
 									designações.
@@ -97,12 +95,10 @@ export default async function WelcomePage() {
 							</div>
 
 							<div className="border border-border bg-card p-4">
-								<div className="mb-3 flex h-10 w-10 items-center justify-center bg-violet-50 text-violet-600">
+								<div className="mb-3 flex h-10 w-10 items-center justify-center bg-muted text-muted-foreground">
 									<HiOutlineCpuChip className="h-5 w-5" aria-hidden="true" />
 								</div>
-								<h2 className="text-sm font-semibold text-foreground">
-									Tecnologia
-								</h2>
+								<h2 className="text-title text-foreground">Tecnologia</h2>
 								<p className="mt-2 text-sm leading-6 text-muted-foreground">
 									Automação e IA para apoiar decisões e organizar melhor o
 									trabalho.
@@ -110,12 +106,10 @@ export default async function WelcomePage() {
 							</div>
 
 							<div className="border border-border bg-card p-4">
-								<div className="mb-3 flex h-10 w-10 items-center justify-center bg-slate-100 text-slate-700">
+								<div className="mb-3 flex h-10 w-10 items-center justify-center bg-muted text-muted-foreground">
 									<HiOutlineUsers className="h-5 w-5" aria-hidden="true" />
 								</div>
-								<h2 className="text-sm font-semibold text-foreground">
-									Organização
-								</h2>
+								<h2 className="text-title text-foreground">Organização</h2>
 								<p className="mt-2 text-sm leading-6 text-muted-foreground">
 									Fluxo claro para equipes, reuniões, pessoas e tarefas
 									recorrentes.
@@ -126,7 +120,7 @@ export default async function WelcomePage() {
 						<div className="flex flex-col gap-3 sm:flex-row">
 							<a
 								href="mailto:contato@assignmenthub.app"
-								className="inline-flex h-11 items-center justify-center gap-2 rounded-none bg-primary px-5 text-sm font-medium text-primary-foreground hover:opacity-95"
+								className="inline-flex h-11 items-center justify-center gap-2 rounded-4xl bg-primary px-5 text-sm font-medium text-primary-foreground hover:opacity-95"
 							>
 								<HiOutlineBuildingOffice2
 									className="h-4 w-4"
@@ -137,7 +131,7 @@ export default async function WelcomePage() {
 
 							<Link
 								href="/"
-								className="inline-flex h-11 items-center justify-center gap-2 rounded-none border border-border bg-background px-5 text-sm font-medium text-foreground hover:bg-muted"
+								className="inline-flex h-11 items-center justify-center gap-2 rounded-4xl border border-border bg-background px-5 text-sm font-medium text-foreground hover:bg-muted"
 							>
 								<HiOutlineArrowLeft className="h-4 w-4" aria-hidden="true" />
 								Ir para a página inicial
@@ -146,11 +140,11 @@ export default async function WelcomePage() {
 					</div>
 
 					<aside className="grid gap-4">
-						<Card className="rounded-none border-border shadow-sm">
+						<Card className="rounded-4xl border-border shadow-sm">
 							<CardHeader>
 								<CardTitle className="flex items-center gap-2 text-base">
 									<HiOutlineBuildingOffice2
-										className="h-5 w-5 text-blue-600"
+										className="h-5 w-5 text-primary"
 										aria-hidden="true"
 									/>
 									Vínculo organizacional
@@ -168,11 +162,11 @@ export default async function WelcomePage() {
 							</CardContent>
 						</Card>
 
-						<Card className="rounded-none border-border shadow-sm">
+						<Card className="rounded-4xl border-border shadow-sm">
 							<CardHeader>
 								<CardTitle className="flex items-center gap-2 text-base">
 									<HiOutlineBolt
-										className="h-5 w-5 text-violet-600"
+										className="h-5 w-5 text-primary"
 										aria-hidden="true"
 									/>
 									Fluxo inteligente

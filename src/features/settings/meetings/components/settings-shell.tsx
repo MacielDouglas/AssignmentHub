@@ -42,19 +42,17 @@ export async function SettingsShell({
 
 	return (
 		<main className="space-y-6">
-			<header className="rounded-[28px] border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-950 sm:p-6">
+			<header className="rounded-4xl border border-border bg-card p-5 shadow-sm sm:p-6">
 				<div className="flex items-start gap-3">
-					<div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-linear-to-br from-blue-600 to-violet-600 text-white shadow-lg shadow-blue-600/20">
+					<div className="flex h-12 w-12 items-center justify-center rounded-4xl bg-primary text-primary-foreground shadow-md">
 						<HiOutlineCog6Tooth className="h-6 w-6" />
 					</div>
 					<div className="space-y-1">
-						<p className="text-xs font-medium uppercase tracking-wide text-slate-500 dark:text-slate-400">
+						<p className="text-label uppercase text-muted-foreground">
 							{organizationName}
 						</p>
-						<h1 className="text-2xl font-semibold tracking-tight text-slate-900 dark:text-slate-50">
-							{t("title")}
-						</h1>
-						<p className="max-w-2xl text-sm text-slate-500 dark:text-slate-400">
+						<h1 className="text-display text-foreground">{t("title")}</h1>
+						<p className="max-w-2xl text-sm text-muted-foreground">
 							{t("subtitle")}
 						</p>
 					</div>
@@ -82,7 +80,7 @@ export async function SettingsShell({
 
 			{activeTab === "assignments" ? (
 				<section className="rounded-[28px] border border-dashed ...">
-					<h2 className="text-base font-semibold">{t("assignmentsTitle")}</h2>
+					<h2 className="text-title">{t("assignmentsTitle")}</h2>
 					<p className="mt-2 text-sm ...">{t("assignmentsSoon")}</p>
 				</section>
 			) : null}

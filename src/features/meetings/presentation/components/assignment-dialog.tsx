@@ -105,7 +105,7 @@ function CandidateButton({
 	const level = candidateTimeLevel(candidate);
 
 	const borderColor = {
-		none: "border-slate-200 dark:border-slate-800",
+		none: "border-border",
 		green:
 			"border-emerald-200 bg-emerald-50/70 hover:bg-emerald-50 dark:border-emerald-900/50 dark:bg-emerald-950/30 dark:hover:bg-emerald-950/50",
 		yellow:
@@ -114,7 +114,7 @@ function CandidateButton({
 	};
 
 	const labelColor = {
-		none: "text-slate-500 dark:text-slate-400",
+		none: "text-muted-foreground",
 		green: "text-emerald-700 dark:text-emerald-300",
 		yellow: "text-amber-700 dark:text-amber-300",
 		red: "text-red-700 dark:text-red-300",
@@ -128,12 +128,12 @@ function CandidateButton({
 			className={[
 				"flex w-full items-start justify-between gap-3 rounded-2xl border px-3 py-2.5 text-left transition",
 				level === "none"
-					? "border-slate-200 bg-white hover:bg-slate-50 dark:border-slate-800 dark:bg-slate-950 dark:hover:bg-slate-900"
+					? "border-border bg-card hover:bg-muted"
 					: borderColor[level],
 			].join(" ")}
 		>
 			<span className="min-w-0 flex-1">
-				<span className="flex items-center gap-1.5 truncate text-sm font-semibold text-slate-900 dark:text-slate-100">
+				<span className="flex items-center gap-1.5 truncate text-title text-foreground">
 					{candidate.hasSameDayAssignment ? (
 						<span className="inline-flex h-4 w-4 shrink-0 items-center justify-center rounded-full bg-amber-500 motion-safe:animate-pulse">
 							<HiOutlineExclamationCircle className="h-3 w-3 text-white" />
@@ -142,7 +142,7 @@ function CandidateButton({
 					{candidate.name}
 				</span>
 				{candidate.subtitle ? (
-					<span className="mt-0.5 block truncate text-xs text-slate-500 dark:text-slate-400">
+					<span className="mt-0.5 block truncate text-xs text-muted-foreground">
 						{candidate.subtitle}
 						{candidate.kind === "SUB_PERSON" ? " · visitante" : ""}
 					</span>
@@ -150,7 +150,7 @@ function CandidateButton({
 			</span>
 			<span
 				className={[
-					"inline-flex shrink-0 items-center gap-1 text-[11px] font-medium",
+					"inline-flex shrink-0 items-center gap-1 text-caption",
 					labelColor[level],
 				].join(" ")}
 			>
@@ -351,19 +351,19 @@ export function AssignmentDialog({
 			}}
 		>
 			<DialogTrigger asChild>{trigger}</DialogTrigger>
-			<DialogContent className="max-h-[85vh] overflow-hidden rounded-[28px] p-0 sm:max-w-xl">
-				<DialogHeader className="border-b border-slate-200 px-5 py-4 text-left dark:border-slate-800">
-					<DialogTitle className="text-base font-semibold text-slate-900 dark:text-slate-100">
+			<DialogContent className="max-h-[85vh] overflow-hidden rounded-4xl p-0 sm:max-w-xl">
+				<DialogHeader className="border-b border-border px-5 py-4 text-left">
+					<DialogTitle className="text-title text-foreground">
 						Designar · {partTitle}
 					</DialogTitle>
-					<p className="text-sm text-slate-500 dark:text-slate-400">
+					<p className="text-sm text-muted-foreground">
 						Papel: {roleLabel(selectedRole)}
 					</p>
 				</DialogHeader>
 
 				<div className="max-h-[60vh] space-y-4 overflow-y-auto px-5 py-4">
 					{data && data.roles.length > 1 ? (
-						<div className="inline-flex rounded-2xl border border-slate-200 bg-slate-50 p-1 dark:border-slate-800 dark:bg-slate-900">
+						<div className="inline-flex rounded-4xl border border-border bg-muted p-1">
 							{data.roles.map((item) => (
 								<button
 									key={item}
@@ -371,8 +371,8 @@ export function AssignmentDialog({
 									className={[
 										"min-h-10 rounded-xl px-4 text-sm font-medium transition",
 										selectedRole === item
-											? "bg-white text-slate-900 shadow-sm dark:bg-slate-800 dark:text-slate-100"
-											: "text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-100",
+											? "bg-card text-foreground shadow-sm"
+											: "text-muted-foreground hover:text-foreground",
 									].join(" ")}
 									onClick={() => loadCandidatesForRole(item)}
 								>
@@ -383,28 +383,30 @@ export function AssignmentDialog({
 					) : null}
 
 					<div className="relative">
-						<HiOutlineMagnifyingGlass className="pointer-events-none absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-slate-400" />
+						<HiOutlineMagnifyingGlass className="pointer-events-none absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
 						<Input
 							value={search}
 							onChange={(event) => setSearch(event.target.value)}
 							placeholder="Buscar por nome ou grupo"
-							className="min-h-11 rounded-2xl pl-9"
+							className="min-h-11 rounded-3xl pl-9"
 						/>
 					</div>
 
 					{error ? (
-						<p className="rounded-2xl border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700 dark:border-red-900/50 dark:bg-red-950/30 dark:text-red-300">
+						<p className="rounded-4xl border border-destructive/20 bg-destructive/10 px-3 py-2 text-sm text-destructive">
 							{error}
 						</p>
 					) : null}
 
 					{pending && !data ? (
-						<p className="text-sm text-slate-500">Carregando candidatos…</p>
+						<p className="text-sm text-muted-foreground">
+							Carregando candidatos…
+						</p>
 					) : null}
 
 					{/* Legenda de cores */}
 					{data && data.candidates.length > 0 ? (
-						<div className="flex flex-wrap items-center gap-3 text-[11px] text-slate-500 dark:text-slate-400">
+						<div className="flex flex-wrap items-center gap-3 text-caption text-muted-foreground">
 							<span className="inline-flex items-center gap-1">
 								<span className="h-2.5 w-2.5 rounded-full bg-emerald-400" />
 								Há mais tempo
@@ -426,7 +428,7 @@ export function AssignmentDialog({
 
 					{neverAssigned.length > 0 ? (
 						<div className="space-y-2">
-							<p className="inline-flex items-center gap-1.5 text-xs font-semibold tracking-wide text-emerald-700 uppercase dark:text-emerald-300">
+							<p className="inline-flex items-center gap-1.5 text-label uppercase text-emerald-700 dark:text-emerald-300">
 								<HiOutlineSparkles className="h-3.5 w-3.5" />
 								Nunca designados (12 meses)
 							</p>
@@ -445,7 +447,7 @@ export function AssignmentDialog({
 
 					{withHistory.length > 0 ? (
 						<div className="space-y-2">
-							<p className="text-xs font-semibold tracking-wide text-slate-500 uppercase">
+							<p className="text-label uppercase text-muted-foreground">
 								Com histórico
 							</p>
 							<div className="space-y-2">
@@ -465,7 +467,7 @@ export function AssignmentDialog({
 					{familyList.length > 0 ? (
 						<div className="space-y-2">
 							<Separator className="my-2" />
-							<p className="text-xs font-semibold tracking-wide text-slate-400 uppercase">
+							<p className="text-label uppercase text-muted-foreground">
 								Familiares (mesma família, sexo oposto)
 							</p>
 							<div className="space-y-2">
@@ -482,13 +484,13 @@ export function AssignmentDialog({
 					) : null}
 
 					{data && filtered.length === 0 && familyList.length === 0 ? (
-						<div className="rounded-2xl border border-dashed border-slate-300 bg-slate-50 p-4 text-sm text-slate-600 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-400">
+						<div className="rounded-4xl border border-dashed border-border bg-muted p-4 text-sm text-muted-foreground">
 							Nenhum candidato elegível para este filtro.
 						</div>
 					) : null}
 
 					{data?.canUseExternalName ? (
-						<div className="space-y-2 rounded-2xl border border-dashed border-slate-300 p-3 dark:border-slate-700">
+						<div className="space-y-2 rounded-4xl border border-dashed border-border p-3">
 							<Label
 								htmlFor="external-name"
 								className="inline-flex items-center gap-1.5"
@@ -515,11 +517,11 @@ export function AssignmentDialog({
 					) : null}
 				</div>
 
-				<DialogFooter className="gap-2 border-t border-slate-200 px-5 py-4 dark:border-slate-800 sm:justify-between">
+				<DialogFooter className="gap-2 border-t border-border px-5 py-4 sm:justify-between">
 					<Button
 						type="button"
 						variant="ghost"
-						className="min-h-11 rounded-2xl text-red-600 hover:bg-red-50 hover:text-red-700 dark:text-red-400 dark:hover:bg-red-950/30"
+						className="min-h-11 rounded-4xl text-destructive hover:bg-destructive/10"
 						disabled={pending}
 						onClick={clearAssignment}
 					>

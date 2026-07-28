@@ -72,18 +72,14 @@ export function CleaningShell({ data, initialTab }: Props) {
 	return (
 		<main className="mx-auto max-w-3xl space-y-5 px-3 pb-24 pt-4 sm:px-4 sm:pb-10">
 			<header className="space-y-2">
-				<p className="text-xs font-semibold uppercase tracking-wider text-blue-600">
-					{t("eyebrow")}
-				</p>
-				<h1 className="text-2xl font-semibold tracking-tight text-slate-900 dark:text-slate-50 sm:text-3xl">
+				<p className="text-label uppercase text-primary">{t("eyebrow")}</p>
+				<h1 className="text-display text-foreground sm:text-3xl">
 					{t("title")}
 				</h1>
-				<p className="max-w-xl text-sm text-slate-500 dark:text-slate-400">
-					{subtitle}
-				</p>
+				<p className="max-w-xl text-sm text-muted-foreground">{subtitle}</p>
 			</header>
 
-			<nav className="flex gap-1 rounded-[22px] border border-slate-200 bg-white p-1.5 shadow-sm dark:border-slate-800 dark:bg-slate-950">
+			<nav className="flex gap-1 rounded-3xl border border-border bg-card p-1.5 shadow-sm">
 				{tabs.map((item) => {
 					const Icon = item.icon;
 					const on = active === item.id;
@@ -94,8 +90,8 @@ export function CleaningShell({ data, initialTab }: Props) {
 							onClick={() => setActive(item.id)}
 							className={`flex flex-1 items-center justify-center gap-2 rounded-[16px] px-3 py-2.5 text-sm font-medium transition ${
 								on
-									? "bg-linear-to-r from-blue-600 to-violet-600 text-white shadow"
-									: "text-slate-600 hover:bg-slate-50 dark:text-slate-300 dark:hover:bg-slate-900"
+									? "bg-primary text-primary-foreground shadow"
+									: "text-muted-foreground hover:bg-muted"
 							}`}
 						>
 							<Icon className="h-4 w-4 shrink-0" />

@@ -87,8 +87,8 @@ export function PublicTalkDialog({
 			<DialogTrigger asChild>{trigger}</DialogTrigger>
 
 			<DialogContent className="max-w-lg rounded-[28px] p-0">
-				<DialogHeader className="border-b border-slate-200 px-5 py-4 text-left dark:border-slate-800">
-					<DialogTitle className="text-base font-semibold text-slate-900 dark:text-slate-100">
+				<DialogHeader className="border-b border-border px-5 py-4 text-left">
+					<DialogTitle className="text-title text-foreground">
 						{mode === "create" ? "Novo discurso" : "Editar discurso"}
 					</DialogTitle>
 				</DialogHeader>
@@ -112,7 +112,7 @@ export function PublicTalkDialog({
 								name="scope"
 								defaultValue="LOCAL"
 								disabled={pending}
-								className="min-h-11 w-full rounded-2xl border border-slate-200 bg-white px-3 text-sm dark:border-slate-700 dark:bg-slate-900"
+								className="min-h-11 w-full rounded-2xl border border-border bg-card px-3 text-sm"
 							>
 								<option value="LOCAL">Somente esta organização</option>
 								<option value="GLOBAL">Catálogo global</option>
@@ -131,7 +131,7 @@ export function PublicTalkDialog({
 								name="locale"
 								defaultValue={talk?.locale ?? "pt"}
 								disabled={pending}
-								className="min-h-11 w-full rounded-2xl border border-slate-200 bg-white px-3 text-sm dark:border-slate-700 dark:bg-slate-900"
+								className="min-h-11 w-full rounded-2xl border border-border bg-card px-3 text-sm"
 							>
 								<option value="pt">Português</option>
 								<option value="es">Español</option>

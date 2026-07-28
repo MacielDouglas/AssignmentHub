@@ -125,7 +125,7 @@ export function OrgMobileDrawer({
 								<Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
 								<input
 									placeholder={t("searchPlaceholder")}
-									className="w-full rounded-lg border py-2 pl-9 pr-3 text-sm"
+									className="w-full rounded-3xl border border-border bg-input/50 py-1 pl-9 pr-3 text-sm text-foreground placeholder:text-muted-foreground focus-visible:ring-3 focus-visible:ring-ring/30 focus-visible:outline-none"
 								/>
 							</div>
 
@@ -144,7 +144,7 @@ export function OrgMobileDrawer({
 											onClick={() => setOpen(false)}
 											className={`flex items-center justify-between rounded-lg px-3 py-3 text-sm transition-colors ${
 												isActive
-													? "bg-foreground text-background"
+													? "bg-primary text-primary-foreground"
 													: "text-muted-foreground hover:bg-muted hover:text-foreground"
 											}`}
 										>

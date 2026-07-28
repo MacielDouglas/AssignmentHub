@@ -60,7 +60,7 @@ export function OrgMobileNavLinks({
 								className={cn(
 									"flex items-center gap-3 border px-3 py-3 text-sm font-medium transition-colors",
 									isActive
-										? "border-blue-100 bg-blue-50 text-blue-700"
+										? "border-primary/20 bg-primary/10 text-primary"
 										: "border-transparent text-muted-foreground hover:border-border hover:bg-muted hover:text-foreground",
 								)}
 							>

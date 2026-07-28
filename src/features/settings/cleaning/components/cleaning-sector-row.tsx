@@ -15,7 +15,7 @@ import type { CleaningType } from "@/generated/prisma/client";
 const initialState: SettingsActionState = { success: false, message: "" };
 
 const fieldClassName =
-	"h-11 w-full rounded-2xl border border-slate-200 bg-white px-3 text-sm outline-none ring-blue-500/30 focus:ring-4 dark:border-slate-800 dark:bg-slate-950";
+	"h-11 w-full rounded-4xl border border-border bg-card px-3 text-sm outline-none ring-primary/30 focus:ring-4";
 
 type Props = {
 	organizationSlug: string;
@@ -77,16 +77,16 @@ export function CleaningSectorRow({
 
 	return (
 		<li
-			className={`rounded-[20px] border p-4 ${
+			className={`rounded-3xl border border-border p-4 ${
 				sector && !sector.isActive
-					? "border-slate-200 bg-slate-50 opacity-70 dark:border-slate-800 dark:bg-slate-900/40"
-					: "border-slate-200 bg-slate-50/80 dark:border-slate-800 dark:bg-slate-900/50"
+					? "border-border bg-muted opacity-70"
+					: "border-border bg-muted/80"
 			}`}
 		>
 			<div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
 				<div className="space-y-1">
 					<div className="flex flex-wrap items-center gap-2">
-						<p className="font-medium text-slate-900 dark:text-slate-50">
+						<p className="font-medium text-foreground">
 							{sector?.name ?? "Novo setor"}
 						</p>
 						{sector ? (
@@ -109,7 +109,7 @@ export function CleaningSectorRow({
 						) : null}
 					</div>
 					{sector?.description ? (
-						<p className="line-clamp-2 text-sm text-slate-600 dark:text-slate-300">
+						<p className="line-clamp-2 text-sm text-muted-foreground">
 							{sector.description}
 						</p>
 					) : null}
@@ -220,7 +220,7 @@ function SectorEditForm({
 	return (
 		<form
 			action={formAction}
-			className="mt-4 space-y-3 border-t border-slate-200 pt-4 dark:border-slate-800"
+			className="mt-4 space-y-3 border-t border-border pt-4"
 		>
 			<input type="hidden" name="organizationSlug" value={organizationSlug} />
 			<input type="hidden" name="type" value={type} />
@@ -245,7 +245,7 @@ function SectorEditForm({
 					name="description"
 					rows={4}
 					defaultValue={sector?.description ?? ""}
-					className="w-full rounded-2xl border border-slate-200 bg-white px-3 py-2 text-sm outline-none ring-blue-500/30 focus:ring-4 dark:border-slate-800 dark:bg-slate-950"
+					className="w-full rounded-4xl border border-border bg-card px-3 py-2 text-sm outline-none ring-primary/30 focus:ring-4"
 				/>
 			</div>
 
@@ -312,7 +312,7 @@ function SectorEditForm({
 				<Button
 					type="submit"
 					disabled={pending}
-					className="h-10 rounded-2xl bg-linear-to-r from-blue-600 to-violet-600 text-white"
+					className="h-10 rounded-4xl bg-primary text-primary-foreground"
 				>
 					{pending ? "Salvando..." : "Salvar setor"}
 				</Button>

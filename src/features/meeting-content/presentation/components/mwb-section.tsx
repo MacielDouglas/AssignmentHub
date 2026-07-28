@@ -425,18 +425,16 @@ export function MwbSection({
 
 	return (
 		<div className="space-y-4">
-			<section className="rounded-[28px] border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-950 sm:p-5">
+			<section className="rounded-4xl border border-border bg-card p-4 shadow-sm sm:p-5">
 				<div className="flex flex-col gap-3">
 					<div>
-						<p className="inline-flex rounded-full bg-blue-50 px-3 py-1 text-xs font-semibold tracking-wide text-blue-700 uppercase dark:bg-blue-950/50 dark:text-blue-300">
+						<p className="inline-flex rounded-full bg-primary/10 px-3 py-1 text-label uppercase text-primary">
 							Meio de semana
 						</p>
 
-						<h2 className="mt-2 text-lg font-semibold text-slate-900 dark:text-slate-50">
-							Apostila
-						</h2>
+						<h2 className="mt-2 text-headline text-foreground">Apostila</h2>
 
-						<p className="mt-1 text-sm text-slate-500">
+						<p className="mt-1 text-sm text-muted-foreground">
 							{totalLocale} edição(ões) em {contentLocaleLabel(locale)}.
 						</p>
 					</div>
@@ -453,14 +451,14 @@ export function MwbSection({
 							onChange={(event) =>
 								setLocale(event.target.value as ContentLocale)
 							}
-							className="min-h-11 rounded-2xl border border-slate-200 bg-white px-3 text-sm dark:border-slate-700 dark:bg-slate-900"
+							className="min-h-11 rounded-4xl border border-border bg-card px-3 text-sm"
 						>
 							<option value="pt">Português</option>
 							<option value="es">Español</option>
 						</select>
 
 						{canManage ? (
-							<label className="inline-flex min-h-11 cursor-pointer items-center justify-center rounded-2xl bg-blue-600 px-4 text-sm font-semibold text-white shadow-lg shadow-blue-600/25">
+							<label className="inline-flex min-h-11 cursor-pointer items-center justify-center rounded-4xl bg-primary px-4 text-sm font-semibold text-primary-foreground shadow-md">
 								Importar .jwpub
 								<input
 									type="file"
@@ -487,7 +485,7 @@ export function MwbSection({
 							disabled={pending}
 							onChange={(event) => setQuery(event.target.value)}
 							placeholder="Buscar por título, símbolo ou semana"
-							className="min-h-11 w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 text-sm dark:border-slate-700 dark:bg-slate-900"
+							className="min-h-11 w-full rounded-4xl border border-border bg-muted px-4 text-sm"
 						/>
 					</div>
 
@@ -504,7 +502,7 @@ export function MwbSection({
 					) : null}
 
 					{pending ? (
-						<p className="text-sm text-slate-500" aria-live="polite">
+						<p className="text-sm text-muted-foreground" aria-live="polite">
 							Processando…
 						</p>
 					) : null}
@@ -526,11 +524,11 @@ export function MwbSection({
 
 			<section
 				aria-label="Lista de edições da apostila"
-				className="overflow-hidden rounded-[28px] border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-950"
+				className="overflow-hidden rounded-4xl border border-border bg-card shadow-sm"
 			>
 				{canManage && selected.size > 0 ? (
-					<div className="flex flex-wrap items-center gap-2 border-b border-slate-200 px-4 py-3 dark:border-slate-800">
-						<span className="text-sm text-slate-600">
+					<div className="flex flex-wrap items-center gap-2 border-b border-border px-4 py-3">
+						<span className="text-sm text-muted-foreground">
 							{selected.size} selecionada(s)
 						</span>
 
@@ -547,17 +545,17 @@ export function MwbSection({
 
 				{filtered.length === 0 ? (
 					<div className="px-4 py-12 text-center">
-						<p className="text-sm font-medium text-slate-700 dark:text-slate-200">
+						<p className="text-sm font-medium text-foreground">
 							Nenhuma edição neste idioma
 						</p>
 
-						<p className="mt-1 text-sm text-slate-500">
+						<p className="mt-1 text-sm text-muted-foreground">
 							Importe o arquivo `.jwpub` da Guia de Atividades para cadastrar
 							semanas, seções, partes e cânticos.
 						</p>
 					</div>
 				) : (
-					<ul className="divide-y divide-slate-100 dark:divide-slate-900">
+					<ul className="divide-y divide-border">
 						{filtered.map((issue) => {
 							const checked = selected.has(issue.id);
 							const expanded = expandedIssueId === issue.id;
@@ -571,32 +569,32 @@ export function MwbSection({
 												checked={checked}
 												disabled={pending}
 												onChange={() => toggleIssueSelection(issue.id)}
-												className="mt-1 h-4 w-4 rounded border-slate-300"
+												className="mt-1 h-4 w-4 rounded border-border"
 												aria-label={`Selecionar ${issue.title}`}
 											/>
 										) : null}
 
 										<div className="min-w-0 flex-1">
 											<div className="flex flex-wrap items-center gap-2">
-												<span className="inline-flex min-h-8 items-center rounded-full bg-slate-100 px-3 text-xs font-semibold uppercase tracking-wide text-slate-700 dark:bg-slate-800 dark:text-slate-300">
+												<span className="inline-flex min-h-8 items-center rounded-full bg-muted px-3 text-label uppercase text-muted-foreground">
 													{issue.symbol}
 												</span>
 
-												<span className="inline-flex min-h-8 items-center rounded-full bg-teal-50 px-3 text-xs font-semibold text-teal-700 dark:bg-teal-950/40 dark:text-teal-300">
+												<span className="inline-flex min-h-8 items-center rounded-full bg-muted px-3 text-label text-muted-foreground">
 													{issue.year ?? "—"}/{formatMonth(issue.month)}
 												</span>
 
-												<span className="inline-flex min-h-8 items-center rounded-full bg-violet-50 px-3 text-xs font-semibold text-violet-700 dark:bg-violet-950/40 dark:text-violet-300">
+												<span className="inline-flex min-h-8 items-center rounded-full bg-muted px-3 text-label text-muted-foreground">
 													{issue.weeksCount} semana(s)
 												</span>
 											</div>
 
-											<h3 className="mt-2 text-sm font-semibold text-slate-900 dark:text-slate-100">
+											<h3 className="mt-2 text-title text-foreground">
 												{issue.title}
 											</h3>
 
 											{issue.coverTitle ? (
-												<p className="mt-1 text-sm text-slate-500">
+												<p className="mt-1 text-sm text-muted-foreground">
 													{issue.coverTitle}
 												</p>
 											) : null}
@@ -605,7 +603,7 @@ export function MwbSection({
 												<button
 													type="button"
 													disabled={pending}
-													className="min-h-10 rounded-xl border border-slate-200 px-3 text-sm font-medium text-slate-700 disabled:cursor-not-allowed disabled:opacity-60 dark:border-slate-700 dark:text-slate-200"
+													className="min-h-10 rounded-xl border border-border px-3 text-sm font-medium text-foreground disabled:cursor-not-allowed disabled:opacity-60"
 													onClick={() =>
 														setExpandedIssueId(expanded ? null : issue.id)
 													}
@@ -621,7 +619,7 @@ export function MwbSection({
 															<button
 																type="button"
 																disabled={pending}
-																className="min-h-10 rounded-xl border border-slate-200 px-3 text-sm font-medium text-slate-700 disabled:cursor-not-allowed disabled:opacity-60 dark:border-slate-700 dark:text-slate-200"
+																className="min-h-10 rounded-xl border border-border px-3 text-sm font-medium text-foreground disabled:cursor-not-allowed disabled:opacity-60"
 															>
 																Editar
 															</button>
@@ -635,14 +633,14 @@ export function MwbSection({
 													{issue.weeks.map((week) => (
 														<article
 															key={week.id}
-															className="rounded-2xl border border-slate-200 bg-slate-50 p-3 dark:border-slate-800 dark:bg-slate-900"
+															className="rounded-4xl border border-border bg-muted p-3"
 														>
-															<p className="text-sm font-medium text-slate-900 dark:text-slate-100">
+															<p className="text-sm font-medium text-foreground">
 																{week.weekLabelRaw ||
 																	`${week.weekStart} → ${week.weekEnd}`}
 															</p>
 
-															<p className="mt-1 text-xs text-slate-500">
+															<p className="mt-1 text-xs text-muted-foreground">
 																Cânticos:{" "}
 																{[
 																	week.openingSongNum,
@@ -656,7 +654,7 @@ export function MwbSection({
 															<div className="mt-3 space-y-2">
 																{week.sections.map((section) => (
 																	<div key={section.id}>
-																		<p className="text-xs font-semibold tracking-wide text-slate-600 uppercase dark:text-slate-300">
+																		<p className="text-label uppercase text-muted-foreground">
 																			{sectionBadge(section.code)} ·{" "}
 																			{section.name}
 																		</p>
@@ -665,7 +663,7 @@ export function MwbSection({
 																			{section.parts.map((part) => (
 																				<li
 																					key={part.id}
-																					className="text-sm text-slate-700 dark:text-slate-200"
+																					className="text-sm text-foreground"
 																				>
 																					<span className="font-medium">
 																						{part.title}
@@ -695,12 +693,12 @@ export function MwbSection({
 				)}
 
 				{canManage && totalLocale > 0 ? (
-					<div className="border-t border-slate-200 px-4 py-3 dark:border-slate-800">
+					<div className="border-t border-border px-4 py-3">
 						<button
 							type="button"
 							disabled={pending}
 							onClick={removeAllLocale}
-							className="min-h-10 text-sm font-medium text-red-600 disabled:cursor-not-allowed disabled:opacity-60"
+							className="min-h-10 text-sm font-medium text-destructive disabled:cursor-not-allowed disabled:opacity-60"
 						>
 							Excluir todas · {contentLocaleLabel(locale)}
 						</button>
@@ -731,17 +729,14 @@ function MwbReviewCard({
 	return (
 		<section
 			aria-labelledby="mwb-review-title"
-			className="space-y-3 rounded-[28px] border border-amber-200 bg-amber-50/60 p-4 dark:border-amber-900/50 dark:bg-amber-950/20 sm:p-5"
+			className="space-y-3 rounded-4xl border border-amber-200 bg-amber-50/60 p-4 dark:border-amber-900/50 dark:bg-amber-950/20 sm:p-5"
 		>
 			<div>
-				<h3
-					id="mwb-review-title"
-					className="text-base font-semibold text-slate-900 dark:text-slate-50"
-				>
+				<h3 id="mwb-review-title" className="text-title text-foreground">
 					Revisar importação
 				</h3>
 
-				<p className="mt-1 text-sm text-slate-600 dark:text-slate-400">
+				<p className="mt-1 text-sm text-muted-foreground">
 					{draft.weeks.length} semana(s) · {job.fileNames.join(", ")}
 					{job.notes ? ` · ${job.notes}` : ""}
 				</p>
@@ -749,9 +744,7 @@ function MwbReviewCard({
 
 			<div className="grid gap-3">
 				<label className="block space-y-1">
-					<span className="text-xs font-medium text-slate-600 dark:text-slate-300">
-						Símbolo
-					</span>
+					<span className="text-label text-muted-foreground">Símbolo</span>
 
 					<input
 						type="text"
@@ -763,14 +756,12 @@ function MwbReviewCard({
 								symbol: event.target.value,
 							})
 						}
-						className="min-h-11 w-full rounded-2xl border border-slate-200 bg-white px-3 text-sm dark:border-slate-700 dark:bg-slate-950"
+						className="min-h-11 w-full rounded-4xl border border-border bg-card px-3 text-sm"
 					/>
 				</label>
 
 				<label className="block space-y-1">
-					<span className="text-xs font-medium text-slate-600 dark:text-slate-300">
-						Título
-					</span>
+					<span className="text-label text-muted-foreground">Título</span>
 
 					<input
 						type="text"
@@ -782,20 +773,20 @@ function MwbReviewCard({
 								title: event.target.value,
 							})
 						}
-						className="min-h-11 w-full rounded-2xl border border-slate-200 bg-white px-3 text-sm dark:border-slate-700 dark:bg-slate-950"
+						className="min-h-11 w-full rounded-4xl border border-border bg-card px-3 text-sm"
 					/>
 				</label>
 			</div>
 
-			<div className="max-h-96 space-y-3 overflow-y-auto rounded-2xl border border-slate-200 bg-white p-3 dark:border-slate-800 dark:bg-slate-950">
+			<div className="max-h-96 space-y-3 overflow-y-auto rounded-4xl border border-border bg-card p-3">
 				{draft.weeks.map((week, weekIndex) => (
 					<div
 						key={week.clientKey}
-						className="rounded-2xl border border-slate-100 p-3 dark:border-slate-800"
+						className="rounded-4xl border border-border p-3"
 					>
 						<div className="grid gap-2 sm:grid-cols-2">
 							<label className="block space-y-1">
-								<span className="text-xs text-slate-500">Início</span>
+								<span className="text-xs text-muted-foreground">Início</span>
 
 								<input
 									type="date"
@@ -808,12 +799,12 @@ function MwbReviewCard({
 											}),
 										)
 									}
-									className="min-h-10 w-full rounded-xl border border-slate-200 px-2 text-sm dark:border-slate-700 dark:bg-slate-900"
+									className="min-h-10 w-full rounded-xl border border-border px-2 text-sm"
 								/>
 							</label>
 
 							<label className="block space-y-1">
-								<span className="text-xs text-slate-500">Fim</span>
+								<span className="text-xs text-muted-foreground">Fim</span>
 
 								<input
 									type="date"
@@ -826,7 +817,7 @@ function MwbReviewCard({
 											}),
 										)
 									}
-									className="min-h-10 w-full rounded-xl border border-slate-200 px-2 text-sm dark:border-slate-700 dark:bg-slate-900"
+									className="min-h-10 w-full rounded-xl border border-border px-2 text-sm"
 								/>
 							</label>
 						</div>
@@ -842,7 +833,7 @@ function MwbReviewCard({
 								>
 							).map(([field, label]) => (
 								<label key={field} className="block space-y-1">
-									<span className="text-xs text-slate-500">{label}</span>
+									<span className="text-xs text-muted-foreground">{label}</span>
 
 									<input
 										type="number"
@@ -857,7 +848,7 @@ function MwbReviewCard({
 												}),
 											)
 										}
-										className="min-h-10 w-full rounded-xl border border-slate-200 px-2 text-sm dark:border-slate-700 dark:bg-slate-900"
+										className="min-h-10 w-full rounded-xl border border-border px-2 text-sm"
 									/>
 								</label>
 							))}
@@ -867,7 +858,7 @@ function MwbReviewCard({
 							{week.sections.map((section, sectionIndex) => (
 								<div
 									key={section.clientKey}
-									className="rounded-xl border border-slate-100 bg-white p-3 dark:border-slate-800 dark:bg-slate-900"
+									className="rounded-xl border border-border bg-card p-3"
 								>
 									<input
 										type="text"
@@ -881,7 +872,7 @@ function MwbReviewCard({
 												}),
 											)
 										}
-										className="mb-2 min-h-9 w-full rounded-lg border border-slate-200 px-2 text-xs font-semibold tracking-wide uppercase dark:border-slate-700 dark:bg-slate-950"
+										className="mb-2 min-h-9 w-full rounded-lg border border-border px-2 text-xs font-semibold tracking-wide uppercase"
 									/>
 
 									{section.parts.map((part, partIndex) => (
@@ -905,7 +896,7 @@ function MwbReviewCard({
 														),
 													)
 												}
-												className="min-h-9 rounded-lg border border-slate-200 px-2 text-sm dark:border-slate-700 dark:bg-slate-950"
+												className="min-h-9 rounded-lg border border-border px-2 text-sm"
 											/>
 
 											<input
@@ -935,7 +926,7 @@ function MwbReviewCard({
 														),
 													);
 												}}
-												className="min-h-9 rounded-lg border border-slate-200 px-2 text-sm dark:border-slate-700 dark:bg-slate-950"
+												className="min-h-9 rounded-lg border border-border px-2 text-sm"
 											/>
 										</div>
 									))}
@@ -951,7 +942,7 @@ function MwbReviewCard({
 					type="button"
 					disabled={pending}
 					onClick={onSave}
-					className="min-h-11 rounded-2xl border border-slate-300 px-4 text-sm font-medium disabled:cursor-not-allowed disabled:opacity-60 dark:border-slate-600"
+					className="min-h-11 rounded-4xl border border-border px-4 text-sm font-medium disabled:cursor-not-allowed disabled:opacity-60"
 				>
 					Salvar rascunho
 				</button>
@@ -960,7 +951,7 @@ function MwbReviewCard({
 					type="button"
 					disabled={pending}
 					onClick={onCommit}
-					className="min-h-11 rounded-2xl bg-blue-600 px-4 text-sm font-semibold text-white disabled:cursor-not-allowed disabled:opacity-60"
+					className="min-h-11 rounded-4xl bg-primary px-4 text-sm font-semibold text-primary-foreground disabled:cursor-not-allowed disabled:opacity-60"
 				>
 					Confirmar e salvar
 				</button>
@@ -969,7 +960,7 @@ function MwbReviewCard({
 					type="button"
 					disabled={pending}
 					onClick={onDiscard}
-					className="min-h-11 rounded-2xl px-4 text-sm font-medium text-red-600 disabled:cursor-not-allowed disabled:opacity-60"
+					className="min-h-11 rounded-4xl px-4 text-sm font-medium text-destructive disabled:cursor-not-allowed disabled:opacity-60"
 				>
 					Descartar
 				</button>

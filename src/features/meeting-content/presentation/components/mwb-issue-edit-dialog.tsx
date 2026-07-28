@@ -476,8 +476,8 @@ export function MwbIssueEditDialog({ slug, issue, trigger }: Props) {
 			<DialogTrigger asChild>{trigger}</DialogTrigger>
 
 			<DialogContent className="max-h-[90dvh] max-w-3xl overflow-y-auto rounded-[28px] p-0">
-				<DialogHeader className="border-b border-slate-200 px-5 py-4 text-left dark:border-slate-800">
-					<DialogTitle className="text-base font-semibold text-slate-900 dark:text-slate-100">
+				<DialogHeader className="border-b border-border px-5 py-4 text-left">
+					<DialogTitle className="text-title text-foreground">
 						Editar apostila
 					</DialogTitle>
 				</DialogHeader>
@@ -512,7 +512,7 @@ export function MwbIssueEditDialog({ slug, issue, trigger }: Props) {
 										locale: event.target.value as IssueDraft["locale"],
 									}))
 								}
-								className="min-h-11 w-full rounded-2xl border border-slate-200 bg-white px-3 text-sm dark:border-slate-700 dark:bg-slate-900"
+								className="min-h-11 w-full rounded-2xl border border-border bg-card px-3 text-sm"
 							>
 								<option value="pt">Português</option>
 								<option value="es">Español</option>
@@ -593,10 +593,10 @@ export function MwbIssueEditDialog({ slug, issue, trigger }: Props) {
 					{draft.weeks.map((week, weekIndex) => (
 						<article
 							key={week.clientKey}
-							className="space-y-3 rounded-2xl border border-slate-200 p-4 dark:border-slate-800"
+							className="space-y-3 rounded-2xl border border-border p-4"
 						>
 							<div className="flex flex-wrap items-center justify-between gap-2">
-								<p className="text-sm font-semibold text-slate-900 dark:text-slate-100">
+								<p className="text-title text-foreground">
 									Semana {weekIndex + 1}
 								</p>
 
@@ -718,10 +718,10 @@ export function MwbIssueEditDialog({ slug, issue, trigger }: Props) {
 							{week.sections.map((section, sectionIndex) => (
 								<div
 									key={section.clientKey}
-									className="space-y-2 rounded-xl border border-slate-100 bg-slate-50 p-3 dark:border-slate-800 dark:bg-slate-900"
+									className="space-y-2 rounded-xl border border-border bg-muted p-3"
 								>
 									<div className="flex flex-wrap items-center justify-between gap-2">
-										<p className="text-xs font-semibold tracking-wide text-slate-500 uppercase">
+										<p className="text-label uppercase text-muted-foreground">
 											Seção {sectionIndex + 1}
 										</p>
 
@@ -764,7 +764,7 @@ export function MwbIssueEditDialog({ slug, issue, trigger }: Props) {
 
 											updateSection(weekIndex, sectionIndex, { code });
 										}}
-										className="min-h-10 w-full rounded-xl border border-slate-200 bg-white px-2 text-sm dark:border-slate-700 dark:bg-slate-950"
+										className="min-h-10 w-full rounded-xl border border-border bg-card px-2 text-sm"
 									>
 										<option value="">Sem código</option>
 										<option value="TREASURES">Tesouros</option>
@@ -775,7 +775,7 @@ export function MwbIssueEditDialog({ slug, issue, trigger }: Props) {
 									{section.parts.map((part, partIndex) => (
 										<div
 											key={part.clientKey}
-											className="grid gap-2 rounded-lg border border-slate-200 bg-white p-2 dark:border-slate-800 dark:bg-slate-950"
+											className="grid gap-2 rounded-lg border border-border bg-card p-2"
 										>
 											<div className="grid gap-2 sm:grid-cols-[minmax(0,1fr)_5.5rem_auto]">
 												<Input
@@ -903,7 +903,7 @@ export function MwbIssueEditDialog({ slug, issue, trigger }: Props) {
 						</p>
 					) : null}
 
-					<div className="sticky bottom-0 flex flex-col-reverse gap-2 border-t border-slate-200 bg-white pt-4 dark:border-slate-800 dark:bg-slate-950 sm:flex-row sm:justify-end">
+					<div className="sticky bottom-0 flex flex-col-reverse gap-2 border-t border-border bg-card pt-4 sm:flex-row sm:justify-end">
 						<Button
 							type="button"
 							variant="outline"

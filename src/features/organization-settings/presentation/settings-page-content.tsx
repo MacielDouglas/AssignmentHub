@@ -180,7 +180,7 @@ export function SettingsPageContent({ data }: SettingsPageContentProps) {
 
 									<h1
 										id="settings-heading"
-										className="text-2xl font-semibold tracking-tight sm:text-3xl"
+										className="text-display sm:text-3xl"
 									>
 										Configurações da organização
 									</h1>
@@ -194,33 +194,29 @@ export function SettingsPageContent({ data }: SettingsPageContentProps) {
 							</div>
 
 							<div className="rounded-2xl border border-white/20 bg-white/70 px-4 py-3 text-left shadow-sm backdrop-blur dark:bg-white/5">
-								<p className="text-xs font-medium uppercase tracking-[0.16em] text-muted-foreground">
+								<p className="text-label uppercase text-muted-foreground">
 									Permissão atual
 								</p>
-								<p className="mt-1 text-sm font-semibold">
-									{getRoleLabel(data.role)}
-								</p>
+								<p className="mt-1 text-title">{getRoleLabel(data.role)}</p>
 							</div>
 						</div>
 
 						<div className="grid gap-3 sm:grid-cols-3">
 							<div className="rounded-2xl border border-white/20 bg-white/70 p-4 shadow-sm backdrop-blur dark:bg-white/5">
-								<p className="text-xs uppercase tracking-[0.14em] text-muted-foreground">
+								<p className="text-label uppercase text-muted-foreground">
 									Organização
 								</p>
-								<p className="mt-2 text-base font-semibold">
-									{data.organization.name}
-								</p>
+								<p className="mt-2 text-title">{data.organization.name}</p>
 								<p className="mt-1 text-sm text-muted-foreground">
 									Slug: {data.organization.slug}
 								</p>
 							</div>
 
 							<div className="rounded-2xl border border-white/20 bg-white/70 p-4 shadow-sm backdrop-blur dark:bg-white/5">
-								<p className="text-xs uppercase tracking-[0.14em] text-muted-foreground">
+								<p className="text-label uppercase text-muted-foreground">
 									Módulos ativos
 								</p>
-								<p className="mt-2 text-base font-semibold">
+								<p className="mt-2 text-title">
 									{[
 										cleaningSettings ? "Limpeza" : null,
 										configuredSchedules.length > 0 ? "Agenda" : null,
@@ -234,10 +230,10 @@ export function SettingsPageContent({ data }: SettingsPageContentProps) {
 							</div>
 
 							<div className="rounded-2xl border border-white/20 bg-white/70 p-4 shadow-sm backdrop-blur dark:bg-white/5">
-								<p className="text-xs uppercase tracking-[0.14em] text-muted-foreground">
+								<p className="text-label uppercase text-muted-foreground">
 									Configurações concluídas
 								</p>
-								<p className="mt-2 text-base font-semibold">
+								<p className="mt-2 text-title">
 									{data.stats.configuredSchedules} de{" "}
 									{data.stats.totalSchedules} itens de agenda
 								</p>
@@ -298,10 +294,7 @@ export function SettingsPageContent({ data }: SettingsPageContentProps) {
 
 			<section aria-labelledby="modules-heading" className="space-y-4">
 				<div className="space-y-1">
-					<h2
-						id="modules-heading"
-						className="text-lg font-semibold tracking-tight"
-					>
+					<h2 id="modules-heading" className="text-headline">
 						Módulos
 					</h2>
 					<p className="text-sm text-muted-foreground">
@@ -336,9 +329,7 @@ export function SettingsPageContent({ data }: SettingsPageContentProps) {
 
 												<div className="min-w-0 flex-1 space-y-3">
 													<div className="flex flex-wrap items-center justify-between gap-2">
-														<h3 className="text-lg font-semibold tracking-tight">
-															{module.title}
-														</h3>
+														<h3 className="text-headline">{module.title}</h3>
 
 														<Badge variant={module.statusVariant}>
 															{module.status}
@@ -352,7 +343,7 @@ export function SettingsPageContent({ data }: SettingsPageContentProps) {
 											</div>
 
 											<div className="rounded-2xl border border-border/60 bg-background/80 p-4">
-												<p className="flex items-center gap-2 text-xs font-medium uppercase tracking-[0.14em] text-muted-foreground">
+												<p className="flex items-center gap-2 text-label uppercase text-muted-foreground">
 													<Sparkles className="size-3.5" />
 													Resumo atual
 												</p>

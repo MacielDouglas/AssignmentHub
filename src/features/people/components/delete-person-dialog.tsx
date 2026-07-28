@@ -60,7 +60,7 @@ export function DeletePersonDialog({
 
 	return (
 		<AlertDialog open={open} onOpenChange={onOpenChange}>
-			<AlertDialogContent className="rounded-[28px]">
+			<AlertDialogContent className="rounded-4xl">
 				<AlertDialogHeader>
 					<AlertDialogTitle className="text-left">
 						Excluir pessoa

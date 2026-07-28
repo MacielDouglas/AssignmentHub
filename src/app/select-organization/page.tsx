@@ -58,7 +58,7 @@ export default async function SelectOrganizationPage() {
 			<section className="mx-auto flex min-h-screen w-full max-w-7xl flex-col px-4 py-6 sm:px-6 lg:px-8">
 				<header className="flex items-center justify-between border-b border-border py-4">
 					<div className="flex items-center gap-3">
-						<div className="flex h-11 w-11 items-center justify-center rounded-none bg-linear-to-br from-blue-600 to-violet-600 text-white shadow-sm">
+						<div className="flex h-11 w-11 items-center justify-center rounded-none bg-primary text-primary-foreground shadow-sm">
 							<HiOutlineSquares2X2 className="h-5 w-5" aria-hidden="true" />
 						</div>
 						<div>
@@ -82,7 +82,7 @@ export default async function SelectOrganizationPage() {
 
 				<section className="grid flex-1 gap-8 py-10 lg:grid-cols-[1.1fr_0.9fr] lg:items-start">
 					<div className="space-y-5">
-						<div className="inline-flex items-center gap-2 border border-violet-100 bg-violet-50 px-3 py-1.5 text-xs font-semibold uppercase tracking-[0.12em] text-violet-700">
+						<div className="inline-flex items-center gap-2 border border-border bg-muted px-3 py-1.5 text-label uppercase text-muted-foreground">
 							<HiOutlineBuildingOffice2
 								className="h-4 w-4"
 								aria-hidden="true"
@@ -91,7 +91,7 @@ export default async function SelectOrganizationPage() {
 						</div>
 
 						<div className="space-y-4">
-							<h1 className="max-w-3xl text-3xl font-semibold leading-tight tracking-tight text-foreground sm:text-4xl">
+							<h1 className="max-w-3xl text-display text-foreground sm:text-4xl">
 								Escolha a organização que você deseja acessar agora.
 							</h1>
 
@@ -106,11 +106,11 @@ export default async function SelectOrganizationPage() {
 
 					<aside className="border border-border bg-card p-6 sm:p-8">
 						<div className="space-y-4">
-							<p className="text-xs font-semibold uppercase tracking-[0.12em] text-blue-700">
+							<p className="text-label uppercase text-primary">
 								Acesso contextual
 							</p>
 
-							<h2 className="text-2xl font-semibold leading-tight text-foreground">
+							<h2 className="text-display text-foreground">
 								Cada organização possui contexto, membros e fluxos próprios.
 							</h2>
 

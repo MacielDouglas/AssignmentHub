@@ -23,7 +23,7 @@ export default async function HomePage() {
 			<section className="mx-auto flex min-h-screen w-full max-w-7xl flex-col px-4 py-6 sm:px-6 lg:px-8">
 				<header className="flex items-center justify-between border-b border-border py-4">
 					<div className="flex items-center gap-3">
-						<div className="flex h-11 w-11 items-center justify-center rounded-none bg-linear-to-br from-blue-600 to-violet-600 text-white shadow-sm">
+						<div className="flex h-11 w-11 items-center justify-center rounded-none bg-primary text-primary-foreground shadow-sm">
 							<HiOutlineSquares2X2 className="h-5 w-5" aria-hidden="true" />
 						</div>
 						<div>
@@ -39,13 +39,13 @@ export default async function HomePage() {
 
 				<section className="grid flex-1 gap-10 py-10 lg:grid-cols-[1.15fr_0.85fr] lg:items-center">
 					<div className="space-y-6">
-						<div className="inline-flex items-center gap-2 border border-blue-100 bg-blue-50 px-3 py-1.5 text-xs font-semibold uppercase tracking-[0.12em] text-blue-700">
+						<div className="inline-flex items-center gap-2 border border-primary/20 bg-primary/10 px-3 py-1.5 text-label uppercase text-primary">
 							<HiOutlineSparkles className="h-4 w-4" aria-hidden="true" />
 							Plataforma inteligente para coordenação
 						</div>
 
 						<div className="space-y-4">
-							<h1 className="max-w-3xl text-3xl font-semibold leading-tight tracking-tight text-foreground sm:text-4xl lg:text-5xl">
+							<h1 className="max-w-3xl text-display text-foreground sm:text-4xl lg:text-5xl">
 								Organize pessoas, reuniões e designações com mais clareza,
 								confiança e automação.
 							</h1>
@@ -60,12 +60,10 @@ export default async function HomePage() {
 
 						<div className="grid gap-3 sm:grid-cols-3">
 							<div className="border border-border bg-card p-4">
-								<div className="mb-3 flex h-10 w-10 items-center justify-center bg-blue-50 text-blue-600">
+								<div className="mb-3 flex h-10 w-10 items-center justify-center bg-muted text-muted-foreground">
 									<HiOutlineCheckBadge className="h-5 w-5" aria-hidden="true" />
 								</div>
-								<h2 className="text-sm font-semibold text-foreground">
-									Confiança
-								</h2>
+								<h2 className="text-title text-foreground">Confiança</h2>
 								<p className="mt-2 text-sm leading-6 text-muted-foreground">
 									Estrutura pensada para apoiar designações corretas e
 									consistentes.
@@ -73,12 +71,10 @@ export default async function HomePage() {
 							</div>
 
 							<div className="border border-border bg-card p-4">
-								<div className="mb-3 flex h-10 w-10 items-center justify-center bg-violet-50 text-violet-600">
+								<div className="mb-3 flex h-10 w-10 items-center justify-center bg-muted text-muted-foreground">
 									<HiOutlineCpuChip className="h-5 w-5" aria-hidden="true" />
 								</div>
-								<h2 className="text-sm font-semibold text-foreground">
-									Tecnologia
-								</h2>
+								<h2 className="text-title text-foreground">Tecnologia</h2>
 								<p className="mt-2 text-sm leading-6 text-muted-foreground">
 									IA e automação para reduzir trabalho manual e melhorar o
 									fluxo.
@@ -86,12 +82,10 @@ export default async function HomePage() {
 							</div>
 
 							<div className="border border-border bg-card p-4">
-								<div className="mb-3 flex h-10 w-10 items-center justify-center bg-slate-100 text-slate-700">
+								<div className="mb-3 flex h-10 w-10 items-center justify-center bg-muted text-muted-foreground">
 									<HiOutlineSquares2X2 className="h-5 w-5" aria-hidden="true" />
 								</div>
-								<h2 className="text-sm font-semibold text-foreground">
-									Organização
-								</h2>
+								<h2 className="text-title text-foreground">Organização</h2>
 								<p className="mt-2 text-sm leading-6 text-muted-foreground">
 									Coordene reuniões, pessoas e tarefas em um ambiente claro e
 									centralizado.
@@ -105,13 +99,13 @@ export default async function HomePage() {
 					</div>
 
 					<aside className="relative overflow-hidden border border-border bg-card p-6 sm:p-8">
-						<div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(124,58,237,0.12),transparent_35%),radial-gradient(circle_at_bottom_left,rgba(37,99,235,0.12),transparent_35%)]" />
+						<div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(37,99,235,0.08),transparent_35%),radial-gradient(circle_at_bottom_left,rgba(37,99,235,0.08),transparent_35%)]" />
 						<div className="relative space-y-6">
 							<div className="space-y-2">
-								<p className="text-xs font-semibold uppercase tracking-[0.12em] text-violet-700">
+								<p className="text-label uppercase text-muted-foreground">
 									Fluxo de acesso
 								</p>
-								<h2 className="text-2xl font-semibold leading-tight text-foreground">
+								<h2 className="text-display text-foreground">
 									Entre com sua conta Google e continue com segurança.
 								</h2>
 							</div>

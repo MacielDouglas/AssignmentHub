@@ -26,16 +26,14 @@ export function SpecialEventsSection({
 	events,
 }: SpecialEventsSectionProps) {
 	return (
-		<section className="space-y-4 rounded-[28px] border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-950 sm:p-6">
+		<section className="space-y-4 rounded-4xl border border-border bg-card p-5 shadow-sm sm:p-6">
 			<header className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
 				<div className="space-y-1">
 					<div className="flex items-center gap-2">
-						<HiOutlineSparkles className="h-5 w-5 text-violet-600" />
-						<h2 className="text-lg font-semibold text-slate-900 dark:text-slate-50">
-							Eventos especiais
-						</h2>
+						<HiOutlineSparkles className="h-5 w-5 text-primary" />
+						<h2 className="text-headline text-foreground">Eventos especiais</h2>
 					</div>
-					<p className="text-sm text-slate-500 dark:text-slate-400">
+					<p className="text-sm text-muted-foreground">
 						Opcional. Comemoração e Congresso: no máximo um por ano. Durante a
 						visita do viajante, as reuniões semanais ficam ocultas na agenda.
 					</p>
@@ -46,7 +44,7 @@ export function SpecialEventsSection({
 			</header>
 
 			{events.length === 0 ? (
-				<div className="rounded-[20px] border border-dashed border-slate-300 p-6 text-center text-sm text-slate-500 dark:border-slate-700">
+				<div className="rounded-3xl border border-dashed border-border p-6 text-center text-sm text-muted-foreground">
 					Nenhum evento especial cadastrado.
 				</div>
 			) : (
@@ -54,16 +52,16 @@ export function SpecialEventsSection({
 					{events.map((event) => (
 						<li
 							key={event.id}
-							className="flex flex-col gap-3 rounded-[20px] border border-slate-200 bg-slate-50/80 p-4 dark:border-slate-800 dark:bg-slate-900/50 sm:flex-row sm:items-center sm:justify-between"
+							className="flex flex-col gap-3 rounded-3xl border border-border bg-muted/80 p-4 sm:flex-row sm:items-center sm:justify-between"
 						>
 							<div className="space-y-2">
 								<div className="flex flex-wrap items-center gap-2">
-									<p className="font-medium text-slate-900 dark:text-slate-50">
+									<p className="font-medium text-foreground">
 										{event.typeLabel}
 									</p>
 									<StatusBadge label={event.typeLabel} tone="violet" />
 								</div>
-								<p className="text-sm text-slate-600 dark:text-slate-300">
+								<p className="text-sm text-muted-foreground">
 									{event.startDate}
 									{event.endDate ? ` → ${event.endDate}` : ""}
 									{event.time
@@ -74,7 +72,7 @@ export function SpecialEventsSection({
 									{event.location ? ` · ${event.location}` : ""}
 								</p>
 								{event.notes ? (
-									<p className="text-xs text-slate-500">{event.notes}</p>
+									<p className="text-xs text-muted-foreground">{event.notes}</p>
 								) : null}
 							</div>
 

@@ -283,15 +283,12 @@ export function WatchtowerReviewTable({ slug, job }: Props) {
 	return (
 		<section
 			aria-labelledby="wt-review-title"
-			className="space-y-4 rounded-[28px] border border-amber-200 bg-amber-50/50 p-4 shadow-sm dark:border-amber-900/50 dark:bg-amber-950/20 sm:p-5"
+			className="space-y-4 rounded-4xl border border-amber-200 bg-amber-50/50 p-4 shadow-sm dark:border-amber-900/50 dark:bg-amber-950/20 sm:p-5"
 		>
 			<header className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
 				<div className="space-y-1">
 					<div className="flex flex-wrap items-center gap-2">
-						<h3
-							id="wt-review-title"
-							className="text-lg font-semibold text-slate-900 dark:text-slate-50"
-						>
+						<h3 id="wt-review-title" className="text-headline text-foreground">
 							Revisão da importação
 						</h3>
 						<ContentBadge label="Aguardando confirmação" tone="amber" />
@@ -300,20 +297,18 @@ export function WatchtowerReviewTable({ slug, job }: Props) {
 							tone="blue"
 						/>
 					</div>
-					<p className="text-sm text-slate-500 dark:text-slate-400">
+					<p className="text-sm text-muted-foreground">
 						Arquivo: {job.fileNames.join(", ") || "—"}. Confira cada campo antes
 						de gravar no banco.
 					</p>
 					{draft.notes ? (
-						<p className="text-xs text-slate-500 dark:text-slate-400">
-							{draft.notes}
-						</p>
+						<p className="text-xs text-muted-foreground">{draft.notes}</p>
 					) : null}
 				</div>
 				<Button
 					type="button"
 					variant="outline"
-					className="h-11 shrink-0 rounded-2xl border-red-200 text-red-700 hover:bg-red-50 dark:border-red-900 dark:text-red-300"
+					className="h-11 shrink-0 rounded-4xl border-red-200 text-destructive hover:bg-red-50 dark:border-red-900"
 					onClick={discardAll}
 					disabled={pending}
 				>
@@ -346,16 +341,16 @@ export function WatchtowerReviewTable({ slug, job }: Props) {
 
 					return (
 						<li key={rowKey}>
-							<article className="space-y-3 rounded-[24px] border border-slate-200 bg-white p-4 dark:border-slate-800 dark:bg-slate-950">
+							<article className="space-y-3 rounded-3xl border border-border bg-card p-4">
 								<header className="flex items-center justify-between gap-2">
-									<h4 className="text-sm font-semibold text-slate-900 dark:text-slate-50">
+									<h4 className="text-title text-foreground">
 										Estudo {index + 1}
 									</h4>
 									<Button
 										type="button"
 										variant="ghost"
 										size="sm"
-										className="rounded-xl text-red-600"
+										className="rounded-xl text-destructive"
 										onClick={() => removeArticle(index)}
 									>
 										<HiOutlineTrash className="mr-1 h-4 w-4" />
@@ -445,7 +440,7 @@ export function WatchtowerReviewTable({ slug, job }: Props) {
 											{article.highlightColor ? (
 												<span
 													aria-hidden
-													className="h-10 w-10 rounded-2xl border border-slate-200 shadow-inner dark:border-slate-700"
+													className="h-10 w-10 rounded-2xl border border-border shadow-inner"
 													style={{ backgroundColor: article.highlightColor }}
 												/>
 											) : null}
@@ -494,7 +489,7 @@ export function WatchtowerReviewTable({ slug, job }: Props) {
 				</Button>
 				<Button
 					type="button"
-					className="h-11 rounded-2xl bg-linear-to-r from-blue-600 to-violet-600 text-white shadow-lg shadow-blue-600/20"
+					className="h-11 rounded-4xl bg-primary text-primary-foreground shadow-md"
 					onClick={commit}
 					disabled={pending}
 				>

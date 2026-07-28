@@ -57,11 +57,11 @@ export function OrganizationSelector({
 						type="button"
 						onClick={() => handleSelect(organization)}
 						disabled={Boolean(loadingOrganizationId)}
-						className="group w-full border border-border bg-card p-5 text-left transition hover:border-blue-200 hover:bg-blue-50/40 disabled:cursor-not-allowed disabled:opacity-70"
+						className="group w-full border border-border bg-card p-5 text-left transition hover:border-primary/20 hover:bg-primary/5 disabled:cursor-not-allowed disabled:opacity-70"
 					>
 						<div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
 							<div className="space-y-3">
-								<div className="flex h-11 w-11 items-center justify-center bg-blue-50 text-blue-600">
+								<div className="flex h-11 w-11 items-center justify-center bg-muted text-muted-foreground">
 									<HiOutlineBuildingOffice2
 										className="h-5 w-5"
 										aria-hidden="true"
@@ -69,7 +69,7 @@ export function OrganizationSelector({
 								</div>
 
 								<div className="space-y-1">
-									<p className="text-base font-semibold text-foreground">
+									<p className="text-title text-foreground">
 										{organization.name}
 									</p>
 									<p className="text-sm text-muted-foreground">
@@ -78,7 +78,7 @@ export function OrganizationSelector({
 								</div>
 
 								<div className="flex flex-wrap gap-2">
-									<span className="inline-flex items-center gap-2 border border-border bg-background px-2.5 py-1 text-xs font-medium text-muted-foreground">
+									<span className="inline-flex items-center gap-2 border border-border bg-background px-2.5 py-1 text-label text-muted-foreground">
 										<HiOutlineShieldCheck
 											className="h-4 w-4"
 											aria-hidden="true"
@@ -86,7 +86,7 @@ export function OrganizationSelector({
 										Papel: {organization.role}
 									</span>
 
-									<span className="inline-flex items-center gap-2 border border-violet-100 bg-violet-50 px-2.5 py-1 text-xs font-medium text-violet-700">
+									<span className="inline-flex items-center gap-2 border border-border bg-muted px-2.5 py-1 text-label text-muted-foreground">
 										<HiOutlineCheckCircle
 											className="h-4 w-4"
 											aria-hidden="true"
@@ -96,7 +96,7 @@ export function OrganizationSelector({
 								</div>
 							</div>
 
-							<div className="inline-flex items-center gap-2 self-start text-sm font-medium text-blue-700 sm:self-center">
+							<div className="inline-flex items-center gap-2 self-start text-sm font-medium text-primary sm:self-center">
 								{isLoading ? "Entrando..." : "Acessar"}
 								<HiOutlineArrowRight
 									className="h-4 w-4 transition-transform group-hover:translate-x-0.5"

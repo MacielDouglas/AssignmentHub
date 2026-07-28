@@ -7,21 +7,32 @@ type ErrorProps = {
 
 export default function OrganizationError({ error, reset }: ErrorProps) {
 	return (
-		<div className="border border-border bg-card p-6">
-			<h2 className="text-xl font-semibold text-foreground">
-				Não foi possível carregar a organização.
-			</h2>
-			<p className="mt-3 text-sm leading-6 text-muted-foreground">
-				Houve um problema ao carregar este ambiente.
-			</p>
-			<p className="mt-2 text-xs text-muted-foreground">{error.message}</p>
-			<button
-				type="button"
-				onClick={reset}
-				className="mt-6 inline-flex h-11 items-center justify-center rounded-none bg-primary px-5 text-sm font-medium text-primary-foreground hover:opacity-95"
-			>
-				Tentar novamente
-			</button>
+		<div className="flex min-h-[60vh] items-center justify-center px-4">
+			<div className="w-full max-w-lg rounded-4xl border border-border bg-card p-8 shadow-md text-center">
+				<div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-destructive/10">
+					<span className="text-2xl text-destructive">!</span>
+				</div>
+				<h2 className="mt-4 text-headline text-foreground">
+					Não foi possível carregar a organização
+				</h2>
+				<p className="mt-2 text-body text-muted-foreground">
+					Houve um problema ao carregar este ambiente. Tente novamente.
+				</p>
+				{process.env.NODE_ENV === "development" && error.message ? (
+					<p className="mt-3 truncate rounded-lg bg-muted px-3 py-2 text-left text-caption text-muted-foreground">
+						{error.message}
+					</p>
+				) : null}
+				<div className="mt-6 flex items-center justify-center gap-3">
+					<button
+						type="button"
+						onClick={reset}
+						className="inline-flex h-11 items-center justify-center rounded-4xl bg-primary px-6 text-label text-primary-foreground shadow-md transition-all hover:brightness-90 active:translate-y-px"
+					>
+						Tentar novamente
+					</button>
+				</div>
+			</div>
 		</div>
 	);
 }

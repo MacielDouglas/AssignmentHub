@@ -318,13 +318,11 @@ export function SongsSection({
 
 	return (
 		<div className="space-y-4">
-			<section className="rounded-[28px] border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-950 sm:p-5">
+			<section className="rounded-4xl border border-border bg-card p-4 shadow-sm sm:p-5">
 				<div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
 					<div>
-						<h2 className="text-lg font-semibold text-slate-900 dark:text-slate-50">
-							Cânticos
-						</h2>
-						<p className="mt-1 text-sm text-slate-500">
+						<h2 className="text-headline text-foreground">Cânticos</h2>
+						<p className="mt-1 text-sm text-muted-foreground">
 							{totalLocale} no catálogo · {contentLocaleLabel(locale)}
 						</p>
 					</div>
@@ -339,7 +337,7 @@ export function SongsSection({
 							onChange={(event) =>
 								setLocale(event.target.value as ContentLocale)
 							}
-							className="min-h-11 rounded-2xl border border-slate-200 bg-white px-3 text-sm dark:border-slate-700 dark:bg-slate-900"
+							className="min-h-11 rounded-4xl border border-border bg-card px-3 text-sm"
 						>
 							<option value="pt">Português</option>
 							<option value="es">Español</option>
@@ -358,7 +356,7 @@ export function SongsSection({
 									Adicionar
 								</Button>
 
-								<label className="inline-flex min-h-11 cursor-pointer items-center justify-center rounded-2xl bg-blue-600 px-4 text-sm font-semibold text-white shadow-lg shadow-blue-600/25">
+								<label className="inline-flex min-h-11 cursor-pointer items-center justify-center rounded-4xl bg-primary px-4 text-sm font-semibold text-primary-foreground shadow-md">
 									Importar .jwpub
 									<input
 										type="file"
@@ -385,7 +383,7 @@ export function SongsSection({
 						value={query}
 						onChange={(event) => setQuery(event.target.value)}
 						placeholder="Buscar por número ou título"
-						className="min-h-11 w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 text-sm dark:border-slate-700 dark:bg-slate-900"
+						className="min-h-11 w-full rounded-4xl border border-border bg-muted px-4 text-sm"
 					/>
 				</div>
 
@@ -402,7 +400,7 @@ export function SongsSection({
 				) : null}
 
 				{pending ? (
-					<p className="mt-3 text-sm text-slate-500" aria-live="polite">
+					<p className="mt-3 text-sm text-muted-foreground" aria-live="polite">
 						Processando…
 					</p>
 				) : null}
@@ -422,11 +420,11 @@ export function SongsSection({
 
 			<section
 				aria-label="Lista de cânticos"
-				className="overflow-hidden rounded-[28px] border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-950"
+				className="overflow-hidden rounded-4xl border border-border bg-card shadow-sm"
 			>
 				{canManage && selected.size > 0 ? (
-					<div className="flex flex-wrap items-center gap-2 border-b border-slate-200 px-4 py-3 dark:border-slate-800">
-						<span className="text-sm text-slate-600">
+					<div className="flex flex-wrap items-center gap-2 border-b border-border px-4 py-3">
+						<span className="text-sm text-muted-foreground">
 							{selected.size} selecionado(s)
 						</span>
 
@@ -445,16 +443,16 @@ export function SongsSection({
 
 				{filtered.length === 0 ? (
 					<div className="px-4 py-12 text-center">
-						<p className="text-sm font-medium text-slate-700 dark:text-slate-200">
+						<p className="text-sm font-medium text-foreground">
 							Nenhum cântico neste idioma
 						</p>
-						<p className="mt-1 text-sm text-slate-500">
+						<p className="mt-1 text-sm text-muted-foreground">
 							Adicione manualmente ou importe o arquivo .jwpub do livro de
 							cânticos (sjj).
 						</p>
 					</div>
 				) : (
-					<ul className="divide-y divide-slate-100 dark:divide-slate-900">
+					<ul className="divide-y divide-border">
 						{filtered.map((song) => {
 							const checked = selected.has(song.id);
 							const checkboxId = `song-select-${song.id}`;
@@ -462,7 +460,7 @@ export function SongsSection({
 							return (
 								<li
 									key={song.id}
-									className="flex min-h-14 items-center gap-3 px-4 py-3 hover:bg-slate-50 dark:hover:bg-slate-900/60"
+									className="flex min-h-14 items-center gap-3 px-4 py-3 hover:bg-muted"
 								>
 									{canManage ? (
 										<div className="flex shrink-0 items-center">
@@ -471,7 +469,7 @@ export function SongsSection({
 												type="checkbox"
 												checked={checked}
 												onChange={() => toggleSelected(song.id)}
-												className="h-4 w-4 rounded border-slate-300"
+												className="h-4 w-4 rounded border-border"
 											/>
 											<label htmlFor={checkboxId} className="sr-only">
 												Selecionar cântico {song.number}: {song.title}
@@ -481,12 +479,12 @@ export function SongsSection({
 
 									<span
 										aria-hidden="true"
-										className="inline-flex h-9 w-12 shrink-0 items-center justify-center rounded-xl bg-blue-50 text-sm font-semibold text-blue-700 dark:bg-blue-950/50 dark:text-blue-300"
+										className="inline-flex h-9 w-12 shrink-0 items-center justify-center rounded-xl bg-muted text-sm font-semibold text-muted-foreground"
 									>
 										{song.number}
 									</span>
 
-									<span className="min-w-0 flex-1 text-sm font-medium text-slate-800 dark:text-slate-100">
+									<span className="min-w-0 flex-1 text-sm font-medium text-foreground">
 										{song.title}
 									</span>
 
@@ -512,7 +510,7 @@ export function SongsSection({
 				)}
 
 				{canManage && totalLocale > 0 ? (
-					<div className="border-t border-slate-200 px-4 py-3 dark:border-slate-800">
+					<div className="border-t border-border px-4 py-3">
 						<button
 							type="button"
 							onClick={removeAllLocale}
@@ -584,7 +582,7 @@ function SongEditorDialog({
 									locale: event.target.value as ContentLocale,
 								})
 							}
-							className="min-h-11 rounded-xl border border-slate-200 bg-white px-3 text-sm dark:border-slate-700 dark:bg-slate-900"
+							className="min-h-11 rounded-xl border border-border bg-card px-3 text-sm"
 						>
 							<option value="pt">Português</option>
 							<option value="es">Español</option>
@@ -682,22 +680,19 @@ function SongbookReviewCard({
 	return (
 		<section
 			aria-labelledby="song-review-title"
-			className="space-y-3 rounded-[28px] border border-amber-200 bg-amber-50/60 p-4 dark:border-amber-900/50 dark:bg-amber-950/20 sm:p-5"
+			className="space-y-3 rounded-4xl border border-amber-200 bg-amber-50/60 p-4 dark:border-amber-900/50 dark:bg-amber-950/20 sm:p-5"
 		>
 			<div>
-				<h3
-					id="song-review-title"
-					className="text-base font-semibold text-slate-900 dark:text-slate-50"
-				>
+				<h3 id="song-review-title" className="text-title text-foreground">
 					Revisar importação
 				</h3>
-				<p className="mt-1 text-sm text-slate-600 dark:text-slate-400">
+				<p className="mt-1 text-sm text-muted-foreground">
 					{draft.songs.length} cânticos · {job.fileNames.join(", ")}
 					{job.notes ? ` · ${job.notes}` : ""}
 				</p>
 			</div>
 
-			<ul className="max-h-72 space-y-2 overflow-y-auto rounded-2xl border border-slate-200 bg-white p-3 dark:border-slate-800 dark:bg-slate-950">
+			<ul className="max-h-72 space-y-2 overflow-y-auto rounded-2xl border border-border bg-card p-3">
 				{draft.songs.map((song, index) => (
 					<li
 						key={song.number}
@@ -720,7 +715,7 @@ function SongbookReviewCard({
 								);
 								onChange({ ...draft, songs });
 							}}
-							className="min-h-10 rounded-xl border border-slate-200 px-2 text-sm dark:border-slate-700 dark:bg-slate-900"
+							className="min-h-10 rounded-xl border border-border px-2 text-sm"
 						/>
 
 						<label className="sr-only" htmlFor={`draft-title-${index}`}>
@@ -738,7 +733,7 @@ function SongbookReviewCard({
 								);
 								onChange({ ...draft, songs });
 							}}
-							className="min-h-10 rounded-xl border border-slate-200 px-3 text-sm dark:border-slate-700 dark:bg-slate-900"
+							className="min-h-10 rounded-xl border border-border px-3 text-sm"
 						/>
 
 						<Button

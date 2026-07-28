@@ -127,17 +127,14 @@ export function WatchtowerStudiesTable({
 	return (
 		<section
 			aria-labelledby="wt-catalog-title"
-			className="space-y-4 rounded-[28px] border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-950 sm:p-5"
+			className="space-y-4 rounded-4xl border border-border bg-card p-4 shadow-sm sm:p-5"
 		>
 			<div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
 				<header className="space-y-1">
-					<h2
-						id="wt-catalog-title"
-						className="text-lg font-semibold text-slate-900 dark:text-slate-50"
-					>
+					<h2 id="wt-catalog-title" className="text-headline text-foreground">
 						Estudos salvos
 					</h2>
-					<p className="text-sm text-slate-500 dark:text-slate-400">
+					<p className="text-sm text-muted-foreground">
 						{contentLocaleLabel(filterLocale)} · {filtered.length} registro(s)
 					</p>
 				</header>
@@ -168,7 +165,7 @@ export function WatchtowerStudiesTable({
 			{canManage ? (
 				<div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap">
 					{filtered.length > 0 ? (
-						<div className="flex items-center gap-2 rounded-2xl border border-slate-200 px-3 py-2 dark:border-slate-800">
+						<div className="flex items-center gap-2 rounded-2xl border border-border px-3 py-2">
 							<Checkbox
 								id="select-all-studies"
 								checked={allVisibleSelected}
@@ -237,14 +234,14 @@ export function WatchtowerStudiesTable({
 			) : null}
 
 			{filtered.length === 0 ? (
-				<article className="rounded-[24px] border border-dashed border-slate-300 bg-slate-50 p-8 text-center dark:border-slate-700 dark:bg-slate-900">
-					<div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-2xl bg-blue-50 text-blue-600 dark:bg-blue-950/50 dark:text-blue-300">
+				<article className="rounded-3xl border border-dashed border-border bg-muted p-8 text-center">
+					<div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-4xl bg-muted text-muted-foreground">
 						<HiOutlineBookOpen className="h-6 w-6" />
 					</div>
-					<h3 className="text-base font-semibold text-slate-900 dark:text-slate-50">
+					<h3 className="text-title text-foreground">
 						Nenhum estudo cadastrado
 					</h3>
-					<p className="mt-2 text-sm text-slate-500 dark:text-slate-400">
+					<p className="mt-2 text-sm text-muted-foreground">
 						Importe um arquivo .jwpub de A Sentinela / La Atalaya para começar.
 					</p>
 				</article>
@@ -255,7 +252,7 @@ export function WatchtowerStudiesTable({
 
 						return (
 							<li key={study.id}>
-								<article className="rounded-[28px] border border-slate-200 bg-slate-50/80 p-4 shadow-sm transition hover:border-blue-200 hover:bg-white dark:border-slate-800 dark:bg-slate-900/80 dark:hover:border-blue-900 dark:hover:bg-slate-950 sm:p-5">
+								<article className="rounded-4xl border border-border bg-muted/80 p-4 shadow-sm transition hover:border-primary/20 hover:bg-card sm:p-5">
 									<div className="flex flex-col gap-4 sm:flex-row sm:items-start">
 										{canManage ? (
 											<div className="pt-1">
@@ -274,11 +271,11 @@ export function WatchtowerStudiesTable({
 											<header className="flex flex-wrap items-start justify-between gap-3">
 												<div className="flex min-w-0 flex-1 flex-wrap items-start gap-3">
 													<div
-														className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl text-white shadow-lg shadow-blue-600/20"
+														className="flex h-11 w-11 shrink-0 items-center justify-center rounded-4xl text-primary-foreground shadow-md"
 														style={{
 															background: study.highlightColor
 																? study.highlightColor
-																: "linear-gradient(to bottom right, #2563EB, #7C3AED)",
+																: "#2563EB",
 														}}
 														aria-hidden
 													>
@@ -286,10 +283,10 @@ export function WatchtowerStudiesTable({
 													</div>
 
 													<div className="min-w-0">
-														<h3 className="text-base font-semibold text-slate-900 dark:text-slate-50">
+														<h3 className="text-title text-foreground">
 															{study.title}
 														</h3>
-														<p className="text-xs text-slate-500 dark:text-slate-400">
+														<p className="text-xs text-muted-foreground">
 															{study.weekLabelRaw ??
 																`${study.weekStart} → ${study.weekEnd}`}
 														</p>

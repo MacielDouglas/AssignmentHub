@@ -92,8 +92,8 @@ export function PublicTalkHistoryDialog({
 			<DialogTrigger asChild>{trigger}</DialogTrigger>
 
 			<DialogContent className="max-h-[calc(100dvh-2rem)] w-[calc(100%-2rem)] max-w-xl overflow-y-auto rounded-[28px] p-0 sm:w-full">
-				<DialogHeader className="sticky top-0 z-10 border-b border-slate-200 bg-white px-5 py-4 text-left dark:border-slate-800 dark:bg-slate-950">
-					<DialogTitle className="pr-8 text-base font-semibold leading-6 text-slate-900 dark:text-slate-100">
+				<DialogHeader className="sticky top-0 z-10 border-b border-border bg-card px-5 py-4 text-left">
+					<DialogTitle className="pr-8 text-title leading-6 text-foreground">
 						Histórico · Nº {talk.number} · {talk.title}
 					</DialogTitle>
 				</DialogHeader>
@@ -106,12 +106,12 @@ export function PublicTalkHistoryDialog({
 						<div className="flex items-center justify-between gap-3">
 							<h3
 								id={`history-list-${talk.id}`}
-								className="text-sm font-semibold text-slate-900 dark:text-slate-100"
+								className="text-title text-foreground"
 							>
 								Registros anteriores
 							</h3>
 
-							<span className="inline-flex min-h-8 items-center rounded-full bg-slate-100 px-3 text-xs font-semibold text-slate-700 dark:bg-slate-800 dark:text-slate-300">
+							<span className="inline-flex min-h-8 items-center rounded-full bg-muted px-3 text-label text-muted-foreground">
 								{talk.latestHistory.length}
 							</span>
 						</div>
@@ -126,14 +126,14 @@ export function PublicTalkHistoryDialog({
 						</div>
 					</section>
 
-					<div className="border-t border-slate-200 dark:border-slate-800" />
+					<div className="border-t border-border" />
 
 					<form key={formKey} action={formAction} className="space-y-4">
 						<div>
-							<h3 className="text-sm font-semibold text-slate-900 dark:text-slate-100">
+							<h3 className="text-title text-foreground">
 								Registrar novo histórico
 							</h3>
-							<p className="mt-1 text-sm text-slate-600 dark:text-slate-400">
+							<p className="mt-1 text-sm text-muted-foreground">
 								Informe quem apresentou este discurso e a data da apresentação.
 							</p>
 						</div>
@@ -151,16 +151,16 @@ export function PublicTalkHistoryDialog({
 								name="performedAt"
 								defaultValue={toDateInputValue(new Date())}
 								disabled={pending}
-								className="min-h-11 w-full rounded-2xl border border-slate-200 bg-white px-3 text-sm dark:border-slate-700 dark:bg-slate-900"
+								className="min-h-11 w-full rounded-2xl border border-border bg-card px-3 text-sm"
 							/>
 						</div>
 
 						<fieldset className="space-y-2">
-							<legend className="text-sm font-medium text-slate-900 dark:text-slate-100">
+							<legend className="text-sm font-medium text-foreground">
 								Tipo de orador
 							</legend>
 
-							<div className="grid grid-cols-2 rounded-2xl border border-slate-200 bg-slate-50 p-1 dark:border-slate-800 dark:bg-slate-900">
+							<div className="grid grid-cols-2 rounded-2xl border border-border bg-muted p-1">
 								<button
 									type="button"
 									onClick={() => setSpeakerType("PERSON")}
@@ -168,8 +168,8 @@ export function PublicTalkHistoryDialog({
 									className={[
 										"min-h-10 rounded-xl px-3 text-sm font-medium transition",
 										speakerType === "PERSON"
-											? "bg-white text-slate-900 shadow-sm dark:bg-slate-800 dark:text-slate-100"
-											: "text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-100",
+											? "bg-card text-foreground shadow-sm"
+											: "text-muted-foreground hover:text-foreground",
 									].join(" ")}
 								>
 									Organização
@@ -182,8 +182,8 @@ export function PublicTalkHistoryDialog({
 									className={[
 										"min-h-10 rounded-xl px-3 text-sm font-medium transition",
 										speakerType === "SUB_PERSON"
-											? "bg-white text-slate-900 shadow-sm dark:bg-slate-800 dark:text-slate-100"
-											: "text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-100",
+											? "bg-card text-foreground shadow-sm"
+											: "text-muted-foreground hover:text-foreground",
 									].join(" ")}
 								>
 									Sub-organização
@@ -202,7 +202,7 @@ export function PublicTalkHistoryDialog({
 									name="speakerPersonId"
 									disabled={pending}
 									defaultValue=""
-									className="min-h-11 w-full rounded-2xl border border-slate-200 bg-white px-3 text-sm dark:border-slate-700 dark:bg-slate-900"
+									className="min-h-11 w-full rounded-2xl border border-border bg-card px-3 text-sm"
 								>
 									<option value="">Selecione</option>
 
@@ -224,7 +224,7 @@ export function PublicTalkHistoryDialog({
 									name="speakerSubPersonId"
 									disabled={pending}
 									defaultValue=""
-									className="min-h-11 w-full rounded-2xl border border-slate-200 bg-white px-3 text-sm dark:border-slate-700 dark:bg-slate-900"
+									className="min-h-11 w-full rounded-2xl border border-border bg-card px-3 text-sm"
 								>
 									<option value="">Selecione</option>
 
@@ -255,7 +255,7 @@ export function PublicTalkHistoryDialog({
 							</Alert>
 						) : null}
 
-						<div className="flex flex-col-reverse gap-2 border-t border-slate-200 pt-4 dark:border-slate-800 sm:flex-row sm:justify-end">
+						<div className="flex flex-col-reverse gap-2 border-t border-border pt-4 sm:flex-row sm:justify-end">
 							<Button
 								type="button"
 								variant="outline"

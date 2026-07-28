@@ -35,7 +35,7 @@ const WEEKDAY_VALUES = [
 const initialState: SettingsActionState = { success: false, message: "" };
 
 const fieldClassName =
-	"h-11 w-full rounded-2xl border border-slate-200 bg-white px-3 text-sm outline-none ring-blue-500/30 focus:ring-4 dark:border-slate-800 dark:bg-slate-950";
+	"h-11 w-full rounded-4xl border border-border bg-card px-3 text-sm outline-none ring-primary/30 focus:ring-4";
 
 type WeeklyMeetingsFormProps = {
 	organizationSlug: string;
@@ -80,18 +80,14 @@ export function WeeklyMeetingsForm({
 	].join("::");
 
 	return (
-		<section className="space-y-4 rounded-[28px] border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-950 sm:p-6">
+		<section className="space-y-4 rounded-4xl border border-border bg-card p-5 shadow-sm sm:p-6">
 			<header className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
 				<div className="space-y-1">
 					<div className="flex items-center gap-2">
-						<HiOutlineCalendarDays className="h-5 w-5 text-blue-600" />
-						<h2 className="text-lg font-semibold text-slate-900 dark:text-slate-50">
-							{t("title")}
-						</h2>
+						<HiOutlineCalendarDays className="h-5 w-5 text-primary" />
+						<h2 className="text-headline text-foreground">{t("title")}</h2>
 					</div>
-					<p className="text-sm text-slate-500 dark:text-slate-400">
-						{t("description")}
-					</p>
+					<p className="text-sm text-muted-foreground">{t("description")}</p>
 				</div>
 				<StatusBadge
 					label={
@@ -163,9 +159,7 @@ function WeeklyMeetingsFormFields({
 			/>
 
 			<div className="space-y-3">
-				<h3 className="text-sm font-semibold text-slate-900 dark:text-slate-50">
-					{t("currentSchedule")}
-				</h3>
+				<h3 className="text-title text-foreground">{t("currentSchedule")}</h3>
 				<div className="grid gap-4 md:grid-cols-2">
 					<SlotFields
 						prefix="currentSlot1"
@@ -189,18 +183,18 @@ function WeeklyMeetingsFormFields({
 				) : null}
 			</div>
 
-			<div className="space-y-3 rounded-[20px] border border-slate-200 bg-slate-50 p-4 dark:border-slate-800 dark:bg-slate-900/50">
-				<label className="flex items-center gap-3 text-sm font-medium text-slate-800 dark:text-slate-200">
+			<div className="space-y-3 rounded-[20px] border border-border bg-muted p-4">
+				<label className="flex items-center gap-3 text-sm font-medium text-foreground">
 					<input
 						type="checkbox"
 						checked={nextEnabled}
 						disabled={!canEdit}
 						onChange={(e) => setNextEnabled(e.target.checked)}
-						className="h-4 w-4 rounded border-slate-300"
+						className="h-4 w-4 rounded border-border"
 					/>
 					{t("nextYearOptional", { year: weekly.nextYear.year })}
 				</label>
-				<p className="text-xs text-slate-500 dark:text-slate-400">
+				<p className="text-xs text-muted-foreground">
 					{t("nextYearHint", { year: weekly.nextYear.year })}
 				</p>
 
@@ -259,14 +253,14 @@ function WeeklyMeetingsFormFields({
 					<Button
 						type="submit"
 						disabled={pending}
-						className="h-11 rounded-2xl bg-linear-to-r from-blue-600 to-violet-600 text-white"
+						className="h-11 rounded-4xl bg-primary text-primary-foreground"
 					>
 						<HiOutlineClock className="mr-2 h-4 w-4" />
 						{pending ? t("saving") : t("saveMeetings")}
 					</Button>
 				</div>
 			) : (
-				<p className="text-sm text-slate-500">{t("readOnly")}</p>
+				<p className="text-sm text-muted-foreground">{t("readOnly")}</p>
 			)}
 		</form>
 	);
@@ -288,10 +282,8 @@ function SlotFields({
 	const t = useTranslations("SettingsMeetings");
 	const tDays = useTranslations("Weekdays");
 	return (
-		<div className="space-y-2 rounded-[20px] border border-slate-200 bg-white p-4 dark:border-slate-800 dark:bg-slate-950">
-			<p className="text-xs font-medium uppercase tracking-wide text-slate-500">
-				{label}
-			</p>
+		<div className="space-y-2 rounded-[20px] border border-border bg-card p-4">
+			<p className="text-label uppercase text-muted-foreground">{label}</p>
 			<div className="space-y-2">
 				<Label className="text-sm font-medium">{t("day")}</Label>
 				<select

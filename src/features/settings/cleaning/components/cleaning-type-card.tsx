@@ -21,7 +21,7 @@ import type { CleaningTypeView } from "@/features/settings/cleaning/lib/cleaning
 const initialState: SettingsActionState = { success: false, message: "" };
 
 const fieldClassName =
-	"h-11 w-full rounded-2xl border border-slate-200 bg-white px-3 text-sm outline-none ring-blue-500/30 focus:ring-4 dark:border-slate-800 dark:bg-slate-950";
+	"h-11 w-full rounded-4xl border border-border bg-card px-3 text-sm outline-none ring-primary/30 focus:ring-4";
 
 const WEEKDAYS = [
 	{ value: "MONDAY", label: "Seg" },
@@ -121,16 +121,16 @@ export function CleaningTypeCard({
 	};
 
 	return (
-		<section className="space-y-4 rounded-[28px] border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-950 sm:p-6">
+		<section className="space-y-4 rounded-4xl border border-border bg-card p-5 shadow-sm sm:p-6">
 			<header className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
 				<div className="space-y-1">
 					<div className="flex items-center gap-2">
-						<Icon className="h-5 w-5 text-blue-600" />
-						<h2 className="text-lg font-semibold text-slate-900 dark:text-slate-50">
+						<Icon className="h-5 w-5 text-primary" />
+						<h2 className="text-headline text-foreground">
 							{CLEANING_TYPE_LABEL[typeView.type]}
 						</h2>
 					</div>
-					<p className="text-sm text-slate-500 dark:text-slate-400">
+					<p className="text-sm text-muted-foreground">
 						{typeView.type === "MEETING"
 							? "Acompanha os horários de reunião configurados. Opcionalmente some durante a visita do viajante."
 							: typeView.type === "WEEKLY"
@@ -178,7 +178,7 @@ export function CleaningTypeCard({
 						checked={enabled}
 						disabled={!canEdit}
 						onChange={(e) => setEnabled(e.target.checked)}
-						className="h-4 w-4 rounded border-slate-300"
+						className="h-4 w-4 rounded border-border"
 					/>
 					Habilitar este tipo de limpeza
 				</label>
@@ -192,17 +192,17 @@ export function CleaningTypeCard({
 								type="button"
 								disabled={!canEdit}
 								onClick={() => setMode(m)}
-								className={`rounded-2xl px-4 py-2 text-sm font-medium transition ${
+								className={`rounded-4xl px-4 py-2 text-sm font-medium transition ${
 									mode === m
-										? "bg-linear-to-r from-blue-600 to-violet-600 text-white"
-										: "border border-slate-200 bg-slate-50 text-slate-700 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200"
+										? "bg-primary text-primary-foreground"
+										: "border border-border bg-muted text-muted-foreground"
 								}`}
 							>
 								{MODE_LABELS[m] ?? m}
 							</button>
 						))}
 					</div>
-					<p className="text-xs text-slate-500">
+					<p className="text-xs text-muted-foreground">
 						Trocar o modo não apaga os setores. Quem será designado é definido
 						na tela de designações.
 					</p>
@@ -215,7 +215,7 @@ export function CleaningTypeCard({
 							checked={followVisit}
 							disabled={!canEdit}
 							onChange={(e) => setFollowVisit(e.target.checked)}
-							className="h-4 w-4 rounded border-slate-300"
+							className="h-4 w-4 rounded border-border"
 						/>
 						Ocultar limpeza nos dias de visita do viajante (quando a reunião
 						semanal também some)
@@ -236,8 +236,8 @@ export function CleaningTypeCard({
 										onClick={() => toggleWeekday(d.value)}
 										className={`rounded-2xl px-3 py-2 text-sm font-medium ${
 											on
-												? "bg-blue-600 text-white"
-												: "border border-slate-200 bg-white dark:border-slate-700 dark:bg-slate-950"
+												? "bg-primary text-primary-foreground"
+												: "border border-border bg-card"
 										}`}
 									>
 										{d.label}
@@ -269,13 +269,15 @@ export function CleaningTypeCard({
 							) : null}
 						</div>
 						{dates.length === 0 ? (
-							<p className="text-sm text-slate-500">Nenhuma data cadastrada.</p>
+							<p className="text-sm text-muted-foreground">
+								Nenhuma data cadastrada.
+							</p>
 						) : (
 							<ul className="space-y-2">
 								{dates.map((d) => (
 									<li
 										key={d.id}
-										className="flex flex-col gap-2 rounded-2xl border border-slate-200 p-3 sm:flex-row sm:items-center dark:border-slate-800"
+										className="flex flex-col gap-2 rounded-4xl border border-border p-3 sm:flex-row sm:items-center"
 									>
 										<input
 											type="date"
@@ -328,13 +330,13 @@ export function CleaningTypeCard({
 						<Button
 							type="submit"
 							disabled={pending}
-							className="h-11 rounded-2xl bg-linear-to-r from-blue-600 to-violet-600 text-white"
+							className="h-11 rounded-2xl bg-primary text-primary-foreground"
 						>
 							{pending ? "Salvando..." : "Salvar este tipo"}
 						</Button>
 					</div>
 				) : (
-					<p className="text-sm text-slate-500">
+					<p className="text-sm text-muted-foreground">
 						Somente administradores podem editar.
 					</p>
 				)}

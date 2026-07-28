@@ -36,10 +36,10 @@ export default async function SetupOrganizationPage() {
 			<section className="mx-auto flex min-h-screen w-full max-w-3xl flex-col px-4 py-8 sm:px-6 lg:px-8">
 				<div className="space-y-4 border border-border bg-card p-6">
 					<div>
-						<p className="text-xs font-semibold uppercase tracking-[0.12em] text-violet-700">
+						<p className="text-label uppercase text-muted-foreground">
 							Configuração inicial
 						</p>
-						<h1 className="mt-2 text-3xl font-semibold tracking-tight text-foreground">
+						<h1 className="mt-2 text-display text-foreground">
 							Criar organização
 						</h1>
 						<p className="mt-3 text-sm leading-6 text-muted-foreground">

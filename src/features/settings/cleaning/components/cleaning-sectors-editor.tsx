@@ -52,11 +52,9 @@ export function CleaningSectorsEditor({
 	}, []);
 
 	return (
-		<div className="space-y-3 border-t border-slate-200 pt-5 dark:border-slate-800">
+		<div className="space-y-3 border-t border-border pt-5">
 			<div className="flex items-center justify-between gap-3">
-				<h3 className="text-sm font-semibold text-slate-900 dark:text-slate-50">
-					Setores
-				</h3>
+				<h3 className="text-title text-foreground">Setores</h3>
 				{canEdit ? (
 					<Button
 						type="button"
@@ -96,7 +94,9 @@ export function CleaningSectorsEditor({
 			</ul>
 
 			{typeView.sectors.length === 0 && !adding ? (
-				<p className="text-sm text-slate-500">Nenhum setor cadastrado.</p>
+				<p className="text-sm text-muted-foreground">
+					Nenhum setor cadastrado.
+				</p>
 			) : null}
 		</div>
 	);

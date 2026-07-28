@@ -171,9 +171,9 @@ export function WatchtowerEditStudyDialog({
 				<button
 					type="button"
 					disabled={disabled}
-					className="app-button-secondary min-h-10 rounded-2xl"
+					className="app-button-secondary inline-flex items-center gap-2 min-h-10 rounded-2xl"
 				>
-					<Pencil className="mr-2 size-4" />
+					<Pencil className="size-4 shrink-0" />
 					Editar
 				</button>
 			</DialogTrigger>

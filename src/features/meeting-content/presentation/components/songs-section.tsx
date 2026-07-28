@@ -329,9 +329,9 @@ export function SongsSection({
 							type="button"
 							disabled={pending}
 							onClick={openCreateDialog}
-							className="app-button-secondary"
+							className="app-button-secondary inline-flex items-center gap-2"
 						>
-							<Plus className="mr-2 size-4" />
+							<Plus className="size-4 shrink-0" />
 							Adicionar
 						</button>
 

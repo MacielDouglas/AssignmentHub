@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState, useTransition } from "react";
+import { HiOutlineMagnifyingGlass } from "react-icons/hi2";
 
 import type { MwbExtract } from "../../application/dto/mwb-extract.dto";
 import type { MwbIssueEntity } from "../../domain/entities/mwb";
@@ -59,7 +60,6 @@ function createClientKey(): string {
 
 function formatMonth(month: number | null): string {
 	if (!month || month < 1 || month > 12) return "—";
-
 	return String(month).padStart(2, "0");
 }
 
@@ -67,7 +67,6 @@ function sectionBadge(code: "TREASURES" | "APPLY" | "LIVING" | null): string {
 	if (code === "TREASURES") return "Tesouros";
 	if (code === "APPLY") return "Ministério";
 	if (code === "LIVING") return "Vida cristã";
-
 	return "Seção";
 }
 
@@ -225,7 +224,6 @@ export function MwbSection({
 	const [message, setMessage] = useState<string | null>(null);
 	const [error, setError] = useState<string | null>(null);
 	const [pending, startTransition] = useTransition();
-
 	const [draftOverride, setDraftOverride] = useState<MwbReviewDraft | null>(
 		null,
 	);
@@ -270,7 +268,6 @@ export function MwbSection({
 
 	function setReviewDraft(nextDraft: MwbReviewDraft) {
 		if (!pendingJob) return;
-
 		setDraftJobId(pendingJob.id);
 		setDraftOverride(nextDraft);
 	}
@@ -283,13 +280,8 @@ export function MwbSection({
 	function toggleIssueSelection(issueId: string) {
 		setSelected((current) => {
 			const next = new Set(current);
-
-			if (next.has(issueId)) {
-				next.delete(issueId);
-			} else {
-				next.add(issueId);
-			}
-
+			if (next.has(issueId)) next.delete(issueId);
+			else next.add(issueId);
 			return next;
 		});
 	}
@@ -298,7 +290,6 @@ export function MwbSection({
 		if (!fileList?.length) return;
 
 		const file = fileList.item(0);
-
 		if (!file) return;
 
 		const formData = new FormData();
@@ -364,8 +355,7 @@ export function MwbSection({
 
 	function discard() {
 		if (!pendingJob) return;
-
-		if (!confirm("Descartar esta importação da apostila?")) return;
+		if (!window.confirm("Descartar esta importação da apostila?")) return;
 
 		startTransition(async () => {
 			setError(null);
@@ -401,7 +391,7 @@ export function MwbSection({
 	}
 
 	function removeAllLocale() {
-		const confirmed = confirm(
+		const confirmed = window.confirm(
 			`Excluir TODAS as edições da apostila em ${contentLocaleLabel(locale)}?`,
 		);
 
@@ -424,41 +414,42 @@ export function MwbSection({
 	}
 
 	return (
-		<div className="space-y-4">
-			<section className="rounded-4xl border border-border bg-card p-4 shadow-sm sm:p-5">
-				<div className="flex flex-col gap-3">
-					<div>
-						<p className="inline-flex rounded-full bg-primary/10 px-3 py-1 text-label uppercase text-primary">
-							Meio de semana
-						</p>
+		<section className="space-y-4">
+			<header className="app-card app-card-body space-y-4">
+				<div className="space-y-1">
+					<p className="app-chip-brand">Meio de semana</p>
+					<h2 className="text-headline text-foreground">Apostila</h2>
+					<p className="text-body-sm text-muted-foreground">
+						Gerencie as edições da apostila por idioma, revise importações e
+						mantenha semanas, seções, partes e cânticos organizados.
+					</p>
+				</div>
 
-						<h2 className="mt-2 text-headline text-foreground">Apostila</h2>
-
-						<p className="mt-1 text-sm text-muted-foreground">
-							{totalLocale} edição(ões) em {contentLocaleLabel(locale)}.
-						</p>
-					</div>
-
-					<div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap">
-						<label className="sr-only" htmlFor="mwb-locale">
-							Idioma
-						</label>
-
-						<select
-							id="mwb-locale"
-							value={locale}
-							disabled={pending}
-							onChange={(event) =>
-								setLocale(event.target.value as ContentLocale)
-							}
-							className="min-h-11 rounded-4xl border border-border bg-card px-3 text-sm"
-						>
-							<option value="pt">Português</option>
-							<option value="es">Español</option>
-						</select>
+				<div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between">
+					<div className="flex flex-col gap-3 sm:flex-row">
+						<div className="app-segmented">
+							<button
+								type="button"
+								disabled={pending}
+								data-state={locale === "pt" ? "active" : "inactive"}
+								onClick={() => setLocale("pt")}
+								className="app-segmented-item"
+							>
+								Português
+							</button>
+							<button
+								type="button"
+								disabled={pending}
+								data-state={locale === "es" ? "active" : "inactive"}
+								onClick={() => setLocale("es")}
+								className="app-segmented-item"
+							>
+								Español
+							</button>
+						</div>
 
 						{canManage ? (
-							<label className="inline-flex min-h-11 cursor-pointer items-center justify-center rounded-4xl bg-primary px-4 text-sm font-semibold text-primary-foreground shadow-md">
+							<label className="app-button-primary inline-flex cursor-pointer items-center justify-center">
 								Importar .jwpub
 								<input
 									type="file"
@@ -474,40 +465,43 @@ export function MwbSection({
 						) : null}
 					</div>
 
-					<div>
-						<label className="sr-only" htmlFor="mwb-search">
-							Buscar edição
-						</label>
-
-						<input
-							id="mwb-search"
-							value={query}
-							disabled={pending}
-							onChange={(event) => setQuery(event.target.value)}
-							placeholder="Buscar por título, símbolo ou semana"
-							className="min-h-11 w-full rounded-4xl border border-border bg-muted px-4 text-sm"
-						/>
+					<div className="flex flex-wrap items-center gap-2">
+						<span className="app-chip">
+							{totalLocale} edição(ões) em {contentLocaleLabel(locale)}
+						</span>
 					</div>
-
-					{error ? (
-						<p className="text-sm text-red-600" role="alert">
-							{error}
-						</p>
-					) : null}
-
-					{message ? (
-						<p className="text-sm text-emerald-600" role="status">
-							{message}
-						</p>
-					) : null}
-
-					{pending ? (
-						<p className="text-sm text-muted-foreground" aria-live="polite">
-							Processando…
-						</p>
-					) : null}
 				</div>
-			</section>
+
+				<div className="app-search">
+					<HiOutlineMagnifyingGlass className="app-search-icon" />
+					<input
+						id="mwb-search"
+						value={query}
+						disabled={pending}
+						onChange={(event) => setQuery(event.target.value)}
+						placeholder="Buscar por título, símbolo ou semana"
+						className="app-input app-search-input w-full"
+					/>
+				</div>
+
+				{error ? (
+					<p className="app-status-error" role="alert">
+						{error}
+					</p>
+				) : null}
+
+				{message ? (
+					<p className="app-status-success" role="status">
+						{message}
+					</p>
+				) : null}
+
+				{pending ? (
+					<p className="app-status-info" aria-live="polite">
+						Processando…
+					</p>
+				) : null}
+			</header>
 
 			{canManage && pendingJob && reviewDraft ? (
 				<MwbReviewCard
@@ -527,7 +521,7 @@ export function MwbSection({
 				className="overflow-hidden rounded-4xl border border-border bg-card shadow-sm"
 			>
 				{canManage && selected.size > 0 ? (
-					<div className="flex flex-wrap items-center gap-2 border-b border-border px-4 py-3">
+					<div className="flex flex-wrap items-center gap-2 border-b border-border px-4 py-3 sm:px-5">
 						<span className="text-sm text-muted-foreground">
 							{selected.size} selecionada(s)
 						</span>
@@ -536,32 +530,28 @@ export function MwbSection({
 							type="button"
 							disabled={pending}
 							onClick={removeSelected}
-							className="min-h-10 rounded-xl bg-red-600 px-3 text-sm font-medium text-white disabled:cursor-not-allowed disabled:opacity-60"
+							className="app-button-danger min-h-10 rounded-xl px-3"
 						>
-							Excluir
+							Excluir selecionadas
 						</button>
 					</div>
 				) : null}
 
 				{filtered.length === 0 ? (
-					<div className="px-4 py-12 text-center">
-						<p className="text-sm font-medium text-foreground">
-							Nenhuma edição neste idioma
-						</p>
-
-						<p className="mt-1 text-sm text-muted-foreground">
-							Importe o arquivo `.jwpub` da Guia de Atividades para cadastrar
-							semanas, seções, partes e cânticos.
-						</p>
+					<div className="app-list-empty m-4 text-center sm:m-5">
+						Nenhuma edição encontrada para esse filtro.
 					</div>
 				) : (
-					<ul className="divide-y divide-border">
+					<ul className="grid gap-4 p-4 sm:p-5">
 						{filtered.map((issue) => {
 							const checked = selected.has(issue.id);
 							const expanded = expandedIssueId === issue.id;
 
 							return (
-								<li key={issue.id} className="px-4 py-4">
+								<li
+									key={issue.id}
+									className="rounded-4xl border border-border bg-card p-4 shadow-sm sm:p-5"
+								>
 									<div className="flex items-start gap-3">
 										{canManage ? (
 											<input
@@ -574,36 +564,34 @@ export function MwbSection({
 											/>
 										) : null}
 
-										<div className="min-w-0 flex-1">
+										<div className="min-w-0 flex-1 space-y-4">
 											<div className="flex flex-wrap items-center gap-2">
-												<span className="inline-flex min-h-8 items-center rounded-full bg-muted px-3 text-label uppercase text-muted-foreground">
-													{issue.symbol}
-												</span>
-
-												<span className="inline-flex min-h-8 items-center rounded-full bg-muted px-3 text-label text-muted-foreground">
+												<span className="app-chip">{issue.symbol}</span>
+												<span className="app-chip">
 													{issue.year ?? "—"}/{formatMonth(issue.month)}
 												</span>
-
-												<span className="inline-flex min-h-8 items-center rounded-full bg-muted px-3 text-label text-muted-foreground">
+												<span className="app-chip">
 													{issue.weeksCount} semana(s)
 												</span>
 											</div>
 
-											<h3 className="mt-2 text-title text-foreground">
-												{issue.title}
-											</h3>
+											<div className="space-y-1">
+												<h3 className="text-title text-foreground">
+													{issue.title}
+												</h3>
 
-											{issue.coverTitle ? (
-												<p className="mt-1 text-sm text-muted-foreground">
-													{issue.coverTitle}
-												</p>
-											) : null}
+												{issue.coverTitle ? (
+													<p className="text-body-sm text-muted-foreground">
+														{issue.coverTitle}
+													</p>
+												) : null}
+											</div>
 
-											<div className="mt-3 flex flex-wrap gap-2">
+											<div className="flex flex-wrap gap-2">
 												<button
 													type="button"
 													disabled={pending}
-													className="min-h-10 rounded-xl border border-border px-3 text-sm font-medium text-foreground disabled:cursor-not-allowed disabled:opacity-60"
+													className="app-button-secondary min-h-10 rounded-2xl"
 													onClick={() =>
 														setExpandedIssueId(expanded ? null : issue.id)
 													}
@@ -619,7 +607,7 @@ export function MwbSection({
 															<button
 																type="button"
 																disabled={pending}
-																className="min-h-10 rounded-xl border border-border px-3 text-sm font-medium text-foreground disabled:cursor-not-allowed disabled:opacity-60"
+																className="app-button-secondary min-h-10 rounded-2xl"
 															>
 																Editar
 															</button>
@@ -629,11 +617,11 @@ export function MwbSection({
 											</div>
 
 											{expanded ? (
-												<div className="mt-3 space-y-3">
+												<div className="space-y-3">
 													{issue.weeks.map((week) => (
 														<article
 															key={week.id}
-															className="rounded-4xl border border-border bg-muted p-3"
+															className="rounded-4xl border border-border bg-muted p-4"
 														>
 															<p className="text-sm font-medium text-foreground">
 																{week.weekLabelRaw ||
@@ -651,15 +639,15 @@ export function MwbSection({
 																	.join(" · ") || "—"}
 															</p>
 
-															<div className="mt-3 space-y-2">
+															<div className="mt-3 space-y-3">
 																{week.sections.map((section) => (
-																	<div key={section.id}>
+																	<div key={section.id} className="space-y-1.5">
 																		<p className="text-label uppercase text-muted-foreground">
 																			{sectionBadge(section.code)} ·{" "}
 																			{section.name}
 																		</p>
 
-																		<ul className="mt-1 space-y-1">
+																		<ul className="space-y-1">
 																			{section.parts.map((part) => (
 																				<li
 																					key={part.id}
@@ -693,7 +681,7 @@ export function MwbSection({
 				)}
 
 				{canManage && totalLocale > 0 ? (
-					<div className="border-t border-border px-4 py-3">
+					<div className="border-t border-border px-4 py-3 sm:px-5">
 						<button
 							type="button"
 							disabled={pending}
@@ -705,7 +693,7 @@ export function MwbSection({
 					</div>
 				) : null}
 			</section>
-		</div>
+		</section>
 	);
 }
 
@@ -729,7 +717,7 @@ function MwbReviewCard({
 	return (
 		<section
 			aria-labelledby="mwb-review-title"
-			className="space-y-3 rounded-4xl border border-amber-200 bg-amber-50/60 p-4 dark:border-amber-900/50 dark:bg-amber-950/20 sm:p-5"
+			className="space-y-3 rounded-4xl border border-amber-200 bg-amber-50/70 p-4 sm:p-5"
 		>
 			<div>
 				<h3 id="mwb-review-title" className="text-title text-foreground">
@@ -745,7 +733,6 @@ function MwbReviewCard({
 			<div className="grid gap-3">
 				<label className="block space-y-1">
 					<span className="text-label text-muted-foreground">Símbolo</span>
-
 					<input
 						type="text"
 						value={draft.symbol}
@@ -756,13 +743,12 @@ function MwbReviewCard({
 								symbol: event.target.value,
 							})
 						}
-						className="min-h-11 w-full rounded-4xl border border-border bg-card px-3 text-sm"
+						className="app-input w-full"
 					/>
 				</label>
 
 				<label className="block space-y-1">
 					<span className="text-label text-muted-foreground">Título</span>
-
 					<input
 						type="text"
 						value={draft.title}
@@ -773,7 +759,7 @@ function MwbReviewCard({
 								title: event.target.value,
 							})
 						}
-						className="min-h-11 w-full rounded-4xl border border-border bg-card px-3 text-sm"
+						className="app-input w-full"
 					/>
 				</label>
 			</div>
@@ -782,12 +768,11 @@ function MwbReviewCard({
 				{draft.weeks.map((week, weekIndex) => (
 					<div
 						key={week.clientKey}
-						className="rounded-4xl border border-border p-3"
+						className="rounded-4xl border border-border bg-card p-3"
 					>
 						<div className="grid gap-2 sm:grid-cols-2">
 							<label className="block space-y-1">
 								<span className="text-xs text-muted-foreground">Início</span>
-
 								<input
 									type="date"
 									value={week.weekStart}
@@ -805,7 +790,6 @@ function MwbReviewCard({
 
 							<label className="block space-y-1">
 								<span className="text-xs text-muted-foreground">Fim</span>
-
 								<input
 									type="date"
 									value={week.weekEnd}
@@ -834,7 +818,6 @@ function MwbReviewCard({
 							).map(([field, label]) => (
 								<label key={field} className="block space-y-1">
 									<span className="text-xs text-muted-foreground">{label}</span>
-
 									<input
 										type="number"
 										min={1}
@@ -858,7 +841,7 @@ function MwbReviewCard({
 							{week.sections.map((section, sectionIndex) => (
 								<div
 									key={section.clientKey}
-									className="rounded-xl border border-border bg-card p-3"
+									className="rounded-xl border border-border bg-muted p-3"
 								>
 									<input
 										type="text"
@@ -872,13 +855,13 @@ function MwbReviewCard({
 												}),
 											)
 										}
-										className="mb-2 min-h-9 w-full rounded-lg border border-border px-2 text-xs font-semibold tracking-wide uppercase"
+										className="mb-2 min-h-10 w-full rounded-xl border border-border bg-card px-3 text-xs font-semibold uppercase tracking-wide"
 									/>
 
 									{section.parts.map((part, partIndex) => (
 										<div
 											key={part.clientKey}
-											className="mb-1 grid gap-1.5 sm:grid-cols-[1fr_5rem]"
+											className="mb-2 grid gap-2 sm:grid-cols-[1fr_5rem]"
 										>
 											<input
 												type="text"
@@ -896,7 +879,7 @@ function MwbReviewCard({
 														),
 													)
 												}
-												className="min-h-9 rounded-lg border border-border px-2 text-sm"
+												className="min-h-10 rounded-xl border border-border bg-card px-3 text-sm"
 											/>
 
 											<input
@@ -926,7 +909,7 @@ function MwbReviewCard({
 														),
 													);
 												}}
-												className="min-h-9 rounded-lg border border-border px-2 text-sm"
+												className="min-h-10 rounded-xl border border-border bg-card px-3 text-sm"
 											/>
 										</div>
 									))}
@@ -942,7 +925,7 @@ function MwbReviewCard({
 					type="button"
 					disabled={pending}
 					onClick={onSave}
-					className="min-h-11 rounded-4xl border border-border px-4 text-sm font-medium disabled:cursor-not-allowed disabled:opacity-60"
+					className="app-button-secondary"
 				>
 					Salvar rascunho
 				</button>
@@ -951,7 +934,7 @@ function MwbReviewCard({
 					type="button"
 					disabled={pending}
 					onClick={onCommit}
-					className="min-h-11 rounded-4xl bg-primary px-4 text-sm font-semibold text-primary-foreground disabled:cursor-not-allowed disabled:opacity-60"
+					className="app-button-primary"
 				>
 					Confirmar e salvar
 				</button>
@@ -960,7 +943,7 @@ function MwbReviewCard({
 					type="button"
 					disabled={pending}
 					onClick={onDiscard}
-					className="min-h-11 rounded-4xl px-4 text-sm font-medium text-destructive disabled:cursor-not-allowed disabled:opacity-60"
+					className="app-button-ghost text-destructive hover:text-destructive"
 				>
 					Descartar
 				</button>

@@ -1,409 +1,411 @@
 "use client";
 
-import { Check, Loader2, Pencil, X } from "lucide-react";
-import { useRouter } from "next/navigation";
-import { useMemo, useState, useTransition } from "react";
-import { Button } from "@/components/ui/button";
+import { Pencil } from "lucide-react";
+import { useState, useTransition } from "react";
+
 import {
 	Dialog,
 	DialogContent,
 	DialogDescription,
-	DialogFooter,
 	DialogHeader,
 	DialogTitle,
 	DialogTrigger,
 } from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
 import type { WatchtowerStudyEntity } from "@/features/meeting-content/domain/entities/watchtower-study";
-import { updateWatchtowerStudyAction } from "@/features/meeting-content/presentation/actions/watchtower.actions";
+
+import { updateWatchtowerStudyAction } from "../actions/watchtower.actions";
 
 type Props = {
 	slug: string;
 	study: WatchtowerStudyEntity;
 	disabled?: boolean;
+	onError?: (message: string | null) => void;
+	onMessage?: (message: string | null) => void;
 };
 
-type FormState = {
-	locale: "pt" | "es";
-	weekLabelRaw: string;
+type EditorState = {
+	title: string;
 	weekStart: string;
 	weekEnd: string;
-	title: string;
-	openingSong: string;
-	closingSong: string;
-	highlightColor: string;
+	weekLabelRaw: string;
 	issueCode: string;
+	openingSongNum: string;
+	closingSongNum: string;
+	highlightColor: string;
 };
 
-function toFormState(study: WatchtowerStudyEntity): FormState {
+function createEditor(study: WatchtowerStudyEntity): EditorState {
 	return {
-		locale: study.locale,
+		title: study.title ?? "",
+		weekStart: study.weekStart ?? "",
+		weekEnd: study.weekEnd ?? "",
 		weekLabelRaw: study.weekLabelRaw ?? "",
-		weekStart: study.weekStart,
-		weekEnd: study.weekEnd,
-		title: study.title,
-		openingSong: String(study.openingSongNum),
-		closingSong: String(study.closingSongNum),
-		highlightColor: study.highlightColor ?? "",
 		issueCode: study.issueCode ?? "",
+		openingSongNum: study.openingSongNum ? String(study.openingSongNum) : "",
+		closingSongNum: study.closingSongNum ? String(study.closingSongNum) : "",
+		highlightColor: study.highlightColor ?? "",
 	};
 }
 
-function validIsoDate(value: string): boolean {
-	const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(value);
-	if (!match) return false;
-
-	const year = Number(match[1]);
-	const month = Number(match[2]);
-	const day = Number(match[3]);
-	const date = new Date(Date.UTC(year, month - 1, day));
-
-	return (
-		date.getUTCFullYear() === year &&
-		date.getUTCMonth() === month - 1 &&
-		date.getUTCDate() === day
-	);
-}
-
-function normalizeColor(value: string): string | null {
-	const color = value.trim();
-	if (!color) return null;
-	if (/^#[0-9A-Fa-f]{6}$/.test(color)) return color.toUpperCase();
-	if (/^[0-9A-Fa-f]{6}$/.test(color)) return `#${color.toUpperCase()}`;
-	return null;
+function normalizeColor(value: string) {
+	const normalized = value.trim().toUpperCase();
+	if (!normalized) return null;
+	const finalValue = normalized.startsWith("#") ? normalized : `#${normalized}`;
+	return /^#[0-9A-F]{6}$/.test(finalValue) ? finalValue : null;
 }
 
 export function WatchtowerEditStudyDialog({
 	slug,
 	study,
 	disabled = false,
+	onError,
+	onMessage,
 }: Props) {
-	const router = useRouter();
 	const [open, setOpen] = useState(false);
-	const [form, setForm] = useState<FormState>(() => toFormState(study));
-	const [error, setError] = useState<string | null>(null);
-	const [isPending, startTransition] = useTransition();
+	const [editor, setEditor] = useState<EditorState>(() => createEditor(study));
+	const [editorError, setEditorError] = useState<string | null>(null);
+	const [pending, startTransition] = useTransition();
 
-	const colorPreview = useMemo(
-		() => normalizeColor(form.highlightColor) ?? "#64748B",
-		[form.highlightColor],
-	);
+	const formDisabled = disabled || pending;
 
-	function openDialog() {
-		setForm(toFormState(study));
-		setError(null);
-		setOpen(true);
-	}
-
-	function closeDialog() {
-		setOpen(false);
-		setError(null);
+	function resetState() {
+		setEditor(createEditor(study));
+		setEditorError(null);
 	}
 
 	function handleOpenChange(nextOpen: boolean) {
-		if (nextOpen) {
-			openDialog();
-			return;
-		}
-		closeDialog();
-	}
-
-	function updateField<K extends keyof FormState>(
-		field: K,
-		value: FormState[K],
-	) {
-		setForm((current) => ({
-			...current,
-			[field]: value,
-		}));
+		if (pending) return;
+		setOpen(nextOpen);
+		if (nextOpen) resetState();
 	}
 
 	function save() {
-		setError(null);
+		const title = editor.title.trim();
+		const weekStart = editor.weekStart.trim();
+		const weekEnd = editor.weekEnd.trim();
+		const openingSongNum = editor.openingSongNum
+			? Number(editor.openingSongNum)
+			: study.openingSongNum;
+		const closingSongNum = editor.closingSongNum
+			? Number(editor.closingSongNum)
+			: study.closingSongNum;
+		const highlightColor = editor.highlightColor.trim()
+			? normalizeColor(editor.highlightColor)
+			: null;
 
-		const openingSong = Number(form.openingSong);
-		const closingSong = Number(form.closingSong);
-		const highlightColor = normalizeColor(form.highlightColor);
-
-		if (!form.title.trim()) {
-			setError("Informe o título do estudo.");
-			return;
-		}
-
-		if (!form.weekLabelRaw.trim()) {
-			setError("Informe o rótulo original da semana.");
-			return;
-		}
-
-		if (!validIsoDate(form.weekStart)) {
-			setError("A data de início deve estar no formato AAAA-MM-DD.");
-			return;
-		}
-
-		if (!validIsoDate(form.weekEnd)) {
-			setError("A data final deve estar no formato AAAA-MM-DD.");
+		if (!title) {
+			setEditorError("Informe o título do estudo.");
 			return;
 		}
 
 		if (
-			!Number.isInteger(openingSong) ||
-			openingSong < 1 ||
-			openingSong > 999
+			!/^\d{4}-\d{2}-\d{2}$/.test(weekStart) ||
+			!/^\d{4}-\d{2}-\d{2}$/.test(weekEnd)
 		) {
-			setError("O cântico inicial deve ser um número entre 1 e 999.");
+			setEditorError("Informe datas válidas para início e fim.");
+			return;
+		}
+
+		if (weekEnd < weekStart) {
+			setEditorError("A data final não pode ser anterior ao início.");
 			return;
 		}
 
 		if (
-			!Number.isInteger(closingSong) ||
-			closingSong < 1 ||
-			closingSong > 999
+			openingSongNum !== null &&
+			(!Number.isInteger(openingSongNum) ||
+				openingSongNum < 1 ||
+				openingSongNum > 999)
 		) {
-			setError("O cântico final deve ser um número entre 1 e 999.");
+			setEditorError("O cântico inicial deve estar entre 1 e 999.");
 			return;
 		}
 
-		if (form.highlightColor.trim() && !highlightColor) {
-			setError("A cor deve estar no formato #RRGGBB, por exemplo #D29632.");
+		if (
+			closingSongNum !== null &&
+			(!Number.isInteger(closingSongNum) ||
+				closingSongNum < 1 ||
+				closingSongNum > 999)
+		) {
+			setEditorError("O cântico final deve estar entre 1 e 999.");
 			return;
 		}
+
+		if (editor.highlightColor.trim() && !highlightColor) {
+			setEditorError("A cor deve estar no formato #RRGGBB.");
+			return;
+		}
+
+		onError?.(null);
+		onMessage?.(null);
 
 		startTransition(async () => {
 			const result = await updateWatchtowerStudyAction(slug, {
 				id: study.id,
-				locale: form.locale,
-				weekLabelRaw: form.weekLabelRaw.trim(),
-				weekStart: form.weekStart,
-				weekEnd: form.weekEnd,
-				title: form.title.trim(),
-				openingSong,
-				closingSong,
+				title,
+				locale: study.locale,
+				weekStart,
+				weekEnd,
+				weekLabelRaw: editor.weekLabelRaw.trim(),
+				issueCode: editor.issueCode.trim() || null,
+				openingSong: openingSongNum ?? 0,
+				closingSong: closingSongNum ?? 0,
 				highlightColor,
-				issueCode: form.issueCode.trim() || null,
 			});
 
 			if (!result.ok) {
-				setError(result.error);
+				setEditorError(result.error);
+				onError?.(result.error);
 				return;
 			}
 
 			setOpen(false);
-			router.refresh();
+			setEditorError(null);
+			onMessage?.("Estudo atualizado com sucesso.");
 		});
 	}
 
 	return (
 		<Dialog open={open} onOpenChange={handleOpenChange}>
 			<DialogTrigger asChild>
-				<Button
+				<button
 					type="button"
-					size="sm"
-					variant="outline"
-					disabled={disabled || isPending}
-					className="h-9 gap-2 rounded-xl"
-					onClick={(event) => {
-						event.preventDefault();
-						openDialog();
-					}}
+					disabled={disabled}
+					className="app-button-secondary min-h-10 rounded-2xl"
 				>
-					<Pencil className="size-4" />
+					<Pencil className="mr-2 size-4" />
 					Editar
-				</Button>
+				</button>
 			</DialogTrigger>
 
-			<DialogContent className="max-h-[90vh] max-w-2xl overflow-y-auto rounded-3xl">
-				<DialogHeader>
-					<DialogTitle>Editar estudo de A Sentinela</DialogTitle>
+			<DialogContent className="app-dialog-content sm:max-w-lg">
+				<DialogHeader className="app-dialog-header">
+					<DialogTitle>Editar estudo</DialogTitle>
 					<DialogDescription>
-						Altere somente este artigo. As alterações serão salvas imediatamente
-						no catálogo global.
+						Atualize as informações principais mantendo consistência entre
+						datas, cânticos e cor de destaque.
 					</DialogDescription>
 				</DialogHeader>
 
-				<div className="grid gap-5 py-2">
+				<div className="app-dialog-body">
 					<div className="grid gap-2">
-						<Label htmlFor={`study-title-${study.id}`}>Título</Label>
-						<Textarea
-							id={`study-title-${study.id}`}
-							value={form.title}
-							onChange={(event) => updateField("title", event.target.value)}
-							className="min-h-20 rounded-2xl"
-							maxLength={500}
-						/>
-					</div>
-
-					<div className="grid gap-2">
-						<Label htmlFor={`study-label-${study.id}`}>
-							Rótulo original da semana
-						</Label>
-						<Input
-							id={`study-label-${study.id}`}
-							value={form.weekLabelRaw}
-							onChange={(event) =>
-								updateField("weekLabelRaw", event.target.value)
-							}
-							className="rounded-xl"
-							maxLength={200}
-							placeholder="28 DE SEPTIEMBRE-4 DE OCTUBRE DE 2026"
-						/>
-					</div>
-
-					<div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-						<div className="grid gap-2">
-							<Label htmlFor={`study-start-${study.id}`}>
-								Início (segunda-feira)
-							</Label>
-							<Input
-								id={`study-start-${study.id}`}
-								type="text"
-								inputMode="numeric"
-								autoComplete="off"
-								placeholder="2026-09-28"
-								maxLength={10}
-								value={form.weekStart}
-								onChange={(event) =>
-									updateField(
-										"weekStart",
-										event.target.value.replace(/[^\d-]/g, "").slice(0, 10),
-									)
-								}
-								className="rounded-xl font-mono"
-							/>
-						</div>
-
-						<div className="grid gap-2">
-							<Label htmlFor={`study-end-${study.id}`}>Fim (domingo)</Label>
-							<Input
-								id={`study-end-${study.id}`}
-								type="text"
-								inputMode="numeric"
-								autoComplete="off"
-								placeholder="2026-10-04"
-								maxLength={10}
-								value={form.weekEnd}
-								onChange={(event) =>
-									updateField(
-										"weekEnd",
-										event.target.value.replace(/[^\d-]/g, "").slice(0, 10),
-									)
-								}
-								className="rounded-xl font-mono"
-							/>
-						</div>
-					</div>
-
-					<div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-						<div className="grid gap-2">
-							<Label htmlFor={`study-opening-song-${study.id}`}>
-								Cântico inicial
-							</Label>
-							<Input
-								id={`study-opening-song-${study.id}`}
-								type="number"
-								min={1}
-								max={999}
-								value={form.openingSong}
-								onChange={(event) =>
-									updateField("openingSong", event.target.value)
-								}
-								className="rounded-xl"
-							/>
-						</div>
-
-						<div className="grid gap-2">
-							<Label htmlFor={`study-closing-song-${study.id}`}>
-								Cântico final
-							</Label>
-							<Input
-								id={`study-closing-song-${study.id}`}
-								type="number"
-								min={1}
-								max={999}
-								value={form.closingSong}
-								onChange={(event) =>
-									updateField("closingSong", event.target.value)
-								}
-								className="rounded-xl"
-							/>
-						</div>
-					</div>
-
-					<div className="grid grid-cols-1 gap-4 sm:grid-cols-[1fr_auto]">
-						<div className="grid gap-2">
-							<Label htmlFor={`study-color-${study.id}`}>Cor de destaque</Label>
-							<Input
-								id={`study-color-${study.id}`}
-								value={form.highlightColor}
-								onChange={(event) =>
-									updateField("highlightColor", event.target.value)
-								}
-								className="rounded-xl font-mono"
-								maxLength={7}
-								placeholder="#D29632"
-							/>
-						</div>
-
-						<div className="grid gap-2">
-							<Label>Prévia</Label>
-							<div
-								className="h-10 w-full min-w-20 rounded-xl border shadow-sm sm:w-20"
-								style={{ backgroundColor: colorPreview }}
-								role="img"
-								aria-label={`Prévia da cor selecionada: ${colorPreview}`}
-							/>
-						</div>
-					</div>
-
-					<div className="grid gap-2">
-						<Label htmlFor={`study-issue-${study.id}`}>Código da revista</Label>
-						<Input
-							id={`study-issue-${study.id}`}
-							value={form.issueCode}
-							onChange={(event) => updateField("issueCode", event.target.value)}
-							className="rounded-xl font-mono"
-							maxLength={64}
-							placeholder="w26.07-S"
-						/>
-					</div>
-
-					{error ? (
-						<div
-							role="alert"
-							className="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700 dark:border-red-950 dark:bg-red-950/30 dark:text-red-300"
+						<label
+							htmlFor="watchtower-title"
+							className="text-label text-muted-foreground"
 						>
-							{error}
+							Título
+						</label>
+						<input
+							id="watchtower-title"
+							value={editor.title}
+							disabled={formDisabled}
+							maxLength={300}
+							onChange={(event) =>
+								setEditor((current) => ({
+									...current,
+									title: event.target.value,
+								}))
+							}
+							className="app-input w-full"
+						/>
+					</div>
+
+					<div className="grid gap-4 sm:grid-cols-2">
+						<div className="grid gap-2">
+							<label
+								htmlFor="watchtower-week-start"
+								className="text-label text-muted-foreground"
+							>
+								Início
+							</label>
+							<input
+								id="watchtower-week-start"
+								type="date"
+								value={editor.weekStart}
+								disabled={formDisabled}
+								onChange={(event) =>
+									setEditor((current) => ({
+										...current,
+										weekStart: event.target.value,
+									}))
+								}
+								className="app-input w-full"
+							/>
 						</div>
+
+						<div className="grid gap-2">
+							<label
+								htmlFor="watchtower-week-end"
+								className="text-label text-muted-foreground"
+							>
+								Fim
+							</label>
+							<input
+								id="watchtower-week-end"
+								type="date"
+								value={editor.weekEnd}
+								disabled={formDisabled}
+								onChange={(event) =>
+									setEditor((current) => ({
+										...current,
+										weekEnd: event.target.value,
+									}))
+								}
+								className="app-input w-full"
+							/>
+						</div>
+					</div>
+
+					<div className="grid gap-2">
+						<label
+							htmlFor="watchtower-week-label"
+							className="text-label text-muted-foreground"
+						>
+							Rótulo da semana
+						</label>
+						<input
+							id="watchtower-week-label"
+							value={editor.weekLabelRaw}
+							disabled={formDisabled}
+							maxLength={150}
+							onChange={(event) =>
+								setEditor((current) => ({
+									...current,
+									weekLabelRaw: event.target.value,
+								}))
+							}
+							className="app-input w-full"
+						/>
+					</div>
+
+					<div className="grid gap-4 sm:grid-cols-2">
+						<div className="grid gap-2">
+							<label
+								htmlFor="watchtower-issue-code"
+								className="text-label text-muted-foreground"
+							>
+								Código da edição
+							</label>
+							<input
+								id="watchtower-issue-code"
+								value={editor.issueCode}
+								disabled={formDisabled}
+								maxLength={40}
+								onChange={(event) =>
+									setEditor((current) => ({
+										...current,
+										issueCode: event.target.value,
+									}))
+								}
+								className="app-input w-full"
+							/>
+						</div>
+
+						<div className="grid gap-2">
+							<label
+								htmlFor="watchtower-highlight-color"
+								className="text-label text-muted-foreground"
+							>
+								Cor de destaque
+							</label>
+							<input
+								id="watchtower-highlight-color"
+								value={editor.highlightColor}
+								disabled={formDisabled}
+								placeholder="#2563EB"
+								maxLength={7}
+								onChange={(event) =>
+									setEditor((current) => ({
+										...current,
+										highlightColor: event.target.value.toUpperCase(),
+									}))
+								}
+								className="app-input w-full uppercase"
+							/>
+						</div>
+					</div>
+
+					<div className="grid gap-4 sm:grid-cols-2">
+						<div className="grid gap-2">
+							<label
+								htmlFor="watchtower-opening-song"
+								className="text-label text-muted-foreground"
+							>
+								Cântico inicial
+							</label>
+							<input
+								id="watchtower-opening-song"
+								type="number"
+								inputMode="numeric"
+								min={1}
+								max={999}
+								value={editor.openingSongNum}
+								disabled={formDisabled}
+								onChange={(event) =>
+									setEditor((current) => ({
+										...current,
+										openingSongNum: event.target.value,
+									}))
+								}
+								className="app-input w-full"
+							/>
+						</div>
+
+						<div className="grid gap-2">
+							<label
+								htmlFor="watchtower-closing-song"
+								className="text-label text-muted-foreground"
+							>
+								Cântico final
+							</label>
+							<input
+								id="watchtower-closing-song"
+								type="number"
+								inputMode="numeric"
+								min={1}
+								max={999}
+								value={editor.closingSongNum}
+								disabled={formDisabled}
+								onChange={(event) =>
+									setEditor((current) => ({
+										...current,
+										closingSongNum: event.target.value,
+									}))
+								}
+								className="app-input w-full"
+							/>
+						</div>
+					</div>
+
+					{editorError ? (
+						<p
+							role="alert"
+							className="rounded-xl border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700"
+						>
+							{editorError}
+						</p>
 					) : null}
 				</div>
 
-				<DialogFooter className="gap-2 sm:gap-0">
-					<Button
+				<div className="app-dialog-footer px-5 py-4">
+					<button
 						type="button"
-						variant="outline"
-						className="rounded-xl"
-						disabled={isPending}
-						onClick={closeDialog}
+						disabled={formDisabled}
+						onClick={() => handleOpenChange(false)}
+						className="app-button-secondary"
 					>
-						<X className="size-4" />
 						Cancelar
-					</Button>
+					</button>
 
-					<Button
+					<button
 						type="button"
-						className="gap-2 rounded-xl"
-						disabled={isPending}
+						disabled={formDisabled}
 						onClick={save}
+						className="app-button-primary"
 					>
-						{isPending ? (
-							<Loader2 className="size-4 animate-spin" />
-						) : (
-							<Check className="size-4" />
-						)}
 						Salvar alterações
-					</Button>
-				</DialogFooter>
+					</button>
+				</div>
 			</DialogContent>
 		</Dialog>
 	);

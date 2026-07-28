@@ -17,6 +17,7 @@ import {
 	deleteAllSongsUseCase,
 	deleteSongsUseCase,
 } from "../../application/use-cases/delete-songs";
+import { discardSongbookImportUseCase } from "../../application/use-cases/discard-songbook-import.use-case";
 import { updateSongUseCase } from "../../application/use-cases/update-song";
 import { updateSongbookImportDraftUseCase } from "../../application/use-cases/update-songbook-import-draft";
 import { createMeetingContentDeps } from "../../infrastructure/composition";
@@ -102,6 +103,27 @@ export async function commitSongbookImportAction(
 		return {
 			ok: false,
 			error: e instanceof Error ? e.message : "Erro ao confirmar",
+		};
+	}
+}
+
+export async function discardSongbookImportAction(
+	slug: string,
+	jobId: string,
+): Promise<ActionResult> {
+	try {
+		await requireMeetingContentManage(slug);
+		const id = JobIdSchema.parse({ jobId }).jobId;
+		const deps = createMeetingContentDeps();
+		const result = await discardSongbookImportUseCase(deps, id);
+		if (!result.ok) return { ok: false, error: result.error };
+
+		revalidateSongs(slug);
+		return { ok: true, data: undefined };
+	} catch (e) {
+		return {
+			ok: false,
+			error: e instanceof Error ? e.message : "Erro ao descartar",
 		};
 	}
 }

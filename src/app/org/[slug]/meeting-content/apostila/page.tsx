@@ -19,6 +19,10 @@ export const metadata: Metadata = {
 	},
 };
 
+function toClientJSON<T>(value: T): T {
+	return JSON.parse(JSON.stringify(value)) as T;
+}
+
 export default async function ApostilaPage({ params }: Props) {
 	const { slug } = await params;
 	const access = await getMeetingContentAccess(slug);
@@ -31,9 +35,9 @@ export default async function ApostilaPage({ params }: Props) {
 		<MwbSection
 			slug={slug}
 			canManage={access.canManage}
-			issues={issues}
-			counts={counts}
-			pendingJob={pendingJob}
+			issues={toClientJSON(issues)}
+			counts={toClientJSON(counts)}
+			pendingJob={pendingJob ? toClientJSON(pendingJob) : null}
 		/>
 	);
 }

@@ -1,18 +1,16 @@
 "use client";
 
-import { Pencil, Plus, X } from "lucide-react";
+import { Pencil, Plus } from "lucide-react";
 import { useMemo, useState, useTransition } from "react";
-import { Button } from "@/components/ui/button";
+import { HiOutlineMagnifyingGlass } from "react-icons/hi2";
+
 import {
 	Dialog,
 	DialogContent,
 	DialogDescription,
-	DialogFooter,
 	DialogHeader,
 	DialogTitle,
 } from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import {
 	type ContentLocale,
 	contentLocaleLabel,
@@ -27,6 +25,7 @@ import {
 	createSongAction,
 	deleteAllSongsAction,
 	deleteSongsAction,
+	discardSongbookImportAction,
 	updateSongAction,
 	updateSongbookImportDraftAction,
 } from "../actions/song.actions";
@@ -47,12 +46,7 @@ type SongEditorState = {
 };
 
 function newSongState(locale: ContentLocale): SongEditorState {
-	return {
-		id: null,
-		number: "",
-		title: "",
-		locale,
-	};
+	return { id: null, number: "", title: "", locale };
 }
 
 function editSongState(song: SongEntity): SongEditorState {
@@ -79,9 +73,7 @@ export function SongsSection({
 	const [pending, startTransition] = useTransition();
 
 	const [editorOpen, setEditorOpen] = useState(false);
-	const [editor, setEditor] = useState<SongEditorState>(() =>
-		newSongState("pt"),
-	);
+	const [editor, setEditor] = useState<SongEditorState>(newSongState("pt"));
 	const [editorError, setEditorError] = useState<string | null>(null);
 
 	const importedDraft = useMemo(() => {
@@ -101,21 +93,15 @@ export function SongsSection({
 
 	function updateDraft(nextDraft: SongbookExtract) {
 		if (!pendingJob) return;
-
-		setLocalDraft({
-			jobId: pendingJob.id,
-			value: nextDraft,
-		});
+		setLocalDraft({ jobId: pendingJob.id, value: nextDraft });
 	}
 
 	const filtered = useMemo(() => {
 		const normalizedQuery = query.trim().toLowerCase();
-
 		return songs
 			.filter((song) => song.locale === locale)
 			.filter((song) => {
 				if (!normalizedQuery) return true;
-
 				return (
 					String(song.number).includes(normalizedQuery) ||
 					song.title.toLowerCase().includes(normalizedQuery)
@@ -144,96 +130,87 @@ export function SongsSection({
 		startTransition(async () => {
 			setError(null);
 			setMessage(null);
-
 			const result = await createAndProcessSongbookImportAction(slug, formData);
-
 			if (!result.ok) {
 				setError(result.error);
 				return;
 			}
-
 			setMessage("Cânticos extraídos. Revise e confirme.");
 		});
 	}
 
 	function saveDraft() {
 		if (!pendingJob || !draft) return;
-
 		startTransition(async () => {
 			setError(null);
-
 			const result = await updateSongbookImportDraftAction(
 				slug,
 				pendingJob.id,
 				draft,
 			);
-
 			if (!result.ok) {
 				setError(result.error);
 				return;
 			}
-
-			setLocalDraft({
-				jobId: pendingJob.id,
-				value: draft,
-			});
+			setLocalDraft({ jobId: pendingJob.id, value: draft });
 			setMessage("Rascunho salvo.");
 		});
 	}
 
 	function commitImport() {
 		if (!pendingJob) return;
-
 		startTransition(async () => {
 			setError(null);
-
 			const result = await commitSongbookImportAction(slug, pendingJob.id);
-
 			if (!result.ok) {
 				setError(result.error);
 				return;
 			}
-
 			setMessage(`${result.data.upserted} cânticos salvos.`);
 			setLocalDraft(null);
 		});
 	}
 
-	function removeSelected() {
-		if (selected.size === 0) return;
+	function discardImport() {
+		if (!pendingJob) return;
+		if (!confirm("Descartar esta importação de cânticos?")) return;
 
 		startTransition(async () => {
 			setError(null);
-
-			const result = await deleteSongsAction(slug, [...selected]);
-
+			const result = await discardSongbookImportAction(slug, pendingJob.id);
 			if (!result.ok) {
 				setError(result.error);
 				return;
 			}
+			setLocalDraft(null);
+			setMessage("Importação descartada.");
+		});
+	}
 
+	function removeSelected() {
+		if (selected.size === 0) return;
+		startTransition(async () => {
+			setError(null);
+			const result = await deleteSongsAction(slug, [...selected]);
+			if (!result.ok) {
+				setError(result.error);
+				return;
+			}
 			setMessage(`${result.data.count} cântico(s) excluído(s).`);
 			setSelected(new Set());
 		});
 	}
 
 	function removeAllLocale() {
-		const confirmed = confirm(
-			`Excluir TODOS os cânticos em ${contentLocaleLabel(locale)}?`,
-		);
-
-		if (!confirmed) return;
-
+		if (!confirm(`Excluir TODOS os cânticos em ${contentLocaleLabel(locale)}?`))
+			return;
 		startTransition(async () => {
 			setError(null);
-
 			const result = await deleteAllSongsAction(slug, locale);
-
 			if (!result.ok) {
 				setError(result.error);
 				return;
 			}
-
 			setMessage(`${result.data.count} cântico(s) excluído(s).`);
 			setSelected(new Set());
 		});
@@ -242,13 +219,8 @@ export function SongsSection({
 	function toggleSelected(songId: string) {
 		setSelected((current) => {
 			const next = new Set(current);
-
-			if (next.has(songId)) {
-				next.delete(songId);
-			} else {
-				next.add(songId);
-			}
-
+			if (next.has(songId)) next.delete(songId);
+			else next.add(songId);
 			return next;
 		});
 	}
@@ -279,7 +251,6 @@ export function SongsSection({
 			setEditorError("Informe um número inteiro entre 1 e 999.");
 			return;
 		}
-
 		if (!title) {
 			setEditorError("Informe o título do cântico.");
 			return;
@@ -288,7 +259,6 @@ export function SongsSection({
 		startTransition(async () => {
 			setEditorError(null);
 			setError(null);
-
 			const result = editor.id
 				? await updateSongAction(slug, {
 						id: editor.id,
@@ -301,12 +271,10 @@ export function SongsSection({
 						title,
 						locale: editor.locale,
 					});
-
 			if (!result.ok) {
 				setEditorError(result.error);
 				return;
 			}
-
 			setEditorOpen(false);
 			setMessage(
 				editor.id
@@ -317,94 +285,102 @@ export function SongsSection({
 	}
 
 	return (
-		<div className="space-y-4">
-			<section className="rounded-4xl border border-border bg-card p-4 shadow-sm sm:p-5">
-				<div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
-					<div>
-						<h2 className="text-headline text-foreground">Cânticos</h2>
-						<p className="mt-1 text-sm text-muted-foreground">
-							{totalLocale} no catálogo · {contentLocaleLabel(locale)}
-						</p>
-					</div>
-
-					<div className="flex flex-wrap gap-2">
-						<label className="sr-only" htmlFor="song-locale">
-							Idioma
-						</label>
-						<select
-							id="song-locale"
-							value={locale}
-							onChange={(event) =>
-								setLocale(event.target.value as ContentLocale)
-							}
-							className="min-h-11 rounded-4xl border border-border bg-card px-3 text-sm"
-						>
-							<option value="pt">Português</option>
-							<option value="es">Español</option>
-						</select>
-
-						{canManage ? (
-							<>
-								<Button
-									type="button"
-									variant="outline"
-									className="min-h-11 rounded-2xl"
-									disabled={pending}
-									onClick={openCreateDialog}
-								>
-									<Plus className="size-4" />
-									Adicionar
-								</Button>
-
-								<label className="inline-flex min-h-11 cursor-pointer items-center justify-center rounded-4xl bg-primary px-4 text-sm font-semibold text-primary-foreground shadow-md">
-									Importar .jwpub
-									<input
-										type="file"
-										accept=".jwpub,application/octet-stream"
-										className="sr-only"
-										disabled={pending}
-										onChange={(event) => {
-											onUpload(event.target.files);
-											event.target.value = "";
-										}}
-									/>
-								</label>
-							</>
-						) : null}
-					</div>
+		<section className="space-y-4">
+			<header className="app-card app-card-body space-y-4">
+				<div className="space-y-1">
+					<p className="app-chip-brand">Cânticos</p>
+					<h2 className="text-headline text-foreground">Cânticos</h2>
+					<p className="text-body-sm text-muted-foreground">
+						Gerencie o catálogo de cânticos por idioma, importe arquivos .jwpub
+						(sjj) e mantenha os números e títulos organizados.
+					</p>
 				</div>
 
-				<div className="mt-4">
-					<label className="sr-only" htmlFor="song-search">
-						Buscar cântico
-					</label>
+				<div className="flex flex-wrap items-center gap-3">
+					<div className="app-segmented">
+						<button
+							type="button"
+							disabled={pending}
+							data-state={locale === "pt" ? "active" : "inactive"}
+							onClick={() => setLocale("pt")}
+							className="app-segmented-item"
+						>
+							Português
+						</button>
+						<button
+							type="button"
+							disabled={pending}
+							data-state={locale === "es" ? "active" : "inactive"}
+							onClick={() => setLocale("es")}
+							className="app-segmented-item"
+						>
+							Español
+						</button>
+					</div>
+
+					<span className="app-chip">
+						{totalLocale} cântico(s) em {contentLocaleLabel(locale)}
+					</span>
+				</div>
+
+				{canManage ? (
+					<div className="flex flex-wrap items-center gap-3">
+						<button
+							type="button"
+							disabled={pending}
+							onClick={openCreateDialog}
+							className="app-button-secondary"
+						>
+							<Plus className="mr-2 size-4" />
+							Adicionar
+						</button>
+
+						<label className="app-button-primary inline-flex cursor-pointer items-center justify-center">
+							Importar .jwpub
+							<input
+								type="file"
+								accept=".jwpub,application/octet-stream"
+								className="sr-only"
+								disabled={pending}
+								onChange={(event) => {
+									onUpload(event.target.files);
+									event.target.value = "";
+								}}
+							/>
+						</label>
+					</div>
+				) : null}
+
+				<div className="app-search">
+					<HiOutlineMagnifyingGlass className="app-search-icon" />
 					<input
 						id="song-search"
 						value={query}
+						disabled={pending}
 						onChange={(event) => setQuery(event.target.value)}
 						placeholder="Buscar por número ou título"
-						className="min-h-11 w-full rounded-4xl border border-border bg-muted px-4 text-sm"
+						className="app-input app-search-input w-full"
 					/>
 				</div>
 
 				{error ? (
-					<p className="mt-3 text-sm text-red-600" role="alert">
+					<p className="app-status-error" role="alert">
 						{error}
 					</p>
 				) : null}
 
 				{message ? (
-					<p className="mt-3 text-sm text-emerald-600" role="status">
+					<p className="app-status-success" role="status">
 						{message}
 					</p>
 				) : null}
 
 				{pending ? (
-					<p className="mt-3 text-sm text-muted-foreground" aria-live="polite">
+					<p className="app-status-info" aria-live="polite">
 						Processando…
 					</p>
 				) : null}
-			</section>
+			</header>
 
 			{canManage && pendingJob && reviewDraft ? (
 				<SongbookReviewCard
@@ -414,6 +390,7 @@ export function SongsSection({
 					onChange={updateDraft}
 					onSave={saveDraft}
 					onCommit={commitImport}
+					onDiscard={discardImport}
 					pending={pending}
 				/>
 			) : null}
@@ -423,86 +400,76 @@ export function SongsSection({
 				className="overflow-hidden rounded-4xl border border-border bg-card shadow-sm"
 			>
 				{canManage && selected.size > 0 ? (
-					<div className="flex flex-wrap items-center gap-2 border-b border-border px-4 py-3">
+					<div className="flex flex-wrap items-center gap-2 border-b border-border px-4 py-3 sm:px-5">
 						<span className="text-sm text-muted-foreground">
 							{selected.size} selecionado(s)
 						</span>
-
-						<Button
+						<button
 							type="button"
-							variant="destructive"
-							size="sm"
 							disabled={pending}
 							onClick={removeSelected}
-							className="rounded-xl"
+							className="app-button-danger min-h-10 rounded-xl px-3"
 						>
 							Excluir selecionados
-						</Button>
+						</button>
 					</div>
 				) : null}
 
 				{filtered.length === 0 ? (
-					<div className="px-4 py-12 text-center">
-						<p className="text-sm font-medium text-foreground">
-							Nenhum cântico neste idioma
-						</p>
-						<p className="mt-1 text-sm text-muted-foreground">
-							Adicione manualmente ou importe o arquivo .jwpub do livro de
-							cânticos (sjj).
-						</p>
+					<div className="app-list-empty m-4 text-center sm:m-5">
+						Nenhum cântico encontrado para esse filtro.
 					</div>
 				) : (
-					<ul className="divide-y divide-border">
+					<ul className="grid gap-4 p-4 sm:p-5">
 						{filtered.map((song) => {
 							const checked = selected.has(song.id);
-							const checkboxId = `song-select-${song.id}`;
 
 							return (
 								<li
 									key={song.id}
-									className="flex min-h-14 items-center gap-3 px-4 py-3 hover:bg-muted"
+									className="rounded-4xl border border-border bg-card p-4 shadow-sm sm:p-5"
 								>
-									{canManage ? (
-										<div className="flex shrink-0 items-center">
+									<div className="flex items-start gap-3">
+										{canManage ? (
 											<input
-												id={checkboxId}
 												type="checkbox"
 												checked={checked}
+												disabled={pending}
 												onChange={() => toggleSelected(song.id)}
-												className="h-4 w-4 rounded border-border"
+												className="mt-1 h-4 w-4 rounded border-border"
+												aria-label={`Selecionar ${song.title}`}
 											/>
-											<label htmlFor={checkboxId} className="sr-only">
-												Selecionar cântico {song.number}: {song.title}
-											</label>
+										) : null}
+
+										<div className="min-w-0 flex-1 space-y-3">
+											<div className="flex flex-wrap items-center gap-2">
+												<span className="app-chip">Nº {song.number}</span>
+												<span className="app-chip">
+													{song.locale === "pt" ? "Português" : "Español"}
+												</span>
+											</div>
+
+											<div className="space-y-1">
+												<h3 className="text-title text-foreground">
+													{song.title}
+												</h3>
+											</div>
+
+											{canManage ? (
+												<div className="flex flex-wrap gap-2">
+													<button
+														type="button"
+														disabled={pending}
+														onClick={() => openEditDialog(song)}
+														className="app-button-secondary min-h-10 rounded-2xl"
+													>
+														<Pencil className="mr-2 size-4" />
+														Editar
+													</button>
+												</div>
+											) : null}
 										</div>
-									) : null}
-
-									<span
-										aria-hidden="true"
-										className="inline-flex h-9 w-12 shrink-0 items-center justify-center rounded-xl bg-muted text-sm font-semibold text-muted-foreground"
-									>
-										{song.number}
-									</span>
-
-									<span className="min-w-0 flex-1 text-sm font-medium text-foreground">
-										{song.title}
-									</span>
-
-									{canManage ? (
-										<Button
-											type="button"
-											size="icon"
-											variant="ghost"
-											className="size-10 shrink-0 rounded-xl"
-											disabled={pending}
-											onClick={() => openEditDialog(song)}
-										>
-											<Pencil className="size-4" />
-											<span className="sr-only">
-												Editar cântico {song.number}
-											</span>
-										</Button>
-									) : null}
+									</div>
 								</li>
 							);
 						})}
@@ -510,14 +477,14 @@ export function SongsSection({
 				)}
 
 				{canManage && totalLocale > 0 ? (
-					<div className="border-t border-border px-4 py-3">
+					<div className="border-t border-border px-4 py-3 sm:px-5">
 						<button
 							type="button"
-							onClick={removeAllLocale}
 							disabled={pending}
-							className="text-sm font-medium text-red-600 disabled:cursor-not-allowed disabled:opacity-60"
+							onClick={removeAllLocale}
+							className="min-h-10 text-sm font-medium text-destructive disabled:cursor-not-allowed disabled:opacity-60"
 						>
-							Excluir todos ({contentLocaleLabel(locale)})
+							Excluir todos · {contentLocaleLabel(locale)}
 						</button>
 					</div>
 				) : null}
@@ -534,7 +501,7 @@ export function SongsSection({
 				onChange={setEditor}
 				onSave={saveSong}
 			/>
-		</div>
+		</section>
 	);
 }
 
@@ -559,8 +526,8 @@ function SongEditorDialog({
 
 	return (
 		<Dialog open={open} onOpenChange={onOpenChange}>
-			<DialogContent className="rounded-3xl sm:max-w-md">
-				<DialogHeader>
+			<DialogContent className="app-dialog-content sm:max-w-md">
+				<DialogHeader className="app-dialog-header">
 					<DialogTitle>
 						{editing ? "Editar cântico" : "Adicionar cântico"}
 					</DialogTitle>
@@ -569,9 +536,14 @@ function SongEditorDialog({
 					</DialogDescription>
 				</DialogHeader>
 
-				<div className="grid gap-4 py-2">
+				<div className="app-dialog-body">
 					<div className="grid gap-2">
-						<Label htmlFor="song-editor-locale">Idioma</Label>
+						<label
+							htmlFor="song-editor-locale"
+							className="text-label text-muted-foreground"
+						>
+							Idioma
+						</label>
 						<select
 							id="song-editor-locale"
 							value={editor.locale}
@@ -582,7 +554,7 @@ function SongEditorDialog({
 									locale: event.target.value as ContentLocale,
 								})
 							}
-							className="min-h-11 rounded-xl border border-border bg-card px-3 text-sm"
+							className="app-input w-full"
 						>
 							<option value="pt">Português</option>
 							<option value="es">Español</option>
@@ -590,8 +562,13 @@ function SongEditorDialog({
 					</div>
 
 					<div className="grid gap-2">
-						<Label htmlFor="song-editor-number">Número</Label>
-						<Input
+						<label
+							htmlFor="song-editor-number"
+							className="text-label text-muted-foreground"
+						>
+							Número
+						</label>
+						<input
 							id="song-editor-number"
 							type="number"
 							inputMode="numeric"
@@ -600,63 +577,60 @@ function SongEditorDialog({
 							value={editor.number}
 							disabled={pending}
 							onChange={(event) =>
-								onChange({
-									...editor,
-									number: event.target.value,
-								})
+								onChange({ ...editor, number: event.target.value })
 							}
-							className="rounded-xl"
+							className="app-input w-full"
 						/>
 					</div>
 
 					<div className="grid gap-2">
-						<Label htmlFor="song-editor-title">Título</Label>
-						<Input
+						<label
+							htmlFor="song-editor-title"
+							className="text-label text-muted-foreground"
+						>
+							Título
+						</label>
+						<input
 							id="song-editor-title"
 							value={editor.title}
 							disabled={pending}
 							maxLength={300}
 							onChange={(event) =>
-								onChange({
-									...editor,
-									title: event.target.value,
-								})
+								onChange({ ...editor, title: event.target.value })
 							}
-							className="rounded-xl"
+							className="app-input w-full"
 						/>
 					</div>
 
 					{error ? (
 						<p
 							role="alert"
-							className="rounded-xl border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700 dark:border-red-950 dark:bg-red-950/30 dark:text-red-300"
+							className="rounded-xl border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700"
 						>
 							{error}
 						</p>
 					) : null}
 				</div>
 
-				<DialogFooter className="gap-2 sm:gap-0">
-					<Button
+				<div className="app-dialog-footer px-5 py-4">
+					<button
 						type="button"
-						variant="outline"
 						disabled={pending}
 						onClick={() => onOpenChange(false)}
-						className="rounded-xl"
+						className="app-button-secondary"
 					>
-						<X className="size-4" />
 						Cancelar
-					</Button>
+					</button>
 
-					<Button
+					<button
 						type="button"
 						disabled={pending}
 						onClick={onSave}
-						className="rounded-xl"
+						className="app-button-primary"
 					>
 						{editing ? "Salvar alterações" : "Adicionar cântico"}
-					</Button>
-				</DialogFooter>
+					</button>
+				</div>
 			</DialogContent>
 		</Dialog>
 	);
@@ -668,6 +642,7 @@ function SongbookReviewCard({
 	onChange,
 	onSave,
 	onCommit,
+	onDiscard,
 	pending,
 }: {
 	job: ContentImportJobEntity;
@@ -675,12 +650,13 @@ function SongbookReviewCard({
 	onChange: (draft: SongbookExtract) => void;
 	onSave: () => void;
 	onCommit: () => void;
+	onDiscard: () => void;
 	pending: boolean;
 }) {
 	return (
 		<section
 			aria-labelledby="song-review-title"
-			className="space-y-3 rounded-4xl border border-amber-200 bg-amber-50/60 p-4 dark:border-amber-900/50 dark:bg-amber-950/20 sm:p-5"
+			className="space-y-3 rounded-4xl border border-amber-200 bg-amber-50/70 p-4 sm:p-5"
 		>
 			<div>
 				<h3 id="song-review-title" className="text-title text-foreground">
@@ -693,88 +669,89 @@ function SongbookReviewCard({
 			</div>
 
 			<ul className="max-h-72 space-y-2 overflow-y-auto rounded-2xl border border-border bg-card p-3">
-				{draft.songs.map((song, index) => (
+				{draft.songs.map((song, idx) => (
 					<li
 						key={song.number}
 						className="grid grid-cols-[4.5rem_minmax(0,1fr)_auto] items-center gap-2"
 					>
-						<label className="sr-only" htmlFor={`draft-number-${index}`}>
-							Número do cântico {index + 1}
-						</label>
 						<input
-							id={`draft-number-${index}`}
 							type="number"
 							min={1}
 							max={999}
 							value={song.number}
+							aria-label={`Número do cântico ${idx + 1}`}
 							disabled={pending}
 							onChange={(event) => {
 								const number = Number(event.target.value);
 								const songs = draft.songs.map((current, currentIndex) =>
-									currentIndex === index ? { ...current, number } : current,
+									currentIndex === idx ? { ...current, number } : current,
 								);
 								onChange({ ...draft, songs });
 							}}
 							className="min-h-10 rounded-xl border border-border px-2 text-sm"
 						/>
 
-						<label className="sr-only" htmlFor={`draft-title-${index}`}>
-							Título do cântico {index + 1}
-						</label>
 						<input
-							id={`draft-title-${index}`}
 							type="text"
 							value={song.title}
+							aria-label={`Título do cântico ${idx + 1}`}
 							disabled={pending}
 							onChange={(event) => {
 								const title = event.target.value;
 								const songs = draft.songs.map((current, currentIndex) =>
-									currentIndex === index ? { ...current, title } : current,
+									currentIndex === idx ? { ...current, title } : current,
 								);
 								onChange({ ...draft, songs });
 							}}
 							className="min-h-10 rounded-xl border border-border px-3 text-sm"
 						/>
 
-						<Button
+						<button
 							type="button"
-							variant="ghost"
 							disabled={pending}
 							onClick={() => {
 								onChange({
 									...draft,
 									songs: draft.songs.filter(
-										(_, currentIndex) => currentIndex !== index,
+										(_, currentIndex) => currentIndex !== idx,
 									),
 								});
 							}}
-							className="min-h-10 rounded-xl px-2 text-sm text-red-600 hover:text-red-700"
+							className="min-h-10 rounded-xl px-2 text-sm text-red-600"
 						>
 							Remover
-						</Button>
+						</button>
 					</li>
 				))}
 			</ul>
 
 			<div className="flex flex-wrap gap-2">
-				<Button
+				<button
 					type="button"
-					variant="outline"
 					disabled={pending}
 					onClick={onSave}
-					className="rounded-2xl"
+					className="app-button-secondary"
 				>
 					Salvar rascunho
-				</Button>
+				</button>
 
-				<Button
+				<button
 					type="button"
 					disabled={pending}
 					onClick={onCommit}
-					className="rounded-2xl"
+					className="app-button-primary"
 				>
 					Confirmar e salvar no catálogo
-				</Button>
+				</button>
+
+				<button
+					type="button"
+					disabled={pending}
+					onClick={onDiscard}
+					className="app-button-ghost text-destructive hover:text-destructive"
+				>
+					Descartar
+				</button>
 			</div>
 		</section>
 	);

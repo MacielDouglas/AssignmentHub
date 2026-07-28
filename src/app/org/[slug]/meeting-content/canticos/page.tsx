@@ -15,6 +15,10 @@ export const metadata: Metadata = {
 	robots: { index: false, follow: false },
 };
 
+function toClientJSON<T>(value: T): T {
+	return JSON.parse(JSON.stringify(value)) as T;
+}
+
 export default async function CanticosPage({ params }: Props) {
 	const { slug } = await params;
 	const access = await getMeetingContentAccess(slug);
@@ -26,9 +30,9 @@ export default async function CanticosPage({ params }: Props) {
 		<SongsSection
 			slug={slug}
 			canManage={access.canManage}
-			songs={items}
-			counts={counts}
-			pendingJob={pendingJob}
+			songs={toClientJSON(items)}
+			counts={toClientJSON(counts)}
+			pendingJob={pendingJob ? toClientJSON(pendingJob) : null}
 		/>
 	);
 }

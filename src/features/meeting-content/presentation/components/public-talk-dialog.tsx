@@ -1,4 +1,5 @@
 "use client";
+//bunda
 
 import { useActionState, useState } from "react";
 
@@ -58,12 +59,6 @@ export function PublicTalkDialog({
 		mode === "create" ? createPublicTalkAction : updatePublicTalkAction;
 
 	const [state, formAction, pending] = useActionState(action, initialState);
-
-	// useEffect(() => {
-	//   if (!state.success) return;
-
-	//   setOpen(false);
-	// }, [state.success]);
 
 	function handleOpenChange(nextOpen: boolean) {
 		if (pending) return;

@@ -1,11 +1,8 @@
-// src/app/org/[slug]/meeting-content/discursos/page.tsx
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 
 import { getMeetingContentAccess } from "@/features/meeting-content/application/services/meeting-content-auth";
-// ajuste o path real do seu list:
 import { listPublicTalksPageData } from "@/features/meeting-content/application/use-cases/list-public-talks-page-data";
-// ou: from ".../queries/get-public-talks-section-data.query"
 import { PublicTalksSection } from "@/features/meeting-content/presentation/components/public-talks-section";
 
 export const metadata: Metadata = {

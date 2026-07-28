@@ -1,31 +1,7 @@
 "use client";
 
-import { useRouter } from "next/navigation";
-import { useMemo, useState, useTransition } from "react";
-import { HiOutlineBookOpen, HiOutlineTrash } from "react-icons/hi2";
+import { useState, useTransition } from "react";
 
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import {
-	AlertDialog,
-	AlertDialogAction,
-	AlertDialogCancel,
-	AlertDialogContent,
-	AlertDialogDescription,
-	AlertDialogFooter,
-	AlertDialogHeader,
-	AlertDialogTitle,
-	AlertDialogTrigger,
-} from "@/components/ui/alert-dialog";
-import { Button } from "@/components/ui/button";
-import { Checkbox } from "@/components/ui/checkbox";
-import { Label } from "@/components/ui/label";
-import {
-	Select,
-	SelectContent,
-	SelectItem,
-	SelectTrigger,
-	SelectValue,
-} from "@/components/ui/select";
 import type { WatchtowerStudyEntity } from "@/features/meeting-content/domain/entities/watchtower-study";
 import type { ContentLocale } from "@/features/meeting-content/domain/values-objects/content-locale";
 import { contentLocaleLabel } from "@/features/meeting-content/domain/values-objects/content-locale";
@@ -41,293 +17,192 @@ type Props = {
 	slug: string;
 	canManage: boolean;
 	studies: WatchtowerStudyEntity[];
-	/** Opcional — se não vier, a tabela filtra sozinha */
-	filterLocale?: ContentLocale;
+	filterLocale: ContentLocale;
 	counts?: { locale: ContentLocale; count: number }[];
+	onError?: (message: string | null) => void;
+	onMessage?: (message: string | null) => void;
+	onPendingChange?: (pending: boolean) => void;
 };
 
 export function WatchtowerStudiesTable({
 	slug,
 	canManage,
 	studies,
-	filterLocale: filterLocaleProp,
+	filterLocale,
+	counts,
+	onError,
+	onMessage,
+	onPendingChange,
 }: Props) {
-	const router = useRouter();
-	const [internalLocale, setInternalLocale] = useState<ContentLocale>(
-		filterLocaleProp ?? "es",
-	);
-	const filterLocale = filterLocaleProp ?? internalLocale;
-
-	const [selected, setSelected] = useState<Set<string>>(() => new Set());
-	const [error, setError] = useState<string | null>(null);
+	const [selected, setSelected] = useState<Set<string>>(new Set());
 	const [pending, startTransition] = useTransition();
 
-	const filtered = useMemo(
-		() => studies.filter((item) => item.locale === filterLocale),
-		[studies, filterLocale],
-	);
+	const filtered = studies.filter((item) => item.locale === filterLocale);
 
-	const allVisibleSelected =
-		filtered.length > 0 && filtered.every((item) => selected.has(item.id));
+	const totalLocale =
+		counts?.find((count) => count.locale === filterLocale)?.count ??
+		filtered.length;
 
-	function toggle(id: string, value: boolean) {
+	function toggle(id: string) {
 		setSelected((prev) => {
 			const next = new Set(prev);
-			if (value) next.add(id);
-			else next.delete(id);
-			return next;
-		});
-	}
-
-	function toggleAllVisible(value: boolean) {
-		setSelected((prev) => {
-			const next = new Set(prev);
-
-			for (const item of filtered) {
-				if (value) next.add(item.id);
-				else next.delete(item.id);
-			}
-
+			if (next.has(id)) next.delete(id);
+			else next.add(id);
 			return next;
 		});
 	}
 
 	function deleteSelected() {
-		setError(null);
+		if (selected.size === 0) return;
+
+		onError?.(null);
+		onMessage?.(null);
+		onPendingChange?.(true);
 
 		startTransition(async () => {
 			const result = await deleteWatchtowerStudiesAction(slug, [...selected]);
+			onPendingChange?.(false);
 
 			if (!result.ok) {
-				setError(result.error);
+				onError?.(result.error);
 				return;
 			}
 
 			setSelected(new Set());
-			router.refresh();
+			onMessage?.(`${result.data.count} estudo(s) excluído(s).`);
 		});
 	}
 
 	function deleteAll() {
-		setError(null);
+		if (
+			!window.confirm(
+				`Excluir TODOS os estudos em ${contentLocaleLabel(filterLocale)}?`,
+			)
+		)
+			return;
+
+		onError?.(null);
+		onMessage?.(null);
+		onPendingChange?.(true);
 
 		startTransition(async () => {
 			const result = await deleteAllWatchtowerStudiesAction(slug, filterLocale);
+			onPendingChange?.(false);
 
 			if (!result.ok) {
-				setError(result.error);
+				onError?.(result.error);
 				return;
 			}
 
 			setSelected(new Set());
-			router.refresh();
+			onMessage?.(`${result.data.count} estudo(s) excluído(s).`);
 		});
 	}
 
 	return (
 		<section
-			aria-labelledby="wt-catalog-title"
-			className="space-y-4 rounded-4xl border border-border bg-card p-4 shadow-sm sm:p-5"
+			aria-label="Lista de estudos"
+			className="overflow-hidden rounded-4xl border border-border bg-card shadow-sm"
 		>
-			<div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-				<header className="space-y-1">
-					<h2 id="wt-catalog-title" className="text-headline text-foreground">
-						Estudos salvos
-					</h2>
-					<p className="text-sm text-muted-foreground">
-						{contentLocaleLabel(filterLocale)} · {filtered.length} registro(s)
-					</p>
-				</header>
-
-				<div className="flex w-full max-w-xs flex-col gap-2 sm:w-auto">
-					<Label htmlFor="filter-locale">Filtrar catálogo</Label>
-					<Select
-						value={filterLocale}
-						onValueChange={(value) => {
-							if (!filterLocaleProp) {
-								setInternalLocale(value as ContentLocale);
-							}
-							setSelected(new Set());
-						}}
-						disabled={Boolean(filterLocaleProp)}
-					>
-						<SelectTrigger id="filter-locale" className="h-11 rounded-2xl">
-							<SelectValue />
-						</SelectTrigger>
-						<SelectContent className="rounded-2xl">
-							<SelectItem value="es">Español</SelectItem>
-							<SelectItem value="pt">Português</SelectItem>
-						</SelectContent>
-					</Select>
-				</div>
-			</div>
-
-			{canManage ? (
-				<div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap">
-					{filtered.length > 0 ? (
-						<div className="flex items-center gap-2 rounded-2xl border border-border px-3 py-2">
-							<Checkbox
-								id="select-all-studies"
-								checked={allVisibleSelected}
-								onCheckedChange={(value) => toggleAllVisible(Boolean(value))}
-								disabled={pending}
-							/>
-							<Label
-								htmlFor="select-all-studies"
-								className="cursor-pointer text-sm font-normal"
-							>
-								Selecionar todos
-							</Label>
-						</div>
-					) : null}
-
-					<Button
+			{canManage && selected.size > 0 ? (
+				<div className="flex flex-wrap items-center gap-2 border-b border-border px-4 py-3 sm:px-5">
+					<span className="text-sm text-muted-foreground">
+						{selected.size} selecionado(s)
+					</span>
+					<button
 						type="button"
-						variant="outline"
-						className="h-11 rounded-2xl"
-						disabled={pending || selected.size === 0}
+						disabled={pending}
 						onClick={deleteSelected}
+						className="app-button-danger min-h-10 rounded-xl px-3"
 					>
-						<HiOutlineTrash className="mr-2 h-4 w-4" />
-						Remover selecionados
-						{selected.size > 0 ? ` (${selected.size})` : ""}
-					</Button>
-
-					<AlertDialog>
-						<AlertDialogTrigger asChild>
-							<Button
-								type="button"
-								variant="destructive"
-								className="h-11 rounded-2xl"
-								disabled={pending || filtered.length === 0}
-							>
-								Remover todos ({filterLocale})
-							</Button>
-						</AlertDialogTrigger>
-						<AlertDialogContent className="rounded-[28px]">
-							<AlertDialogHeader>
-								<AlertDialogTitle>Remover todos os estudos?</AlertDialogTitle>
-								<AlertDialogDescription>
-									Isso apaga permanentemente todos os estudos em{" "}
-									{contentLocaleLabel(filterLocale)}. Esta ação não pode ser
-									desfeita.
-								</AlertDialogDescription>
-							</AlertDialogHeader>
-							<AlertDialogFooter>
-								<AlertDialogCancel className="rounded-2xl">
-									Cancelar
-								</AlertDialogCancel>
-								<AlertDialogAction className="rounded-2xl" onClick={deleteAll}>
-									Confirmar exclusão
-								</AlertDialogAction>
-							</AlertDialogFooter>
-						</AlertDialogContent>
-					</AlertDialog>
+						Excluir selecionados
+					</button>
 				</div>
-			) : null}
-
-			{error ? (
-				<Alert variant="destructive" className="rounded-2xl">
-					<AlertTitle>Erro</AlertTitle>
-					<AlertDescription>{error}</AlertDescription>
-				</Alert>
 			) : null}
 
 			{filtered.length === 0 ? (
-				<article className="rounded-3xl border border-dashed border-border bg-muted p-8 text-center">
-					<div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-4xl bg-muted text-muted-foreground">
-						<HiOutlineBookOpen className="h-6 w-6" />
-					</div>
-					<h3 className="text-title text-foreground">
-						Nenhum estudo cadastrado
-					</h3>
-					<p className="mt-2 text-sm text-muted-foreground">
-						Importe um arquivo .jwpub de A Sentinela / La Atalaya para começar.
-					</p>
-				</article>
+				<div className="app-list-empty m-4 text-center sm:m-5">
+					Nenhum estudo encontrado para esse filtro.
+				</div>
 			) : (
-				<ul className="grid gap-3">
+				<ul className="grid gap-4 p-4 sm:p-5">
 					{filtered.map((study) => {
 						const checked = selected.has(study.id);
 
 						return (
-							<li key={study.id}>
-								<article className="rounded-4xl border border-border bg-muted/80 p-4 shadow-sm transition hover:border-primary/20 hover:bg-card sm:p-5">
-									<div className="flex flex-col gap-4 sm:flex-row sm:items-start">
-										{canManage ? (
-											<div className="pt-1">
-												<Checkbox
-													checked={checked}
-													onCheckedChange={(value) =>
-														toggle(study.id, Boolean(value))
-													}
-													aria-label={`Selecionar ${study.title}`}
+							<li
+								key={study.id}
+								className="rounded-4xl border border-border bg-card p-4 shadow-sm sm:p-5"
+							>
+								<div className="flex items-start gap-3">
+									{canManage ? (
+										<input
+											type="checkbox"
+											checked={checked}
+											disabled={pending}
+											onChange={() => toggle(study.id)}
+											className="mt-1 h-4 w-4 rounded border-border"
+											aria-label={`Selecionar ${study.title}`}
+										/>
+									) : null}
+
+									<div className="min-w-0 flex-1 space-y-3">
+										<div className="flex flex-wrap gap-2">
+											<ContentBadge
+												label={`${study.weekStart} → ${study.weekEnd}`}
+											/>
+											<ContentBadge
+												label={`Cânticos ${study.openingSongNum ?? "—"} / ${study.closingSongNum ?? "—"}`}
+											/>
+											{study.issueCode ? (
+												<ContentBadge label={study.issueCode} />
+											) : null}
+											{study.highlightColor ? (
+												<ContentBadge label={study.highlightColor} />
+											) : null}
+										</div>
+
+										<div className="space-y-1">
+											<h3 className="text-title text-foreground">
+												{study.title}
+											</h3>
+											<p className="text-body-sm text-muted-foreground">
+												{study.weekLabelRaw ||
+													`${study.weekStart} → ${study.weekEnd}`}
+											</p>
+										</div>
+
+										<div className="flex flex-wrap gap-2">
+											{canManage ? (
+												<WatchtowerEditStudyDialog
+													slug={slug}
+													study={study}
 													disabled={pending}
+													onError={onError}
+													onMessage={onMessage}
 												/>
-											</div>
-										) : null}
-
-										<div className="min-w-0 flex-1 space-y-3">
-											<header className="flex flex-wrap items-start justify-between gap-3">
-												<div className="flex min-w-0 flex-1 flex-wrap items-start gap-3">
-													<div
-														className="flex h-11 w-11 shrink-0 items-center justify-center rounded-4xl text-primary-foreground shadow-md"
-														style={{
-															background: study.highlightColor
-																? study.highlightColor
-																: "#2563EB",
-														}}
-														aria-hidden
-													>
-														<HiOutlineBookOpen className="h-5 w-5" />
-													</div>
-
-													<div className="min-w-0">
-														<h3 className="text-title text-foreground">
-															{study.title}
-														</h3>
-														<p className="text-xs text-muted-foreground">
-															{study.weekLabelRaw ??
-																`${study.weekStart} → ${study.weekEnd}`}
-														</p>
-													</div>
-												</div>
-
-												{canManage ? (
-													<div className="shrink-0">
-														<WatchtowerEditStudyDialog
-															slug={slug}
-															study={study}
-															disabled={pending}
-														/>
-													</div>
-												) : null}
-											</header>
-
-											<div className="flex flex-wrap gap-2">
-												<ContentBadge
-													label={`${study.weekStart} → ${study.weekEnd}`}
-													tone="blue"
-												/>
-												<ContentBadge
-													label={`Cânticos ${study.openingSongNum} / ${study.closingSongNum}`}
-													tone="violet"
-												/>
-												{study.issueCode ? (
-													<ContentBadge label={study.issueCode} />
-												) : null}
-												{study.highlightColor ? (
-													<ContentBadge label={study.highlightColor} />
-												) : null}
-											</div>
+											) : null}
 										</div>
 									</div>
-								</article>
+								</div>
 							</li>
 						);
 					})}
 				</ul>
 			)}
+
+			{canManage && totalLocale > 0 ? (
+				<div className="border-t border-border px-4 py-3 sm:px-5">
+					<button
+						type="button"
+						disabled={pending}
+						onClick={deleteAll}
+						className="min-h-10 text-sm font-medium text-destructive disabled:cursor-not-allowed disabled:opacity-60"
+					>
+						Excluir todas · {contentLocaleLabel(filterLocale)}
+					</button>
+				</div>
+			) : null}
 		</section>
 	);
 }

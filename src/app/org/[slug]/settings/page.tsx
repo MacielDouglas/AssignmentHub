@@ -1,9 +1,10 @@
 import { headers } from "next/headers";
 import { notFound } from "next/navigation";
 import { getTranslations } from "next-intl/server";
+import { CleaningSettingsPanel } from "@/features/settings/cleaning/components/cleaning-settings-panel";
 import { loadCleaningSettingsView } from "@/features/settings/cleaning/lib/cleaning-settings";
 import { formatDateInput } from "@/features/settings/lib/year-bounds";
-import { SettingsShell } from "@/features/settings/meetings/components/settings-shell";
+import { MeetingsSettingsPanel } from "@/features/settings/meetings/components/meetings-settings-panel";
 import { loadWeeklyMeetingsView } from "@/features/settings/meetings/lib/meeting-schedule";
 import {
 	SPECIAL_EVENT_TYPES,
@@ -84,14 +85,30 @@ export default async function SettingsPage({
 			: "meetings";
 
 	return (
-		<SettingsShell
-			organizationSlug={membership.organization.slug}
-			organizationName={membership.organization.name}
-			canEdit={canEdit}
-			activeTab={activeTab}
-			weekly={weekly}
-			specialEvents={specialEvents}
-			cleaning={cleaning}
-		/>
+		<>
+			{activeTab === "meetings" ? (
+				<MeetingsSettingsPanel
+					organizationSlug={membership.organization.slug}
+					canEdit={canEdit}
+					weekly={weekly}
+					specialEvents={specialEvents}
+				/>
+			) : null}
+
+			{activeTab === "cleaning" ? (
+				<CleaningSettingsPanel
+					organizationSlug={membership.organization.slug}
+					canEdit={canEdit}
+					cleaning={cleaning}
+				/>
+			) : null}
+
+			{activeTab === "assignments" ? (
+				<section className="rounded-[28px] border border-dashed border-border bg-card p-5 shadow-sm sm:p-6">
+					<h2 className="text-title text-foreground">Designações</h2>
+					<p className="mt-2 text-sm text-muted-foreground">Em breve.</p>
+				</section>
+			) : null}
+		</>
 	);
 }

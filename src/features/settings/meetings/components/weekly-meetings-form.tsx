@@ -81,7 +81,7 @@ export function WeeklyMeetingsForm({
 
 	return (
 		<section className="space-y-4 rounded-4xl border border-border bg-card p-5 shadow-sm sm:p-6">
-			<header className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+			<header className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between sm:gap-6 md:gap-8">
 				<div className="space-y-1">
 					<div className="flex items-center gap-2">
 						<HiOutlineCalendarDays className="h-5 w-5 text-primary" />
@@ -89,14 +89,16 @@ export function WeeklyMeetingsForm({
 					</div>
 					<p className="text-sm text-muted-foreground">{t("description")}</p>
 				</div>
-				<StatusBadge
-					label={
-						weekly.current.scheduleId
-							? t("statusConfigured")
-							: t("statusPending")
-					}
-					tone={weekly.current.scheduleId ? "emerald" : "amber"}
-				/>
+				<div className="shrink-0">
+					<StatusBadge
+						label={
+							weekly.current.scheduleId
+								? t("statusConfigured")
+								: t("statusPending")
+						}
+						tone={weekly.current.scheduleId ? "emerald" : "amber"}
+					/>
+				</div>
 			</header>
 
 			<WeeklyMeetingsFormFields

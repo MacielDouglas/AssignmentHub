@@ -122,7 +122,7 @@ export function CleaningTypeCard({
 
 	return (
 		<section className="space-y-4 rounded-4xl border border-border bg-card p-5 shadow-sm sm:p-6">
-			<header className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+			<header className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between sm:gap-5">
 				<div className="space-y-1">
 					<div className="flex items-center gap-2">
 						<Icon className="h-5 w-5 text-primary" />
@@ -138,10 +138,12 @@ export function CleaningTypeCard({
 								: "Cadastre as datas da limpeza geral no ano."}
 					</p>
 				</div>
-				<StatusBadge
-					label={enabled ? "Ativa" : "Desativada"}
-					tone={enabled ? "emerald" : "amber"}
-				/>
+				<div className="shrink-0">
+					<StatusBadge
+						label={enabled ? "Ativa" : "Desativada"}
+						tone={enabled ? "emerald" : "amber"}
+					/>
+				</div>
 			</header>
 
 			{/* ========== FORM 1: salvar tipo ========== */}

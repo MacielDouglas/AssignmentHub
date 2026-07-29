@@ -11,6 +11,19 @@ import {
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
 
+const GENDER_STYLE = {
+	MALE: {
+		avatar: "bg-blue-100 text-blue-600 ring-blue-200",
+		gender: "text-blue-600",
+		label: "Masculino",
+	},
+	FEMALE: {
+		avatar: "bg-pink-100 text-pink-600 ring-pink-200",
+		gender: "text-pink-600",
+		label: "Feminino",
+	},
+} as const;
+
 type PeoplePageProps = {
 	params: Promise<{ slug: string }>;
 };
@@ -167,57 +180,46 @@ export default async function PeoplePage({ params }: PeoplePageProps) {
 	).length;
 
 	return (
-		<main className="space-y-6">
-			<section className="rounded-4xl border border-border bg-muted p-5 sm:p-6 lg:p-8">
-				<div className="grid gap-6 lg:grid-cols-[1.2fr_0.8fr]">
-					<header className="space-y-3">
-						<h1 className="text-display text-foreground sm:text-3xl">
-							Pessoas e designações.
-						</h1>
-						<p className="max-w-2xl text-sm leading-6 text-muted-foreground sm:text-base">
-							Cadastre pessoas, organize famílias, controle privilégios e
-							designações.
-						</p>
-					</header>
-
-					<div className="grid grid-cols-3 gap-3">
-						<article className="rounded-3xl border border-border bg-card p-4">
-							<p className="text-label text-muted-foreground">Pessoas</p>
-							<p className="mt-2 text-display text-foreground">{totalPeople}</p>
-						</article>
-						<article className="rounded-3xl border border-border bg-card p-4">
-							<p className="text-label text-muted-foreground">Ativas</p>
-							<p className="mt-2 text-display text-foreground">
-								{activePeople}
+		<>
+			{/* Stats summary */}
+			<section className="rounded-4xl border border-border bg-card p-4 shadow-sm sm:p-5">
+				<div className="grid grid-cols-3 gap-2 sm:gap-3">
+					{[
+						{ label: "Pessoas", value: totalPeople },
+						{ label: "Ativas", value: activePeople },
+						{ label: "Famílias", value: familyHeads },
+						{
+							label: "Homens",
+							value: malePeople,
+							accent: "text-blue-600",
+						},
+						{
+							label: "Mulheres",
+							value: femalePeople,
+							accent: "text-pink-600",
+						},
+						{
+							label: "Privilégios",
+							value: servicePeople,
+						},
+					].map((stat) => (
+						<article
+							key={stat.label}
+							className="rounded-3xl border border-border bg-muted/50 p-3 sm:p-4"
+						>
+							<p className="text-label text-muted-foreground">{stat.label}</p>
+							<p
+								className={`mt-1 text-display ${stat.accent ?? "text-foreground"}`}
+							>
+								{stat.value}
 							</p>
 						</article>
-						<article className="rounded-3xl border border-border bg-card p-4">
-							<p className="text-label text-muted-foreground">Famílias</p>
-							<p className="mt-2 text-display text-foreground">{familyHeads}</p>
-						</article>
-						<article className="rounded-3xl border border-border bg-card p-4">
-							<p className="text-label text-muted-foreground">Homens</p>
-							<p className="mt-2 text-display text-foreground">{malePeople}</p>
-						</article>
-						<article className="rounded-3xl border border-border bg-card p-4">
-							<p className="text-label text-muted-foreground">Mulheres</p>
-							<p className="mt-2 text-display text-foreground">
-								{femalePeople}
-							</p>
-						</article>
-						<article className="rounded-3xl border border-border bg-card p-4">
-							<p className="text-label text-muted-foreground">
-								Privilégios de Serviço
-							</p>
-							<p className="mt-2 text-display text-foreground">
-								{servicePeople}
-							</p>
-						</article>
-					</div>
+					))}
 				</div>
 			</section>
 
-			<section className="flex flex-col gap-4 rounded-4xl border border-border bg-card p-4 shadow-md ring-1 ring-border/30 sm:p-5">
+			{/* People list */}
+			<section className="space-y-4">
 				<div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
 					<header className="space-y-1">
 						<h2 className="text-headline text-foreground">
@@ -258,7 +260,7 @@ export default async function PeoplePage({ params }: PeoplePageProps) {
 						</p>
 					</article>
 				) : (
-					<div className="grid gap-4">
+					<div className="space-y-3">
 						{renderedPeople.map(({ person, groupLabel, isHead }) => {
 							const familyMembers =
 								person.familyId || person.headedFamily?.id
@@ -269,115 +271,131 @@ export default async function PeoplePage({ params }: PeoplePageProps) {
 										)?.members ?? [])
 									: [];
 
+							const gender = GENDER_STYLE[person.sex];
+
 							return (
 								<article
 									key={person.id}
-									className="rounded-4xl border border-border bg-muted/50 p-4 shadow-sm transition hover:bg-card sm:p-5"
+									className="rounded-4xl border border-border bg-card p-4 shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-md sm:p-5"
 								>
 									<div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
-										<div className="space-y-4">
-											<header className="space-y-3">
-												<div className="flex flex-wrap items-center gap-2">
-													<div className="flex h-11 w-11 items-center justify-center rounded-3xl bg-muted text-muted-foreground">
-														<HiOutlineUser className="h-5 w-5" />
-													</div>
-
-													<div className="min-w-0">
-														<h3 className="truncate text-title text-foreground">
-															{person.name}
-														</h3>
-														<p className="text-xs text-muted-foreground">
-															{person.sex === "MALE" ? "Masculino" : "Feminino"}
-														</p>
-													</div>
+										<div className="min-w-0 flex-1 space-y-4">
+											{/* Person identity */}
+											<div className="flex items-start gap-3">
+												<div
+													className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-3xl ring-2 ring-inset ${gender.avatar}`}
+												>
+													<HiOutlineUser className="h-5 w-5" />
 												</div>
 
-												<div className="flex flex-wrap gap-2">
-													<span className="inline-flex items-center rounded-full border border-border bg-muted px-3 py-1 text-label text-muted-foreground">
-														{person.isActive ? "Ativo" : "Inativo"}
-													</span>
-													<span className="inline-flex items-center rounded-full border border-border bg-muted px-3 py-1 text-label text-muted-foreground">
-														{person.young ? "Jovem" : "Adulto"}
-													</span>
-													{person.isStudent ? (
-														<span className="inline-flex items-center rounded-full border border-border bg-muted px-3 py-1 text-label text-muted-foreground">
-															Estudante
-														</span>
-													) : null}
-													{person.baptized ? (
-														<span className="inline-flex items-center rounded-full border border-border bg-muted px-3 py-1 text-label text-muted-foreground">
-															Batizado(a)
-														</span>
-													) : null}
-													{person.isMarried ? (
-														<span className="inline-flex items-center rounded-full border border-border bg-muted px-3 py-1 text-label text-muted-foreground">
-															{person.spouse
-																? `Casado(a) com ${person.spouse.name}`
-																: "Casado(a)"}
-														</span>
-													) : null}
-													{groupLabel ? (
-														<span className="inline-flex items-center rounded-full border border-border bg-muted px-3 py-1 text-label text-muted-foreground">
-															{isHead
-																? `Chefe · ${groupLabel}`
-																: `Família · ${groupLabel}`}
-														</span>
-													) : null}
-													{person.user ? (
-														<span className="inline-flex items-center rounded-full border border-border bg-muted px-3 py-1 text-label text-muted-foreground">
-															Com usuário vinculado
-														</span>
-													) : null}
+												<div className="min-w-0">
+													<h3 className="truncate text-title text-foreground">
+														{person.name}
+													</h3>
+													<p className={`text-xs font-medium ${gender.gender}`}>
+														{gender.label}
+													</p>
 												</div>
-											</header>
+											</div>
 
+											{/* Status badges */}
 											<div className="flex flex-wrap gap-2">
-												{person.servicePrivilege?.elder ? (
+												<span className="inline-flex items-center rounded-full border border-border bg-muted px-3 py-1 text-label text-muted-foreground">
+													{person.isActive ? "Ativo" : "Inativo"}
+												</span>
+												<span className="inline-flex items-center rounded-full border border-border bg-muted px-3 py-1 text-label text-muted-foreground">
+													{person.young ? "Jovem" : "Adulto"}
+												</span>
+												{person.isStudent ? (
 													<span className="inline-flex items-center rounded-full border border-border bg-muted px-3 py-1 text-label text-muted-foreground">
-														Ancião
+														Estudante
 													</span>
 												) : null}
-												{person.servicePrivilege?.spiritualGems ? (
+												{person.baptized ? (
 													<span className="inline-flex items-center rounded-full border border-border bg-muted px-3 py-1 text-label text-muted-foreground">
-														Jóias espirituais
+														Batizado(a)
 													</span>
 												) : null}
-												{person.servicePrivilege?.treasuresFromGodsWordTalk ? (
+												{person.isMarried ? (
 													<span className="inline-flex items-center rounded-full border border-border bg-muted px-3 py-1 text-label text-muted-foreground">
-														Discurso Tesouros da Palavra de Deus
+														{person.spouse
+															? `Casado(a) com ${person.spouse.name}`
+															: "Casado(a)"}
 													</span>
 												) : null}
-												{person.servicePrivilege?.publicTalk ? (
+												{groupLabel ? (
 													<span className="inline-flex items-center rounded-full border border-border bg-muted px-3 py-1 text-label text-muted-foreground">
-														Discurso público
+														{isHead
+															? `Chefe · ${groupLabel}`
+															: `Família · ${groupLabel}`}
 													</span>
 												) : null}
-												{person.bibleReading ? (
+												{person.user ? (
 													<span className="inline-flex items-center rounded-full border border-border bg-muted px-3 py-1 text-label text-muted-foreground">
-														Leitura da Bíblia
-													</span>
-												) : null}
-												{person.sound ? (
-													<span className="inline-flex items-center rounded-full border border-border bg-muted px-3 py-1 text-label text-muted-foreground">
-														Som
-													</span>
-												) : null}
-												{person.video ? (
-													<span className="inline-flex items-center rounded-full border border-border bg-muted px-3 py-1 text-label text-muted-foreground">
-														Vídeo
-													</span>
-												) : null}
-												{person.cleaning ? (
-													<span className="inline-flex items-center rounded-full border border-border bg-muted px-3 py-1 text-label text-muted-foreground">
-														Limpeza
-													</span>
-												) : null}
-												{person.privilegePrayer ? (
-													<span className="inline-flex items-center rounded-full border border-border bg-muted px-3 py-1 text-label text-muted-foreground">
-														Oração
+														Com usuário vinculado
 													</span>
 												) : null}
 											</div>
+
+											{/* Service privileges */}
+											{person.servicePrivilege?.elder ||
+											person.servicePrivilege?.spiritualGems ||
+											person.servicePrivilege?.treasuresFromGodsWordTalk ||
+											person.servicePrivilege?.publicTalk ||
+											person.bibleReading ||
+											person.sound ||
+											person.video ||
+											person.cleaning ||
+											person.privilegePrayer ? (
+												<div className="flex flex-wrap gap-2">
+													{person.servicePrivilege?.elder ? (
+														<span className="inline-flex items-center rounded-full border border-border bg-muted px-3 py-1 text-label text-muted-foreground">
+															Ancião
+														</span>
+													) : null}
+													{person.servicePrivilege?.spiritualGems ? (
+														<span className="inline-flex items-center rounded-full border border-border bg-muted px-3 py-1 text-label text-muted-foreground">
+															Jóias espirituais
+														</span>
+													) : null}
+													{person.servicePrivilege
+														?.treasuresFromGodsWordTalk ? (
+														<span className="inline-flex items-center rounded-full border border-border bg-muted px-3 py-1 text-label text-muted-foreground">
+															Discurso Tesouros da Palavra de Deus
+														</span>
+													) : null}
+													{person.servicePrivilege?.publicTalk ? (
+														<span className="inline-flex items-center rounded-full border border-border bg-muted px-3 py-1 text-label text-muted-foreground">
+															Discurso público
+														</span>
+													) : null}
+													{person.bibleReading ? (
+														<span className="inline-flex items-center rounded-full border border-border bg-muted px-3 py-1 text-label text-muted-foreground">
+															Leitura da Bíblia
+														</span>
+													) : null}
+													{person.sound ? (
+														<span className="inline-flex items-center rounded-full border border-border bg-muted px-3 py-1 text-label text-muted-foreground">
+															Som
+														</span>
+													) : null}
+													{person.video ? (
+														<span className="inline-flex items-center rounded-full border border-border bg-muted px-3 py-1 text-label text-muted-foreground">
+															Vídeo
+														</span>
+													) : null}
+													{person.cleaning ? (
+														<span className="inline-flex items-center rounded-full border border-border bg-muted px-3 py-1 text-label text-muted-foreground">
+															Limpeza
+														</span>
+													) : null}
+													{person.privilegePrayer ? (
+														<span className="inline-flex items-center rounded-full border border-border bg-muted px-3 py-1 text-label text-muted-foreground">
+															Oração
+														</span>
+													) : null}
+												</div>
+											) : null}
 										</div>
 
 										<div className="flex w-full flex-col gap-2 lg:w-auto lg:min-w-56">
@@ -401,7 +419,7 @@ export default async function PeoplePage({ params }: PeoplePageProps) {
 														trigger={
 															<button
 																type="button"
-																className="inline-flex h-11 items-center justify-center gap-2 rounded-4xl border border-border bg-card px-4 text-sm font-medium text-foreground"
+																className="inline-flex h-11 w-full items-center justify-center gap-2 rounded-4xl border border-border bg-card px-4 text-sm font-medium text-foreground transition-colors hover:bg-muted lg:w-auto"
 															>
 																Editar
 															</button>
@@ -417,6 +435,6 @@ export default async function PeoplePage({ params }: PeoplePageProps) {
 					</div>
 				)}
 			</section>
-		</main>
+		</>
 	);
 }

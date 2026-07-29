@@ -39,7 +39,7 @@ type Props = {
 	slug: string;
 	partId: string;
 	partTitle: string;
-	role: MeetingAssignmentRole;
+	assignmentRole: MeetingAssignmentRole;
 	trigger: ReactNode;
 };
 
@@ -169,7 +169,7 @@ export function AssignmentDialog({
 	slug,
 	partId,
 	partTitle,
-	role,
+	assignmentRole: role,
 	trigger,
 }: Props) {
 	const [open, setOpen] = useState(false);

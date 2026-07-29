@@ -1,6 +1,7 @@
 "use client";
 
 import type { ReactNode } from "react";
+import { HiOutlineBuildingOffice2 } from "react-icons/hi2";
 import { cn } from "@/lib/utils";
 
 import type {
@@ -83,16 +84,21 @@ function computeStartTimes(
 	return map;
 }
 
-const MIDWEEK_SECTION_KINDS: Record<
-	string,
-	{ label: string; partKinds: string[] }
-> = {
+type MidweekSectionDef = {
+	label: string;
+	displayLabel?: string;
+	color?: string;
+	partKinds: string[];
+};
+
+const MIDWEEK_SECTION_KINDS: Record<string, MidweekSectionDef> = {
 	INTRODUCAO: {
 		label: "Introdução",
 		partKinds: ["MIDWEEK_OPENING_SONG", "MIDWEEK_INTRODUCTION"],
 	},
 	TREASURES: {
 		label: "Tesouros Espirituais",
+		displayLabel: "TESOUROS DA PALAVRA DE DEUS",
 		partKinds: [
 			"MIDWEEK_TREASURES_TALK",
 			"MIDWEEK_SPIRITUAL_GEMS",
@@ -101,6 +107,8 @@ const MIDWEEK_SECTION_KINDS: Record<
 	},
 	MINISTRY: {
 		label: "Ministério",
+		displayLabel: "FAÇA SEU MELHOR NO MINISTÉRIO",
+		color: "#d68f00",
 		partKinds: [
 			"MIDWEEK_MINISTRY_INITIATING_CONVERSATION",
 			"MIDWEEK_MINISTRY_CULTIVATING_INTEREST",
@@ -111,6 +119,8 @@ const MIDWEEK_SECTION_KINDS: Record<
 	},
 	LIVING: {
 		label: "Vida Cristã",
+		displayLabel: "NOSSA VIDA CRISTÃ",
+		color: "#bf2f13",
 		partKinds: [
 			"MIDWEEK_MIDDLE_SONG",
 			"MIDWEEK_LIVING_PART",
@@ -127,6 +137,8 @@ const MIDWEEK_SECTION_KINDS: Record<
 
 type VisualSection = {
 	label: string | null;
+	displayLabel?: string;
+	color?: string;
 	parts: MeetingPartDto[];
 };
 
@@ -150,7 +162,12 @@ function buildMidweekVisualSections(parts: MeetingPartDto[]): VisualSection[] {
 		}
 		if (sectionParts.length > 0) {
 			sectionParts.sort((a, b) => a.sortOrder - b.sortOrder);
-			sections.push({ label: sectionDef.label, parts: sectionParts });
+			sections.push({
+				label: sectionDef.label,
+				displayLabel: sectionDef.displayLabel,
+				color: sectionDef.color,
+				parts: sectionParts,
+			});
 		}
 	}
 
@@ -176,6 +193,43 @@ function buildMidweekVisualSections(parts: MeetingPartDto[]): VisualSection[] {
 	return result;
 }
 
+function SectionHeader({ label, color }: { label: string; color?: string }) {
+	if (color) {
+		return (
+			<div className="flex items-center gap-3">
+				<span
+					className="h-px flex-1"
+					style={{ backgroundColor: `${color}30` }}
+				/>
+				<span
+					className="inline-flex items-center rounded-full border px-3 py-1 text-caption font-semibold uppercase tracking-wider"
+					style={{
+						borderColor: `${color}30`,
+						backgroundColor: `${color}10`,
+						color,
+					}}
+				>
+					{label}
+				</span>
+				<span
+					className="h-px flex-1"
+					style={{ backgroundColor: `${color}30` }}
+				/>
+			</div>
+		);
+	}
+
+	return (
+		<div className="flex items-center gap-3">
+			<span className="h-px flex-1 bg-border" />
+			<span className="inline-flex items-center rounded-full border border-primary/10 bg-primary/8 px-3 py-1 text-caption font-semibold uppercase tracking-wider text-primary">
+				{label}
+			</span>
+			<span className="h-px flex-1 bg-border" />
+		</div>
+	);
+}
+
 export function MeetingProgramCard({
 	slug,
 	program,
@@ -194,66 +248,75 @@ export function MeetingProgramCard({
 			key={part.id}
 			slug={slug}
 			part={part}
-			startTime={startTimes.get(part.id) ?? null}
+			startTime={
+				part.kind === "MIDWEEK_CHAIRMAN"
+					? null
+					: (startTimes.get(part.id) ?? null)
+			}
 			canManage={canManage && !program.isCancelled && !part.isDisabled}
 		/>
 	);
 
 	return (
-		<section className="overflow-hidden rounded-3xl bg-card shadow-sm ring-1 ring-border/40">
-			<div className="relative flex items-center gap-3 border-b border-border/50 bg-gradient-to-b from-background to-muted/20 px-4 py-3.5 sm:px-5 sm:py-4">
+		<section className="overflow-hidden rounded-[28px] bg-card shadow-sm ring-1 ring-border/40">
+			{/* Card header */}
+			<div
+				className={cn(
+					"relative flex items-center gap-3 border-b border-border/50 px-5 py-4 sm:px-6 sm:py-5",
+					isMidweek
+						? "bg-linear-to-br from-primary/8 via-background to-background"
+						: "bg-linear-to-br from-muted/60 via-background to-background",
+				)}
+			>
 				<div
 					className={cn(
-						"flex h-9 w-9 shrink-0 items-center justify-center rounded-2xl sm:h-10 sm:w-10",
+						"flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl sm:h-11 sm:w-11",
 						isMidweek
-							? "bg-primary/10 text-primary"
-							: "bg-muted text-muted-foreground",
+							? "bg-primary text-primary-foreground shadow-sm"
+							: "bg-muted-foreground/10 text-muted-foreground",
 					)}
 				>
-					<svg
-						viewBox="0 0 24 24"
-						fill="none"
-						className="h-4.5 w-4.5 sm:h-5 sm:w-5"
-						stroke="currentColor"
-						strokeWidth={2}
-						aria-hidden="true"
-					>
-						{isMidweek ? (
-							<>
-								<path d="M3 12h3l2-5 3 11 3-8 2 5 3-3v6H3z" />
-								<circle cx="19" cy="5" r="1.5" />
-							</>
-						) : (
-							<>
-								<circle cx="12" cy="12" r="9" />
-								<path d="M12 8v8M8 12h8" />
-							</>
-						)}
-					</svg>
+					{isMidweek ? (
+						<HiOutlineBuildingOffice2 className="h-5 w-5 sm:h-5.5 sm:w-5.5" />
+					) : (
+						<svg
+							viewBox="0 0 24 24"
+							fill="none"
+							className="h-5 w-5 sm:h-5.5 sm:w-5.5"
+							stroke="currentColor"
+							strokeWidth={2}
+							aria-hidden="true"
+						>
+							<circle cx="12" cy="12" r="9" />
+							<path d="M12 8v8M8 12h8" />
+						</svg>
+					)}
 				</div>
 				<div className="min-w-0">
 					<h2 className="text-headline text-foreground">
 						{isMidweek ? "Meio de semana" : "Fim de semana"}
 					</h2>
 					{program.scheduledTime ? (
-						<p className="text-caption text-muted-foreground">
+						<p className="mt-0.5 text-caption text-muted-foreground">
 							{program.scheduledTime}
 						</p>
 					) : null}
 				</div>
 			</div>
 
-			<div className="space-y-5 p-4 sm:p-5">
+			{/* Card body */}
+			<div className="space-y-6 p-5 sm:p-6">
+				{/* Event banner */}
 				{program.isCancelled || program.specialEventTitle ? (
-					<div className="rounded-2xl border border-border/60 bg-muted/30 px-3.5 py-3">
-						<p className="text-title text-foreground">
+					<div className="rounded-2xl border border-amber-200/60 bg-amber-50/80 px-4 py-3">
+						<p className="text-title text-amber-900">
 							{program.isCancelled
 								? (program.cancellationReason ??
 									"Reunião substituída por evento especial")
 								: program.specialEventTitle}
 						</p>
 						{(program.specialEventDate || program.specialEventTime) && (
-							<p className="mt-1 text-body-sm text-muted-foreground">
+							<p className="mt-1 text-body-sm text-amber-800/80">
 								{program.specialEventDate}
 								{program.specialEventTime
 									? ` às ${program.specialEventTime}`
@@ -261,13 +324,14 @@ export function MeetingProgramCard({
 							</p>
 						)}
 						{program.specialEventLocation && (
-							<p className="text-body-sm text-muted-foreground">
+							<p className="text-body-sm text-amber-800/80">
 								{program.specialEventLocation}
 							</p>
 						)}
 					</div>
 				) : null}
 
+				{/* Program sections */}
 				{isMidweek ? (
 					<MidweekSections
 						parts={program.parts}
@@ -281,14 +345,6 @@ export function MeetingProgramCard({
 				)}
 			</div>
 		</section>
-	);
-}
-
-function SectionBadge({ index }: { index: number }) {
-	return (
-		<div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-caption font-semibold text-primary sm:h-5 sm:w-5 sm:rounded-md">
-			{String(index).padStart(2, "0")}
-		</div>
 	);
 }
 
@@ -306,14 +362,14 @@ function MidweekSections({
 			{sections.map((section, i) => (
 				<div key={section.label ?? section.parts[0]?.id ?? i}>
 					{section.label ? (
-						<div className="mb-2.5 flex items-center gap-2.5">
-							<SectionBadge index={i + 1} />
-							<h3 className="text-label font-semibold uppercase tracking-wider text-muted-foreground">
-								{section.label}
-							</h3>
+						<div className="mb-3">
+							<SectionHeader
+								label={section.displayLabel ?? section.label}
+								color={section.color}
+							/>
 						</div>
 					) : null}
-					<div className="space-y-1.5">
+					<div className="space-y-2">
 						{section.parts.map((part) => renderPartRow(part))}
 					</div>
 				</div>
@@ -330,7 +386,6 @@ function WeekendSections({
 	renderPartRow: (part: MeetingPartDto) => ReactNode;
 }) {
 	const groups = groupPartsBySection(parts);
-	let sectionCount = 0;
 
 	return (
 		<div className="space-y-5">
@@ -338,16 +393,12 @@ function WeekendSections({
 				const meta = group.sectionCode ? SECTION_META[group.sectionCode] : null;
 
 				if (meta) {
-					sectionCount++;
 					return (
 						<div key={group.sectionCode}>
-							<div className="mb-2.5 flex items-center gap-2.5">
-								<SectionBadge index={sectionCount} />
-								<h3 className="text-label font-semibold uppercase tracking-wider text-muted-foreground">
-									{meta.label}
-								</h3>
+							<div className="mb-3">
+								<SectionHeader label={meta.label} />
 							</div>
-							<div className="space-y-1.5">
+							<div className="space-y-2">
 								{group.parts.map((part) => renderPartRow(part))}
 							</div>
 						</div>
@@ -357,7 +408,7 @@ function WeekendSections({
 				return (
 					<div
 						key={`standalone-${group.parts[0]?.sortOrder ?? 0}`}
-						className="space-y-1.5"
+						className="space-y-2"
 					>
 						{group.parts.map((part) => renderPartRow(part))}
 					</div>

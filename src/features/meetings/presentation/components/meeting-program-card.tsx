@@ -8,6 +8,7 @@ import type {
 	MeetingPartDto,
 	MeetingProgramDto,
 } from "../../domain/meeting-types";
+import { AssignmentDialog } from "./assignment-dialog";
 import { MeetingPartRow } from "./meeting-part-row";
 
 type SectionMeta = {
@@ -61,27 +62,35 @@ function computeStartTimes(
 	parts: MeetingPartDto[],
 	baseTime: string | null,
 ): Map<string, string> {
-	const map = new Map<string, string>();
-	if (!baseTime) return map;
+	if (!baseTime) return new Map();
 
 	const [h, m] = baseTime.split(":").map(Number);
-	let minutes = h * 60 + m;
+	const shouldAddSixMinutes = parts[4]?.assignments?.[0]?.role === "PRIMARY";
 
-	const sorted = [...parts].sort((a, b) => a.sortOrder - b.sortOrder);
+	const initialMinutes = h * 60 + m + (shouldAddSixMinutes ? 5 : 0);
 
-	for (const part of sorted) {
-		const hrs = Math.floor(minutes / 60);
-		const mins = minutes % 60;
-		map.set(
-			part.id,
-			`${String(hrs).padStart(2, "0")}:${String(mins).padStart(2, "0")}`,
-		);
-		if (part.durationMin != null) {
-			minutes += part.durationMin;
-		}
-	}
+	return [...parts]
+		.sort((a, b) => a.sortOrder - b.sortOrder)
+		.reduce(
+			({ map, minutes }, part) => {
+				const hrs = Math.floor(minutes / 60);
+				const mins = minutes % 60;
 
-	return map;
+				map.set(
+					part.id,
+					`${String(hrs).padStart(2, "0")}:${String(mins).padStart(2, "0")}`,
+				);
+
+				return {
+					map,
+					minutes: minutes + (part.durationMin ?? 0),
+				};
+			},
+			{
+				map: new Map<string, string>(),
+				minutes: initialMinutes,
+			},
+		).map;
 }
 
 type MidweekSectionDef = {
@@ -94,7 +103,11 @@ type MidweekSectionDef = {
 const MIDWEEK_SECTION_KINDS: Record<string, MidweekSectionDef> = {
 	INTRODUCAO: {
 		label: "Introdução",
-		partKinds: ["MIDWEEK_OPENING_SONG", "MIDWEEK_INTRODUCTION"],
+		partKinds: [
+			"MIDWEEK_CHAIRMAN",
+			"MIDWEEK_OPENING_SONG",
+			"MIDWEEK_INTRODUCTION",
+		],
 	},
 	TREASURES: {
 		label: "Tesouros Espirituais",
@@ -143,8 +156,6 @@ type VisualSection = {
 };
 
 function buildMidweekVisualSections(parts: MeetingPartDto[]): VisualSection[] {
-	const standaloneKinds = new Set(["MIDWEEK_DAY", "MIDWEEK_CHAIRMAN"]);
-
 	const byKind = new Map<string, MeetingPartDto[]>();
 	for (const part of parts) {
 		const list = byKind.get(part.kind) ?? [];
@@ -171,26 +182,7 @@ function buildMidweekVisualSections(parts: MeetingPartDto[]): VisualSection[] {
 		}
 	}
 
-	const standaloneParts: MeetingPartDto[] = [];
-	for (const kind of standaloneKinds) {
-		const kindParts = byKind.get(kind);
-		if (kindParts) standaloneParts.push(...kindParts);
-	}
-
-	const chairmanParts = standaloneParts.filter(
-		(p) => p.kind === "MIDWEEK_CHAIRMAN",
-	);
-
-	const result: VisualSection[] = [];
-
-	if (chairmanParts.length > 0) {
-		chairmanParts.sort((a, b) => a.sortOrder - b.sortOrder);
-		result.push({ label: null, parts: chairmanParts });
-	}
-
-	result.push(...sections);
-
-	return result;
+	return sections;
 }
 
 function SectionHeader({ label, color }: { label: string; color?: string }) {
@@ -232,6 +224,8 @@ function SectionHeader({ label, color }: { label: string; color?: string }) {
 
 export function MeetingProgramCard({
 	slug,
+	weekStart,
+	weekEnd,
 	program,
 	canManage,
 	variant,
@@ -248,11 +242,7 @@ export function MeetingProgramCard({
 			key={part.id}
 			slug={slug}
 			part={part}
-			startTime={
-				part.kind === "MIDWEEK_CHAIRMAN"
-					? null
-					: (startTimes.get(part.id) ?? null)
-			}
+			startTime={startTimes.get(part.id) ?? null}
 			canManage={canManage && !program.isCancelled && !part.isDisabled}
 		/>
 	);
@@ -336,6 +326,10 @@ export function MeetingProgramCard({
 					<MidweekSections
 						parts={program.parts}
 						renderPartRow={renderPartRow}
+						baseTime={program.scheduledTime}
+						slug={slug}
+						weekStart={weekStart}
+						weekEnd={weekEnd}
 					/>
 				) : (
 					<WeekendSections
@@ -351,29 +345,151 @@ export function MeetingProgramCard({
 function MidweekSections({
 	parts,
 	renderPartRow,
+	baseTime,
+	slug,
+	weekStart,
+	weekEnd,
 }: {
 	parts: MeetingPartDto[];
 	renderPartRow: (part: MeetingPartDto) => ReactNode;
+	baseTime: string | null;
+	slug: string;
+	weekStart: string;
+	weekEnd: string;
 }) {
 	const sections = buildMidweekVisualSections(parts);
 
 	return (
 		<div className="space-y-5">
-			{sections.map((section, i) => (
-				<div key={section.label ?? section.parts[0]?.id ?? i}>
-					{section.label ? (
-						<div className="mb-3">
-							<SectionHeader
-								label={section.displayLabel ?? section.label}
-								color={section.color}
+			{sections.map((section, i) => {
+				const isIntro = section.label === "Introdução";
+
+				return (
+					<div key={section.label ?? section.parts[0]?.id ?? i}>
+						{section.label ? (
+							<div className={isIntro ? "mb-4" : "mb-3"}>
+								<SectionHeader
+									label={section.displayLabel ?? section.label}
+									color={section.color}
+								/>
+							</div>
+						) : null}
+						{isIntro ? (
+							<MidweekIntroductionSection
+								parts={section.parts}
+								baseTime={baseTime}
+								slug={slug}
+								weekStart={weekStart}
+								weekEnd={weekEnd}
 							/>
-						</div>
-					) : null}
-					<div className="space-y-2">
-						{section.parts.map((part) => renderPartRow(part))}
+						) : (
+							<div className="space-y-1">
+								{section.parts.map((part) => renderPartRow(part))}
+							</div>
+						)}
 					</div>
+				);
+			})}
+		</div>
+	);
+}
+
+function MidweekIntroductionSection({
+	parts,
+	baseTime,
+	slug,
+}: {
+	parts: MeetingPartDto[];
+	baseTime: string | null;
+	slug: string;
+	weekStart: string;
+	weekEnd: string;
+}) {
+	const chairman = parts.find((p) => p.kind === "MIDWEEK_CHAIRMAN");
+	const song = parts.find((p) => p.kind === "MIDWEEK_OPENING_SONG");
+
+	const chairmanAssignment = chairman?.assignments[0];
+
+	function addMinutes(time: string, mins: number) {
+		const [h, m] = time.split(":").map(Number);
+		const total = h * 60 + m + mins;
+		return `${String(Math.floor(total / 60)).padStart(2, "0")}:${String(total % 60).padStart(2, "0")}`;
+	}
+
+	const songTime = baseTime;
+	const introTime = baseTime ? addMinutes(baseTime, 5) : null;
+
+	return (
+		<div className="space-y-1">
+			{/* Presidente */}
+			<div className="flex items-center justify-between">
+				<span className="text-label font-medium text-foreground">
+					Presidente
+				</span>
+				{chairman ? (
+					<AssignmentDialog
+						slug={slug}
+						partId={chairman.id}
+						partTitle={chairman.title}
+						assignmentRole="CHAIRMAN"
+						trigger={
+							<button
+								type="button"
+								className="text-label text-right text-foreground underline decoration-dotted underline-offset-2 hover:decoration-solid"
+							>
+								{chairmanAssignment?.assigneeName ?? "Não designado"}
+							</button>
+						}
+					/>
+				) : null}
+			</div>
+
+			{/* Cântico - Desktop */}
+			<div className="hidden sm:block">
+				<div className="flex items-center gap-3">
+					<span className="text-body-sm text-foreground">
+						{songTime ? <span className="font-medium">{songTime}</span> : null}{" "}
+						Cântico {song?.songNumber}
+						{song?.songTitle ? ` - ${song.songTitle}` : ""} e oração
+					</span>
+					<span className="shrink-0 text-caption text-muted-foreground/60">
+						5 min
+					</span>
 				</div>
-			))}
+			</div>
+
+			{/* Cântico - Mobile */}
+			<div className="sm:hidden">
+				<div className="flex items-center gap-3">
+					<span className="text-body-sm text-foreground">
+						{songTime ? <span className="font-medium">{songTime}</span> : null}{" "}
+						Cântico {song?.songNumber} e oração
+					</span>
+					<span className="shrink-0 text-caption text-muted-foreground/60">
+						5 min
+					</span>
+				</div>
+				{song?.songTitle ? (
+					<p className="mt-0.5 pl-13 text-caption text-muted-foreground sm:pl-0">
+						{song.songTitle}
+					</p>
+				) : null}
+			</div>
+
+			{/* Introdução */}
+			<div>
+				<div className="flex items-center gap-3">
+					<span className="text-body-sm text-foreground">
+						{introTime ? (
+							<span className="font-medium">{introTime}</span>
+						) : null}{" "}
+						Introdução
+					</span>
+					<span className="shrink-0 text-caption text-muted-foreground/60">
+						1 min
+					</span>
+				</div>
+			</div>
 		</div>
 	);
 }

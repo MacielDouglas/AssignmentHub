@@ -218,6 +218,7 @@ export default async function GroupsPage({ params }: GroupsPageProps) {
 									</div>
 
 									<GroupActionsMenu
+										key={group.id}
 										canManage={canManageGroups}
 										organizationSlug={organization.slug}
 										group={{

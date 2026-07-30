@@ -264,6 +264,51 @@ export async function saveWeeklyMeetingsAction(
 					});
 				}
 			}
+
+			// Atualiza scheduledTime dos programas existentes conforme novo horário
+			if (currentScheduleId) {
+				const scheduleRecord = await tx.organizationSchedule.findUnique({
+					where: { id: currentScheduleId },
+					select: { effectiveFrom: true },
+				});
+
+				if (scheduleRecord?.effectiveFrom) {
+					const midweekSlot = currentSlots.find(
+						(s) =>
+							s.weekday === "MONDAY" ||
+							s.weekday === "TUESDAY" ||
+							s.weekday === "WEDNESDAY" ||
+							s.weekday === "THURSDAY" ||
+							s.weekday === "FRIDAY",
+					);
+
+					const weekendSlot = currentSlots.find(
+						(s) => s.weekday === "SATURDAY" || s.weekday === "SUNDAY",
+					);
+
+					if (midweekSlot) {
+						await tx.meetingProgram.updateMany({
+							where: {
+								organizationId: organization.id,
+								kind: "MIDWEEK",
+								weekStart: { gte: scheduleRecord.effectiveFrom },
+							},
+							data: { scheduledTime: midweekSlot.time },
+						});
+					}
+
+					if (weekendSlot) {
+						await tx.meetingProgram.updateMany({
+							where: {
+								organizationId: organization.id,
+								kind: "WEEKEND",
+								weekStart: { gte: scheduleRecord.effectiveFrom },
+							},
+							data: { scheduledTime: weekendSlot.time },
+						});
+					}
+				}
+			}
 		});
 
 		revalidatePath(`/org/${organization.slug}/settings`);

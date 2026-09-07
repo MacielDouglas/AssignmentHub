@@ -20,12 +20,12 @@ Centralizes people, groups, meetings, cleaning schedules, and designations in a 
 
 ## Operating Context
 
-Congregation elders coordinate midweek and weekend meeting programs with rotating assignments, organize field service groups, and manage Kingdom Hall cleaning rosters. The workflow spans a full weekly cycle: import meeting content from JW Library (.jwpub files), review AI-extracted material, assign speakers/readers/chairmen/prayers, generate cleaning rosters with fairness rotation, and export PDFs. Multiple elders and ministerial servants share access with role-based permissions (OWNER/ADMIN/MEMBER).
+Congregation elders coordinate midweek and weekend meeting programs with rotating assignments, organize field service groups, and manage Kingdom Hall cleaning rosters. The workflow spans a full weekly cycle: import meeting content from JW Library (.jwpub files), review extracted material, assign speakers/readers/chairmen/prayers, generate cleaning rosters with fairness rotation, and export PDFs. Multiple elders and ministerial servants share access with role-based permissions (OWNER/ADMIN/MEMBER).
 
 ## Capabilities and Constraints
 
 - Midweek (Apostila/Guia de Atividades) and weekend (Discurso Público + Sentinela) meeting program generation
-- Meeting content catalog: MWB issues, Watchtower studies, songbooks, public talk outlines — imported from .jwpub files with AI-assisted extraction via Groq (llama-3.3-70b-versatile)
+- Meeting content catalog: MWB issues, Watchtower studies, songbooks, public talk outlines — imported from .jwpub files with deterministic structural extraction (ZIP → SQLite, sem IA)
 - Candidate assignment dialog with eligibility filtering (sex, baptized status, service privileges, flags)
 - Cleaning schedule generator with configurable sectors, modes (Person/Family/Group), and fairness rotation
 - Group management with field service group membership
@@ -40,9 +40,9 @@ Congregation elders coordinate midweek and weekend meeting programs with rotatin
 
 ## Brand Commitments
 
-- Product name: **AssignmentHub** — *"Plataforma inteligente para coordenação"*
+- Product name: **AssignmentHub** — *"Plataforma para coordenação"*
 - Contact: contato@assignmenthub.app
-- Values communicated in UI: trust (designações corretas e consistentes), technology (IA e automação), organization (ambiente claro e centralizado)
+- Values communicated in UI: trust (designações corretas e consistentes), technology (automação local), organization (ambiente claro e centralizado)
 - Congregation data is never shared with third parties; data in transit and at rest is encrypted
 
 ## Evidence on Hand
@@ -51,13 +51,13 @@ Congregation elders coordinate midweek and weekend meeting programs with rotatin
 - JW Library .jwpub extraction pipeline (ZIP → SQLite → structured content)
 - Cleaning roster generator with fairness tracking and PDF export
 - Meeting program generator with diff-based upsert
-- AI-assisted content review flow with Groq API
+- Structured content review flow with human approval
 - Full i18n in pt-BR and es
 
 ## Product Principles
 
 1. **One source of truth** — All congregation data lives in a single, structured system rather than scattered across spreadsheets and paper.
-2. **Automate the routine, review the critical** — Let AI handle content extraction and roster generation, but always require human review for imported teaching material and final assignment decisions.
+2. **Automate the routine, review the critical** — Let local automation handle content extraction and roster generation, but always require human review for imported teaching material and final assignment decisions.
 3. **Fairness by design** — Assignment and cleaning rotation algorithms must distribute workload equitably and surface history so elders can avoid overburdening the same people.
 4. **Privacy is non-negotiable** — Congregation data belongs to the congregation. Never share with third parties; encrypt in transit and at rest.
 5. **Every user is a publisher, not a developer** — Elders should be able to run their congregation without technical support. The interface must be clear, forgiving, and self-explanatory.

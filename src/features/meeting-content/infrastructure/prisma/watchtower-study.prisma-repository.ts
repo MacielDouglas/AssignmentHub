@@ -49,6 +49,9 @@ export class PrismaWatchtowerStudyRepository
 		const rows = await db.watchtowerStudy.findMany({
 			where: locale ? { locale } : undefined,
 			orderBy: [{ locale: "asc" }, { weekStart: "desc" }],
+			// ~4 anos de estudos semanais. Trava o egress da página sentinela,
+			// que antes serializava a tabela inteira para o cliente.
+			take: 200,
 			include: {
 				openingSong: { select: { title: true } },
 				closingSong: { select: { title: true } },

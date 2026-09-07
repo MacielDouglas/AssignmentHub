@@ -42,7 +42,7 @@ export default async function WelcomePage() {
 								AssignmentHub
 							</p>
 							<p className="text-xs text-muted-foreground">
-								Workflow, reuniões e IA com confiança
+								Workflow, reuniões e automação com confiança
 							</p>
 						</div>
 					</div>
@@ -78,7 +78,7 @@ export default async function WelcomePage() {
 							<p className="max-w-2xl text-base leading-7 text-muted-foreground">
 								Assim que esse vínculo for criado, você poderá acessar o
 								ambiente da sua organização para gerenciar reuniões, tarefas,
-								pessoas e fluxos apoiados por inteligência artificial.
+								pessoas e fluxos com automação local.
 							</p>
 						</div>
 
@@ -100,7 +100,7 @@ export default async function WelcomePage() {
 								</div>
 								<h2 className="text-title text-foreground">Tecnologia</h2>
 								<p className="mt-2 text-sm leading-6 text-muted-foreground">
-									Automação e IA para apoiar decisões e organizar melhor o
+									Automação local para apoiar decisões e organizar melhor o
 									trabalho.
 								</p>
 							</div>
@@ -169,7 +169,7 @@ export default async function WelcomePage() {
 										className="h-5 w-5 text-primary"
 										aria-hidden="true"
 									/>
-									Fluxo inteligente
+									Fluxo organizado
 								</CardTitle>
 								<CardDescription>
 									Reuniões, tarefas e designações com apoio tecnológico.

@@ -10,7 +10,7 @@ const inter = Inter({ subsets: ["latin"], variable: "--font-sans" });
 export const metadata: Metadata = {
 	title: "AssignmentHub",
 	description:
-		"Organização inteligente de tarefas, reuniões e designações com IA.",
+		"Organização de tarefas, reuniões e designações com automação local.",
 };
 
 export default async function RootLayout({

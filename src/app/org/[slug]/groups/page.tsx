@@ -38,6 +38,7 @@ export default async function GroupsPage({ params }: GroupsPageProps) {
 					name: true,
 					groups: {
 						orderBy: { name: "asc" },
+						take: 100,
 						select: {
 							id: true,
 							name: true,
@@ -52,12 +53,16 @@ export default async function GroupsPage({ params }: GroupsPageProps) {
 							},
 							members: {
 								orderBy: { name: "asc" },
+								take: 200,
 								select: { id: true, name: true },
 							},
 						},
 					},
 					people: {
 						orderBy: { name: "asc" },
+						// Cap de segurança: evita serializar a org inteira 2x
+						// (people + groups) em cada view. Típico <500.
+						take: 1000,
 						select: {
 							id: true,
 							name: true,

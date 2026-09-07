@@ -10,8 +10,7 @@ type Props = {
 
 export const metadata: Metadata = {
 	title: "A Sentinela | Conteúdo das Reuniões",
-	description:
-		"Importe e gerencie estudos de A Sentinela com revisão assistida.",
+	description: "Importe e gerencie estudos de A Sentinela com revisão humana.",
 	robots: {
 		index: false,
 		follow: false,

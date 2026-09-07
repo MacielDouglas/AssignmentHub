@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import { headers } from "next/headers";
 import { notFound } from "next/navigation";
 
@@ -13,6 +14,15 @@ type OrganizationLayoutProps = {
 	params: Promise<{
 		slug: string;
 	}>;
+};
+
+// Dados internos da congregação: bloqueia indexação para evitar
+// egress de bots no Origin (SSR dinâmico sem cache paga por view).
+export const metadata: Metadata = {
+	robots: {
+		index: false,
+		follow: false,
+	},
 };
 
 export default async function OrganizationLayout({

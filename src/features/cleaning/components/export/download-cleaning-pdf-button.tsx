@@ -14,7 +14,6 @@ import type {
 	CleaningPdfI18n,
 	SavedListDetailForPdf,
 } from "@/features/cleaning/lib/cleaning-pdf-types";
-import { downloadCleaningPdf } from "@/features/cleaning/lib/download-cleaning-pdf";
 import type { RosterDraft } from "@/features/cleaning/lib/roster-types";
 
 type Props = {
@@ -96,10 +95,15 @@ export function DownloadCleaningPdfButton({
 		};
 	};
 
-	const handleClick = () => {
+	const handleClick = async () => {
 		setError(null);
 		setBusy(true);
 		try {
+			// Import dinâmico: jspdf (~300KB gzip) só baixa quando o usuário
+			// clica em PDF, não em todo acesso à página de limpeza (LCP/egress).
+			const { downloadCleaningPdf } = await import(
+				"@/features/cleaning/lib/download-cleaning-pdf"
+			);
 			if (draft) {
 				downloadCleaningPdf(
 					buildPdfInputFromDraft(

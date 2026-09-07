@@ -6,8 +6,9 @@ const withNextIntl = createNextIntlPlugin("./src/i18n/request.ts");
 const nextConfig: NextConfig = {
 	experimental: {
 		serverActions: {
-			// PDFs da Sentinela/MWB: 2–15 MB + overhead multipart
-			bodySizeLimit: "200mb",
+			// .jwpub máximo 100MB + overhead multipart. 105mb cobre o legítimo
+			// e bloqueia abuso de 200MB (timeout/OOM/egress no Hobby).
+			bodySizeLimit: "105mb",
 		},
 	},
 };

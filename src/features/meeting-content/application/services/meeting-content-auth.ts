@@ -1,6 +1,7 @@
 import "server-only";
 
 import { headers } from "next/headers";
+import { cache } from "react";
 
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
@@ -12,107 +13,110 @@ export type MeetingContentAccess = {
 	isSuperAdmin: boolean;
 };
 
-export async function getMeetingContentAccess(
-	slug?: string,
-): Promise<MeetingContentAccess | null> {
-	const session = await auth.api.getSession({
-		headers: await headers(),
-	});
+// cache() dedupa dentro do mesmo request: layout + page + queries
+// chamam getMeetingContentAccess(slug) e antes eram 2-3x queries Neon
+// idênticas por view (custo DB + memória provisionada).
+export const getMeetingContentAccess = cache(
+	async (slug?: string): Promise<MeetingContentAccess | null> => {
+		const session = await auth.api.getSession({
+			headers: await headers(),
+		});
 
-	if (!session?.user?.id) {
-		return null;
-	}
+		if (!session?.user?.id) {
+			return null;
+		}
 
-	const user = await db.user.findUnique({
-		where: { id: session.user.id },
-		select: {
-			id: true,
-			systemRole: true,
-		},
-	});
+		const user = await db.user.findUnique({
+			where: { id: session.user.id },
+			select: {
+				id: true,
+				systemRole: true,
+			},
+		});
 
-	if (!user) {
-		return null;
-	}
+		if (!user) {
+			return null;
+		}
 
-	const isSuperAdmin = user.systemRole === "SUPER_ADMIN";
+		const isSuperAdmin = user.systemRole === "SUPER_ADMIN";
 
-	if (!slug) {
+		if (!slug) {
+			if (isSuperAdmin) {
+				return {
+					userId: user.id,
+					organizationId: null,
+					canManage: true,
+					isSuperAdmin: true,
+				};
+			}
+
+			const adminMembership = await db.organizationMembership.findFirst({
+				where: {
+					userId: user.id,
+					role: {
+						in: ["OWNER", "ADMIN"],
+					},
+				},
+				select: {
+					organizationId: true,
+				},
+				orderBy: {
+					createdAt: "asc",
+				},
+			});
+
+			return {
+				userId: user.id,
+				organizationId: adminMembership?.organizationId ?? null,
+				canManage: Boolean(adminMembership),
+				isSuperAdmin: false,
+			};
+		}
+
+		const organization = await db.organization.findUnique({
+			where: { slug },
+			select: {
+				id: true,
+			},
+		});
+
+		if (!organization) {
+			return null;
+		}
+
 		if (isSuperAdmin) {
 			return {
 				userId: user.id,
-				organizationId: null,
+				organizationId: organization.id,
 				canManage: true,
 				isSuperAdmin: true,
 			};
 		}
 
-		const adminMembership = await db.organizationMembership.findFirst({
+		const membership = await db.organizationMembership.findUnique({
 			where: {
-				userId: user.id,
-				role: {
-					in: ["OWNER", "ADMIN"],
+				organizationId_userId: {
+					organizationId: organization.id,
+					userId: user.id,
 				},
 			},
 			select: {
-				organizationId: true,
-			},
-			orderBy: {
-				createdAt: "asc",
+				role: true,
 			},
 		});
 
-		return {
-			userId: user.id,
-			organizationId: adminMembership?.organizationId ?? null,
-			canManage: Boolean(adminMembership),
-			isSuperAdmin: false,
-		};
-	}
+		if (!membership) {
+			return null;
+		}
 
-	const organization = await db.organization.findUnique({
-		where: { slug },
-		select: {
-			id: true,
-		},
-	});
-
-	if (!organization) {
-		return null;
-	}
-
-	if (isSuperAdmin) {
 		return {
 			userId: user.id,
 			organizationId: organization.id,
-			canManage: true,
-			isSuperAdmin: true,
+			canManage: membership.role === "OWNER" || membership.role === "ADMIN",
+			isSuperAdmin: false,
 		};
-	}
-
-	const membership = await db.organizationMembership.findUnique({
-		where: {
-			organizationId_userId: {
-				organizationId: organization.id,
-				userId: user.id,
-			},
-		},
-		select: {
-			role: true,
-		},
-	});
-
-	if (!membership) {
-		return null;
-	}
-
-	return {
-		userId: user.id,
-		organizationId: organization.id,
-		canManage: membership.role === "OWNER" || membership.role === "ADMIN",
-		isSuperAdmin: false,
-	};
-}
+	},
+);
 
 export async function requireMeetingContentManage(slug: string) {
 	const access = await getMeetingContentAccess(slug);

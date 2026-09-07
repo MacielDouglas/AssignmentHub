@@ -142,6 +142,10 @@ async function loadFairnessHistory(
 				list: { organizationId, status: "SAVED" },
 			},
 		},
+		// Trava de segurança: 90 dias em org grande gera milhares de linhas.
+		// 5000 cobre o cenário real e evita agregação JS sem limite (CPU + memória).
+		take: 5000,
+		orderBy: { assignmentDate: { date: "desc" } },
 		select: {
 			personId: true,
 			sectorId: true,

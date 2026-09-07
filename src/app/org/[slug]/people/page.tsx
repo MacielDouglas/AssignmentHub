@@ -53,6 +53,9 @@ export default async function PeoplePage({ params }: PeoplePageProps) {
 					name: true,
 					families: {
 						orderBy: { name: "asc" },
+						// Trava anti-egress: congregação típica tem <500 pessoas.
+						// Sem take, uma org anômala serializaria MBs de RSC por view.
+						take: 500,
 						select: {
 							id: true,
 							name: true,
@@ -63,11 +66,13 @@ export default async function PeoplePage({ params }: PeoplePageProps) {
 									name: true,
 								},
 								orderBy: { name: "asc" },
+								take: 200,
 							},
 						},
 					},
 					people: {
 						orderBy: { name: "asc" },
+						take: 1000,
 						select: {
 							id: true,
 							name: true,
@@ -261,177 +266,183 @@ export default async function PeoplePage({ params }: PeoplePageProps) {
 					</article>
 				) : (
 					<div className="space-y-3">
-						{renderedPeople.map(({ person, groupLabel, isHead }) => {
-							const familyMembers =
-								person.familyId || person.headedFamily?.id
-									? (organization.families.find(
-											(family) =>
-												family.id ===
-												(person.headedFamily?.id ?? person.familyId),
-										)?.members ?? [])
-									: [];
-
-							const gender = GENDER_STYLE[person.sex];
-
-							return (
-								<article
-									key={person.id}
-									className="rounded-4xl border border-border bg-card p-4 shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-md sm:p-5"
-								>
-									<div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
-										<div className="min-w-0 flex-1 space-y-4">
-											{/* Person identity */}
-											<div className="flex items-start gap-3">
-												<div
-													className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-3xl ring-2 ring-inset ${gender.avatar}`}
-												>
-													<HiOutlineUser className="h-5 w-5" />
-												</div>
-
-												<div className="min-w-0">
-													<h3 className="truncate text-title text-foreground">
-														{person.name}
-													</h3>
-													<p className={`text-xs font-medium ${gender.gender}`}>
-														{gender.label}
-													</p>
-												</div>
-											</div>
-
-											{/* Status badges */}
-											<div className="flex flex-wrap gap-2">
-												<span className="inline-flex items-center rounded-full border border-border bg-muted px-3 py-1 text-label text-muted-foreground">
-													{person.isActive ? "Ativo" : "Inativo"}
-												</span>
-												<span className="inline-flex items-center rounded-full border border-border bg-muted px-3 py-1 text-label text-muted-foreground">
-													{person.young ? "Jovem" : "Adulto"}
-												</span>
-												{person.isStudent ? (
-													<span className="inline-flex items-center rounded-full border border-border bg-muted px-3 py-1 text-label text-muted-foreground">
-														Estudante
-													</span>
-												) : null}
-												{person.baptized ? (
-													<span className="inline-flex items-center rounded-full border border-border bg-muted px-3 py-1 text-label text-muted-foreground">
-														Batizado(a)
-													</span>
-												) : null}
-												{person.isMarried ? (
-													<span className="inline-flex items-center rounded-full border border-border bg-muted px-3 py-1 text-label text-muted-foreground">
-														{person.spouse
-															? `Casado(a) com ${person.spouse.name}`
-															: "Casado(a)"}
-													</span>
-												) : null}
-												{groupLabel ? (
-													<span className="inline-flex items-center rounded-full border border-border bg-muted px-3 py-1 text-label text-muted-foreground">
-														{isHead
-															? `Chefe · ${groupLabel}`
-															: `Família · ${groupLabel}`}
-													</span>
-												) : null}
-												{person.user ? (
-													<span className="inline-flex items-center rounded-full border border-border bg-muted px-3 py-1 text-label text-muted-foreground">
-														Com usuário vinculado
-													</span>
-												) : null}
-											</div>
-
-											{/* Service privileges */}
-											{person.servicePrivilege?.elder ||
-											person.servicePrivilege?.spiritualGems ||
-											person.servicePrivilege?.treasuresFromGodsWordTalk ||
-											person.servicePrivilege?.publicTalk ||
-											person.bibleReading ||
-											person.sound ||
-											person.video ||
-											person.cleaning ||
-											person.privilegePrayer ? (
-												<div className="flex flex-wrap gap-2">
-													{person.servicePrivilege?.elder ? (
-														<span className="inline-flex items-center rounded-full border border-border bg-muted px-3 py-1 text-label text-muted-foreground">
-															Ancião
-														</span>
-													) : null}
-													{person.servicePrivilege?.spiritualGems ? (
-														<span className="inline-flex items-center rounded-full border border-border bg-muted px-3 py-1 text-label text-muted-foreground">
-															Jóias espirituais
-														</span>
-													) : null}
-													{person.servicePrivilege
-														?.treasuresFromGodsWordTalk ? (
-														<span className="inline-flex items-center rounded-full border border-border bg-muted px-3 py-1 text-label text-muted-foreground">
-															Discurso Tesouros da Palavra de Deus
-														</span>
-													) : null}
-													{person.servicePrivilege?.publicTalk ? (
-														<span className="inline-flex items-center rounded-full border border-border bg-muted px-3 py-1 text-label text-muted-foreground">
-															Discurso público
-														</span>
-													) : null}
-													{person.bibleReading ? (
-														<span className="inline-flex items-center rounded-full border border-border bg-muted px-3 py-1 text-label text-muted-foreground">
-															Leitura da Bíblia
-														</span>
-													) : null}
-													{person.sound ? (
-														<span className="inline-flex items-center rounded-full border border-border bg-muted px-3 py-1 text-label text-muted-foreground">
-															Som
-														</span>
-													) : null}
-													{person.video ? (
-														<span className="inline-flex items-center rounded-full border border-border bg-muted px-3 py-1 text-label text-muted-foreground">
-															Vídeo
-														</span>
-													) : null}
-													{person.cleaning ? (
-														<span className="inline-flex items-center rounded-full border border-border bg-muted px-3 py-1 text-label text-muted-foreground">
-															Limpeza
-														</span>
-													) : null}
-													{person.privilegePrayer ? (
-														<span className="inline-flex items-center rounded-full border border-border bg-muted px-3 py-1 text-label text-muted-foreground">
-															Oração
-														</span>
-													) : null}
-												</div>
-											) : null}
-										</div>
-
-										<div className="flex w-full flex-col gap-2 lg:w-auto lg:min-w-56">
-											<PersonActionsMenu
-												slug={organization.slug}
-												canManage={canManagePeople}
-												person={{
-													id: person.id,
-													name: person.name,
-													headedFamily: person.headedFamily,
-													user: person.user,
-												}}
-												familyMembers={familyMembers}
-												editTrigger={
-													<PersonFormDialog
-														slug={organization.slug}
-														mode="edit"
-														families={families}
-														peopleOptions={peopleOptions}
-														person={person}
-														trigger={
-															<button
-																type="button"
-																className="inline-flex h-11 w-full items-center justify-center gap-2 rounded-4xl border border-border bg-card px-4 text-sm font-medium text-foreground transition-colors hover:bg-muted lg:w-auto"
-															>
-																Editar
-															</button>
-														}
-													/>
-												}
-											/>
-										</div>
-									</div>
-								</article>
+						{(() => {
+							// Mapa O(1) em vez de .find() por pessoa (era O(P*F)).
+							const membersByFamilyId = new Map(
+								organization.families.map((f) => [f.id, f.members] as const),
 							);
-						})}
+							return renderedPeople.map(({ person, groupLabel, isHead }) => {
+								const familyMembers =
+									person.familyId || person.headedFamily?.id
+										? (membersByFamilyId.get(
+												person.headedFamily?.id ?? person.familyId ?? "",
+											) ?? [])
+										: [];
+
+								const gender = GENDER_STYLE[person.sex];
+
+								return (
+									<article
+										key={person.id}
+										className="rounded-4xl border border-border bg-card p-4 shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-md sm:p-5"
+									>
+										<div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+											<div className="min-w-0 flex-1 space-y-4">
+												{/* Person identity */}
+												<div className="flex items-start gap-3">
+													<div
+														className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-3xl ring-2 ring-inset ${gender.avatar}`}
+													>
+														<HiOutlineUser className="h-5 w-5" />
+													</div>
+
+													<div className="min-w-0">
+														<h3 className="truncate text-title text-foreground">
+															{person.name}
+														</h3>
+														<p
+															className={`text-xs font-medium ${gender.gender}`}
+														>
+															{gender.label}
+														</p>
+													</div>
+												</div>
+
+												{/* Status badges */}
+												<div className="flex flex-wrap gap-2">
+													<span className="inline-flex items-center rounded-full border border-border bg-muted px-3 py-1 text-label text-muted-foreground">
+														{person.isActive ? "Ativo" : "Inativo"}
+													</span>
+													<span className="inline-flex items-center rounded-full border border-border bg-muted px-3 py-1 text-label text-muted-foreground">
+														{person.young ? "Jovem" : "Adulto"}
+													</span>
+													{person.isStudent ? (
+														<span className="inline-flex items-center rounded-full border border-border bg-muted px-3 py-1 text-label text-muted-foreground">
+															Estudante
+														</span>
+													) : null}
+													{person.baptized ? (
+														<span className="inline-flex items-center rounded-full border border-border bg-muted px-3 py-1 text-label text-muted-foreground">
+															Batizado(a)
+														</span>
+													) : null}
+													{person.isMarried ? (
+														<span className="inline-flex items-center rounded-full border border-border bg-muted px-3 py-1 text-label text-muted-foreground">
+															{person.spouse
+																? `Casado(a) com ${person.spouse.name}`
+																: "Casado(a)"}
+														</span>
+													) : null}
+													{groupLabel ? (
+														<span className="inline-flex items-center rounded-full border border-border bg-muted px-3 py-1 text-label text-muted-foreground">
+															{isHead
+																? `Chefe · ${groupLabel}`
+																: `Família · ${groupLabel}`}
+														</span>
+													) : null}
+													{person.user ? (
+														<span className="inline-flex items-center rounded-full border border-border bg-muted px-3 py-1 text-label text-muted-foreground">
+															Com usuário vinculado
+														</span>
+													) : null}
+												</div>
+
+												{/* Service privileges */}
+												{person.servicePrivilege?.elder ||
+												person.servicePrivilege?.spiritualGems ||
+												person.servicePrivilege?.treasuresFromGodsWordTalk ||
+												person.servicePrivilege?.publicTalk ||
+												person.bibleReading ||
+												person.sound ||
+												person.video ||
+												person.cleaning ||
+												person.privilegePrayer ? (
+													<div className="flex flex-wrap gap-2">
+														{person.servicePrivilege?.elder ? (
+															<span className="inline-flex items-center rounded-full border border-border bg-muted px-3 py-1 text-label text-muted-foreground">
+																Ancião
+															</span>
+														) : null}
+														{person.servicePrivilege?.spiritualGems ? (
+															<span className="inline-flex items-center rounded-full border border-border bg-muted px-3 py-1 text-label text-muted-foreground">
+																Jóias espirituais
+															</span>
+														) : null}
+														{person.servicePrivilege
+															?.treasuresFromGodsWordTalk ? (
+															<span className="inline-flex items-center rounded-full border border-border bg-muted px-3 py-1 text-label text-muted-foreground">
+																Discurso Tesouros da Palavra de Deus
+															</span>
+														) : null}
+														{person.servicePrivilege?.publicTalk ? (
+															<span className="inline-flex items-center rounded-full border border-border bg-muted px-3 py-1 text-label text-muted-foreground">
+																Discurso público
+															</span>
+														) : null}
+														{person.bibleReading ? (
+															<span className="inline-flex items-center rounded-full border border-border bg-muted px-3 py-1 text-label text-muted-foreground">
+																Leitura da Bíblia
+															</span>
+														) : null}
+														{person.sound ? (
+															<span className="inline-flex items-center rounded-full border border-border bg-muted px-3 py-1 text-label text-muted-foreground">
+																Som
+															</span>
+														) : null}
+														{person.video ? (
+															<span className="inline-flex items-center rounded-full border border-border bg-muted px-3 py-1 text-label text-muted-foreground">
+																Vídeo
+															</span>
+														) : null}
+														{person.cleaning ? (
+															<span className="inline-flex items-center rounded-full border border-border bg-muted px-3 py-1 text-label text-muted-foreground">
+																Limpeza
+															</span>
+														) : null}
+														{person.privilegePrayer ? (
+															<span className="inline-flex items-center rounded-full border border-border bg-muted px-3 py-1 text-label text-muted-foreground">
+																Oração
+															</span>
+														) : null}
+													</div>
+												) : null}
+											</div>
+
+											<div className="flex w-full flex-col gap-2 lg:w-auto lg:min-w-56">
+												<PersonActionsMenu
+													slug={organization.slug}
+													canManage={canManagePeople}
+													person={{
+														id: person.id,
+														name: person.name,
+														headedFamily: person.headedFamily,
+														user: person.user,
+													}}
+													familyMembers={familyMembers}
+													editTrigger={
+														<PersonFormDialog
+															slug={organization.slug}
+															mode="edit"
+															families={families}
+															peopleOptions={peopleOptions}
+															person={person}
+															trigger={
+																<button
+																	type="button"
+																	className="inline-flex h-11 w-full items-center justify-center gap-2 rounded-4xl border border-border bg-card px-4 text-sm font-medium text-foreground transition-colors hover:bg-muted lg:w-auto"
+																>
+																	Editar
+																</button>
+															}
+														/>
+													}
+												/>
+											</div>
+										</div>
+									</article>
+								);
+							});
+						})()}
 					</div>
 				)}
 			</section>

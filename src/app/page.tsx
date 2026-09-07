@@ -31,7 +31,7 @@ export default async function HomePage() {
 								AssignmentHub
 							</p>
 							<p className="text-xs text-muted-foreground">
-								Reuniões, tarefas e IA com segurança
+								Reuniões, tarefas e automação com segurança
 							</p>
 						</div>
 					</div>
@@ -41,7 +41,7 @@ export default async function HomePage() {
 					<div className="space-y-6">
 						<div className="inline-flex items-center gap-2 border border-primary/20 bg-primary/10 px-3 py-1.5 text-label uppercase text-primary">
 							<HiOutlineSparkles className="h-4 w-4" aria-hidden="true" />
-							Plataforma inteligente para coordenação
+							Plataforma para coordenação
 						</div>
 
 						<div className="space-y-4">
@@ -53,8 +53,7 @@ export default async function HomePage() {
 							<p className="max-w-2xl text-base leading-7 text-muted-foreground">
 								O AssignmentHub foi criado para apoiar o gerenciamento de
 								tarefas, reuniões e fluxos organizacionais com uma experiência
-								moderna, segura e preparada para recursos de inteligência
-								artificial.
+								moderna, segura e com automação local.
 							</p>
 						</div>
 
@@ -76,7 +75,7 @@ export default async function HomePage() {
 								</div>
 								<h2 className="text-title text-foreground">Tecnologia</h2>
 								<p className="mt-2 text-sm leading-6 text-muted-foreground">
-									IA e automação para reduzir trabalho manual e melhorar o
+									Automação local para reduzir trabalho manual e melhorar o
 									fluxo.
 								</p>
 							</div>
@@ -130,7 +129,7 @@ export default async function HomePage() {
 
 								<div className="border border-border bg-background p-4">
 									<p className="font-medium text-foreground">
-										3. Redirecionamento inteligente
+										3. Redirecionamento automático
 									</p>
 									<p className="mt-1">
 										Você segue para a sua organização ou para a página de

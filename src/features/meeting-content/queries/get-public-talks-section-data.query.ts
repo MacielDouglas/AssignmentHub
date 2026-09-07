@@ -51,7 +51,8 @@ export async function getPublicTalksSectionData(params: {
 	locale?: "pt" | "es";
 	search?: string;
 }): Promise<PublicTalksSectionData> {
-	const search = params.search?.trim();
+	// Limita busca para evitar query lenta no Postgres (custo Neon + CPU).
+	const search = params.search?.trim().slice(0, 64);
 
 	const [rawTalks, people, subPeople] = await Promise.all([
 		db.publicTalk.findMany({
@@ -95,7 +96,9 @@ export async function getPublicTalksSectionData(params: {
 				histories: {
 					where: { organizationId: params.organizationId },
 					orderBy: [{ performedAt: "desc" }, { createdAt: "desc" }],
-					take: 10,
+					// 3 últimos bastam para o preview da lista; histórico completo
+					// fica na visão de detalhe. Reduz ~70% do payload Flight/egress.
+					take: 3,
 					select: {
 						id: true,
 						performedAt: true,

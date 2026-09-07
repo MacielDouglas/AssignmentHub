@@ -4,6 +4,9 @@ import { revalidatePath } from "next/cache";
 import { getTranslations } from "next-intl/server";
 import { z } from "zod";
 
+import { splitSessionDatesByBlockedWeeks } from "@/features/cleaning/lib/blocked-weeks";
+import { listCleaningBlockingEvents } from "@/features/cleaning/lib/blocking-events";
+
 import type { SettingsActionState } from "@/features/settings/actions/settings-action-state";
 import { requireSettingsManager } from "@/features/settings/actions/settings-auth";
 import { parseDateInput } from "@/features/settings/lib/year-bounds";
@@ -95,6 +98,21 @@ export async function saveCleaningListAction(
 		return { success: false, message: t("overlap") };
 	}
 
+	// Trava server-side: semanas de Congresso/Assembleia não têm limpeza,
+	// mesmo que o cliente envie essas datas.
+	const blockingEvents = await listCleaningBlockingEvents(
+		authz.organization.id,
+	);
+	const split = splitSessionDatesByBlockedWeeks(
+		parsed.data.days.map((d) => ({ date: d.date })),
+		blockingEvents,
+	);
+	const blockedSet = new Set(split.blockedDates.map((b) => b.date));
+	const days = parsed.data.days.filter((d) => !blockedSet.has(d.date));
+	if (days.length === 0) {
+		return { success: false, message: t("allBlocked") };
+	}
+
 	try {
 		await db.$transaction(async (tx) => {
 			let targetListId = listId;
@@ -137,7 +155,7 @@ export async function saveCleaningListAction(
 				targetListId = list.id;
 			}
 
-			for (const day of parsed.data.days) {
+			for (const day of days) {
 				const date = parseDateInput(day.date);
 				if (!date) continue;
 

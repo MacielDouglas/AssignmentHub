@@ -82,6 +82,9 @@
 		"errNoMeetingDays": "Configura los días de reunión en Configuración.",
 		"errNoWeeklyDays": "Configura los días de la limpieza semanal.",
 		"errNoDates": "Ninguna fecha de limpieza en este período.",
+		"errAllBlocked": "Todas las fechas caen en semanas de evento (Congreso/Asamblea) — sin limpieza.",
+		"blockedTitle": "Semanas con evento (sin limpieza)",
+		"blockedRow": "{from} a {to} · {label}",
 		"updateTable": "Actualizar tabla"
 	},
 	"CleaningBoard": {
@@ -131,7 +134,8 @@
 		"success": "Tabla de limpieza guardada.",
 		"updated": "Tabla de limpieza actualizada.",
 		"failed": "No se pudo guardar la tabla de limpieza.",
-		"notFound": "Tabla no encontrada."
+		"notFound": "Tabla no encontrada.",
+		"allBlocked": "Todas las fechas caen en semanas de evento (sin limpieza)."
 	},
 	"CleaningListManage": {
 		"invalidRequest": "Solicitud no válida.",
@@ -150,6 +154,10 @@
 	"CleaningSession": {
 		"meetingWithTime": "Reunión {time}",
 		"meeting": "Reunión",
+		"midweek": "Reunión de mitad de semana",
+		"midweekWithTime": "Mitad de semana · {time}",
+		"weekend": "Reunión de fin de semana",
+		"weekendWithTime": "Fin de semana · {time}",
 		"weekly": "Limpieza semanal",
 		"general": "Limpieza general"
 	},

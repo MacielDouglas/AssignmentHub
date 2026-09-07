@@ -1,8 +1,13 @@
+import type { BlockingEvent } from "@/features/cleaning/lib/blocking-events";
 import type {
 	EligiblePerson,
 	FairnessHistory,
 } from "@/features/cleaning/lib/roster-types";
-import type { CleaningType, Weekday } from "@/generated/prisma/client";
+import type {
+	CleaningType,
+	MeetingKind,
+	Weekday,
+} from "@/generated/prisma/client";
 
 export type SavedListSummary = {
 	id: string;
@@ -50,15 +55,17 @@ export type CleaningPageData = {
 			scheduleId: string | null;
 			effectiveFrom: string | null;
 			effectiveUntil: string | null;
-			slots: Array<{ weekday: Weekday; time: string }>;
+			slots: Array<{ weekday: Weekday; time: string; kind: MeetingKind }>;
 		};
 		nextYear: {
 			year: number;
 			scheduleId: string | null;
-			slots: Array<{ weekday: Weekday; time: string }>;
+			slots: Array<{ weekday: Weekday; time: string; kind: MeetingKind }>;
 		};
 	};
 	people: EligiblePerson[];
 	history: FairnessHistory;
 	savedLists: SavedListSummary[];
+	/** Congresso e Assembleias: semanas com esses eventos não têm limpeza. */
+	blockingEvents: BlockingEvent[];
 };

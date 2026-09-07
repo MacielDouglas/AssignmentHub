@@ -3,7 +3,7 @@ import {
 	startOfCivilYear,
 	todayUtcDateOnly,
 } from "@/features/settings/lib/year-bounds";
-import type { Weekday } from "@/generated/prisma/client";
+import type { MeetingKind, Weekday } from "@/generated/prisma/client";
 import { db } from "@/lib/db";
 
 const WEEKDAY_JS: Record<number, Weekday> = {
@@ -152,6 +152,8 @@ export async function getMeetingSlotsForDate(
 export type WeeklyMeetingDraft = {
 	weekday: Weekday;
 	time: string;
+	/** Meio x fim de semana (meio = sortOrder 0 quando kind ausente). */
+	kind: MeetingKind;
 };
 
 export type WeeklyMeetingsView = {
@@ -222,17 +224,21 @@ export async function loadWeeklyMeetingsView(
 			scheduleId: current?.id ?? null,
 			effectiveFrom: current?.effectiveFrom ?? null,
 			effectiveUntil: current?.effectiveUntil ?? null,
-			slots: (current?.weeklyRules ?? []).map((r) => ({
+			// kind é posicional (sortOrder 0 = meio, 1 = fim) — funciona com
+			// ou sem a coluna kind no banco.
+			slots: (current?.weeklyRules ?? []).map((r, i) => ({
 				weekday: r.weekday,
 				time: r.time,
+				kind: (i === 0 ? "MIDWEEK" : "WEEKEND") as MeetingKind,
 			})),
 		},
 		nextYear: {
 			year: nextYear,
 			scheduleId: next?.id ?? null,
-			slots: (next?.weeklyRules ?? []).map((r) => ({
+			slots: (next?.weeklyRules ?? []).map((r, i) => ({
 				weekday: r.weekday,
 				time: r.time,
+				kind: (i === 0 ? "MIDWEEK" : "WEEKEND") as MeetingKind,
 			})),
 		},
 	};

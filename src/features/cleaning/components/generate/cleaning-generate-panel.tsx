@@ -14,6 +14,8 @@ import { Label } from "@/components/ui/label";
 import { StatusBadge } from "@/components/ui/status-badge";
 import { saveCleaningListAction } from "@/features/cleaning/actions/save-cleaning-list-action";
 import { RosterEditor } from "@/features/cleaning/components/editor/roster-editor";
+import type { BlockedWeek } from "@/features/cleaning/lib/blocked-weeks";
+import { splitSessionDatesByBlockedWeeks } from "@/features/cleaning/lib/blocked-weeks";
 import type { CleaningPageData } from "@/features/cleaning/lib/cleaning-page-data";
 import { generateRoster } from "@/features/cleaning/lib/generate-roster";
 import type { RosterDraft } from "@/features/cleaning/lib/roster-types";
@@ -25,7 +27,11 @@ import {
 	toDateKey,
 	weeklySessionDates,
 } from "@/features/cleaning/lib/session-dates";
-import type { CleaningType, Weekday } from "@/generated/prisma/client";
+import type {
+	CleaningType,
+	MeetingKind,
+	Weekday,
+} from "@/generated/prisma/client";
 import { DownloadCleaningPdfButton } from "../export/download-cleaning-pdf-button";
 
 type Props = {
@@ -71,6 +77,7 @@ export function CleaningGeneratePanel({
 	const meetingSlots = data.weeklyMeetings.current.slots.map((s) => ({
 		weekday: s.weekday,
 		time: s.time,
+		kind: s.kind,
 	}));
 
 	const applyPreset = (id: (typeof PRESET_IDS)[number]) => {
@@ -95,6 +102,17 @@ export function CleaningGeneratePanel({
 	};
 
 	const generalOptions = typeView?.dates ?? [];
+
+	const meetingDateLabel = (
+		kind: MeetingKind | undefined,
+		time: string,
+	): string => {
+		if (kind === "MIDWEEK")
+			return time ? tSession("midweekWithTime", { time }) : tSession("midweek");
+		if (kind === "WEEKEND")
+			return time ? tSession("weekendWithTime", { time }) : tSession("weekend");
+		return time ? tSession("meetingWithTime", { time }) : tSession("meeting");
+	};
 
 	const handleGenerate = () => {
 		setError(null);
@@ -126,9 +144,7 @@ export function CleaningGeneratePanel({
 			}
 			sessionDates = meetingSessionDates(from, to, meetingSlots).map((s) => ({
 				date: s.date,
-				label: s.time
-					? tSession("meetingWithTime", { time: s.time })
-					: tSession("meeting"),
+				label: meetingDateLabel(s.kind, s.time),
 			}));
 		} else if (type === "WEEKLY") {
 			const wds = (typeView?.weekdays ?? []) as Weekday[];
@@ -161,6 +177,18 @@ export function CleaningGeneratePanel({
 			return;
 		}
 
+		// Semanas de Congresso/Assembleia não têm limpeza (reuniões + eventos).
+		const split = splitSessionDatesByBlockedWeeks(
+			sessionDates,
+			data.blockingEvents,
+		);
+		if (split.active.length === 0) {
+			setError(
+				split.blockedWeeks.length > 0 ? t("errAllBlocked") : t("errNoDates"),
+			);
+			return;
+		}
+
 		const next = generateRoster({
 			cleaningType: type,
 			periodFrom: from,
@@ -168,11 +196,11 @@ export function CleaningGeneratePanel({
 			keepFamilyTogether: true,
 			sectors,
 			people: data.people,
-			sessionDates,
+			sessionDates: split.active,
 			history: data.history,
 		});
 
-		onDraftChange(next);
+		onDraftChange({ ...next, blockedWeeks: split.blockedWeeks });
 	};
 
 	const handleSave = () => {
@@ -261,6 +289,18 @@ export function CleaningGeneratePanel({
 				</div>
 
 				{error ? <p className="text-sm text-red-600">{error}</p> : null}
+
+				<BlockedWeeksBanner
+					blockedWeeks={draft.blockedWeeks ?? []}
+					title={t("blockedTitle")}
+					formatRow={(w) =>
+						t("blockedRow", {
+							from: formatShortDate(w.weekStart),
+							to: formatShortDate(w.weekEnd),
+							label: w.label,
+						})
+					}
+				/>
 
 				<RosterEditor draft={draft} onChange={onDraftChange} />
 			</div>
@@ -414,6 +454,35 @@ export function CleaningGeneratePanel({
 			>
 				{t("createTable")}
 			</Button>
+		</div>
+	);
+}
+
+function formatShortDate(iso: string): string {
+	const [y, m, d] = iso.split("-");
+	return `${d}/${m}/${y}`;
+}
+
+function BlockedWeeksBanner({
+	blockedWeeks,
+	title,
+	formatRow,
+}: {
+	blockedWeeks: BlockedWeek[];
+	title: string;
+	formatRow: (w: BlockedWeek) => string;
+}) {
+	if (blockedWeeks.length === 0) return null;
+	return (
+		<div className="space-y-2 rounded-3xl border border-amber-200 bg-amber-50 px-4 py-3 dark:border-amber-900 dark:bg-amber-950/40">
+			<p className="text-sm font-medium text-amber-800 dark:text-amber-200">
+				{title}
+			</p>
+			<ul className="space-y-1 text-xs text-amber-700 dark:text-amber-300">
+				{blockedWeeks.map((w) => (
+					<li key={w.weekStart}>{formatRow(w)}</li>
+				))}
+			</ul>
 		</div>
 	);
 }

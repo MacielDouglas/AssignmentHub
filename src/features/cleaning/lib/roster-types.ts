@@ -46,6 +46,8 @@ export type RosterDraft = {
 	sectors: RosterSector[];
 	people: EligiblePerson[];
 	listId?: string | null;
+	/** Semanas puladas por Congresso/Assembleia — só exibição, não salva. */
+	blockedWeeks?: Array<{ weekStart: string; weekEnd: string; label: string }>;
 };
 
 export type GenerateRosterInput = {

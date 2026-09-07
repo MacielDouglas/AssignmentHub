@@ -1,4 +1,4 @@
-import type { Weekday } from "@/generated/prisma/client";
+import type { MeetingKind, Weekday } from "@/generated/prisma/client";
 
 const WEEKDAY_INDEX: Record<Weekday, number> = {
 	SUNDAY: 0,
@@ -38,18 +38,22 @@ export function eachDateKey(from: string, to: string): string[] {
 export function meetingSessionDates(
 	from: string,
 	to: string,
-	slots: Array<{ weekday: Weekday; time: string }>,
-): Array<{ date: string; time: string }> {
+	slots: Array<{ weekday: Weekday; time: string; kind?: MeetingKind }>,
+): Array<{ date: string; time: string; kind?: MeetingKind }> {
 	const want = new Set(slots.map((s) => WEEKDAY_INDEX[s.weekday]));
-	const labelByDow = new Map(
-		slots.map((s) => [WEEKDAY_INDEX[s.weekday], s.time] as const),
+	const byDow = new Map(
+		slots.map((s) => [WEEKDAY_INDEX[s.weekday], s] as const),
 	);
 	return eachDateKey(from, to)
 		.filter((k) => want.has(parseDateKey(k).getDay()))
-		.map((date) => ({
-			date,
-			time: labelByDow.get(parseDateKey(date).getDay()) ?? "",
-		}));
+		.map((date) => {
+			const slot = byDow.get(parseDateKey(date).getDay());
+			return {
+				date,
+				time: slot?.time ?? "",
+				kind: slot?.kind,
+			};
+		});
 }
 
 export function weeklySessionDates(

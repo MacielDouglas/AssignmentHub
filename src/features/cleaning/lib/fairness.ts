@@ -45,6 +45,27 @@ export function unitLoad(
 	return sum / memberIds.length;
 }
 
+/** maior carga individual da unidade — evita arrastar quem já trabalhou muito. */
+export function unitMaxLoad(
+	memberIds: string[],
+	history: FairnessHistory,
+): number {
+	if (memberIds.length === 0) return Number.POSITIVE_INFINITY;
+	return Math.max(...memberIds.map((id) => history.totalByPerson[id] ?? 0));
+}
+
+/**
+ * Última data trabalhada (yyyy-mm-dd) ou null. `datesByPerson` vem ordenado
+ * do banco e `recordAssignment` adiciona em ordem cronológica.
+ */
+export function lastWorkedDate(
+	personId: string,
+	history: FairnessHistory,
+): string | null {
+	const dates = history.datesByPerson[personId] ?? [];
+	return dates.length > 0 ? (dates[dates.length - 1] as string) : null;
+}
+
 export function pickPeople(
 	candidates: EligiblePerson[],
 	sector: RosterSector,

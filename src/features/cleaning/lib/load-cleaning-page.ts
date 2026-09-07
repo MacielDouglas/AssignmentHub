@@ -1,5 +1,6 @@
 import "server-only";
 
+import { listCleaningBlockingEvents } from "@/features/cleaning/lib/blocking-events";
 import type { CleaningPageData } from "@/features/cleaning/lib/cleaning-page-data";
 import type {
 	EligiblePerson,
@@ -34,6 +35,7 @@ export async function loadCleaningPageData(args: {
 		history,
 		savedLists,
 		membershipUser,
+		blockingEvents,
 	] = await Promise.all([
 		loadCleaningSettingsView(args.organizationId),
 		loadWeeklyMeetingsView(args.organizationId),
@@ -76,6 +78,7 @@ export async function loadCleaningPageData(args: {
 			where: { id: args.userId },
 			select: { personId: true },
 		}),
+		listCleaningBlockingEvents(args.organizationId),
 	]);
 
 	const people: EligiblePerson[] = peopleRaw.map((p) => ({
@@ -96,6 +99,7 @@ export async function loadCleaningPageData(args: {
 			slots: weeklyMeetingsRaw.current.slots.map((s) => ({
 				weekday: s.weekday,
 				time: s.time,
+				kind: s.kind,
 			})),
 		},
 		nextYear: {
@@ -104,6 +108,7 @@ export async function loadCleaningPageData(args: {
 			slots: weeklyMeetingsRaw.nextYear.slots.map((s) => ({
 				weekday: s.weekday,
 				time: s.time,
+				kind: s.kind,
 			})),
 		},
 	};
@@ -118,6 +123,7 @@ export async function loadCleaningPageData(args: {
 		weeklyMeetings,
 		people,
 		history,
+		blockingEvents,
 		savedLists: savedLists.map((l) => ({
 			id: l.id,
 			cleaningType: l.cleaningType,

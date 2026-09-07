@@ -3,9 +3,11 @@ import {
 	requiredCount,
 } from "@/features/cleaning/lib/eligibility";
 import {
+	lastWorkedDate,
 	personScore,
 	recordAssignment,
 	unitLoad,
+	unitMaxLoad,
 } from "@/features/cleaning/lib/fairness";
 import { buildAssignmentUnits } from "@/features/cleaning/lib/family-units";
 import type {
@@ -69,13 +71,17 @@ function pushPerson(
  * Seleciona quem trabalha no dia:
  * - com keepFamilyTogether: família entra inteira ou não entra
  * - preenche o restante com pessoas sem família (unidades de 1)
- * - ordena por quem limpou menos (carga média da unidade)
+ * - ordena por MAIOR carga individual (evita arrastar quem já trabalhou
+ *   muito junto com família de média baixa), desempate pela média
+ * - 1ª passada exige descanso desde a sessão anterior (sem repetição
+ *   em sequência); 2ª passada relaxa se faltar gente (pool pequeno)
  */
 function selectUnitsForDay(
 	people: EligiblePerson[],
 	sectors: RosterSector[],
 	history: FairnessHistory,
 	keepFamilyTogether: boolean,
+	prevDate: string | null,
 ): EligiblePerson[] {
 	const need = totalSlotsNeeded(sectors);
 	if (need <= 0) return [];
@@ -83,14 +89,14 @@ function selectUnitsForDay(
 	const units = buildAssignmentUnits(people);
 
 	const ranked = [...units].sort((a, b) => {
-		const la = unitLoad(
-			a.members.map((m) => m.id),
-			history,
-		);
-		const lb = unitLoad(
-			b.members.map((m) => m.id),
-			history,
-		);
+		const aIds = a.members.map((m) => m.id);
+		const bIds = b.members.map((m) => m.id);
+		const ma = unitMaxLoad(aIds, history);
+		const mb = unitMaxLoad(bIds, history);
+		if (ma !== mb) return ma - mb;
+
+		const la = unitLoad(aIds, history);
+		const lb = unitLoad(bIds, history);
 		if (la !== lb) return la - lb;
 
 		const aFamily = a.familyId ? 0 : 1;
@@ -102,10 +108,6 @@ function selectUnitsForDay(
 		return an.localeCompare(bn);
 	});
 
-	const selected: EligiblePerson[] = [];
-	const used = new Set<string>();
-	let open = need;
-
 	const personCanWorkSomewhere = (person: EligiblePerson): boolean => {
 		return (
 			sectors.some((s) => isEligibleForSector(person, s, false)) ||
@@ -113,38 +115,59 @@ function selectUnitsForDay(
 		);
 	};
 
-	for (const unit of ranked) {
-		if (open <= 0) break;
+	// Descansou desde a sessão anterior? (prevDate null = 1ª data, todos aptos)
+	const restedSincePrev = (person: EligiblePerson): boolean => {
+		if (!prevDate) return true;
+		const last = lastWorkedDate(person.id, history);
+		if (!last) return true;
+		return last < prevDate;
+	};
 
-		const available = unit.members.filter(
-			(m) => !used.has(m.id) && personCanWorkSomewhere(m),
-		);
-		if (available.length === 0) continue;
+	const selected: EligiblePerson[] = [];
+	const used = new Set<string>();
+	let open = need;
 
-		const isFamilyUnit = Boolean(unit.familyId) && keepFamilyTogether;
+	for (const enforceRest of [true, false]) {
+		for (const unit of ranked) {
+			if (open <= 0) break;
 
-		if (isFamilyUnit) {
-			const whole = unit.members.filter((m) => !used.has(m.id));
-			const placeable = whole.filter(personCanWorkSomewhere);
-			if (placeable.length !== whole.length) {
+			const available = unit.members.filter(
+				(m) =>
+					!used.has(m.id) &&
+					personCanWorkSomewhere(m) &&
+					(!enforceRest || restedSincePrev(m)),
+			);
+			if (available.length === 0) continue;
+
+			const isFamilyUnit = Boolean(unit.familyId) && keepFamilyTogether;
+
+			if (isFamilyUnit) {
+				const whole = unit.members.filter((m) => !used.has(m.id));
+				const placeable = whole.filter(
+					(m) =>
+						personCanWorkSomewhere(m) && (!enforceRest || restedSincePrev(m)),
+				);
+				if (placeable.length !== whole.length) {
+					continue;
+				}
+				if (whole.length > open) continue;
+
+				for (const m of whole) {
+					selected.push(m);
+					used.add(m.id);
+				}
+				open -= whole.length;
 				continue;
 			}
-			if (whole.length > open) continue;
 
-			for (const m of whole) {
+			for (const m of available) {
+				if (open <= 0) break;
 				selected.push(m);
 				used.add(m.id);
+				open -= 1;
 			}
-			open -= whole.length;
-			continue;
 		}
-
-		for (const m of available) {
-			if (open <= 0) break;
-			selected.push(m);
-			used.add(m.id);
-			open -= 1;
-		}
+		if (open <= 0) break;
 	}
 
 	return selected;
@@ -207,14 +230,17 @@ export function generateRoster(input: GenerateRosterInput): RosterDraft {
 	const history = cloneHistory(input.history);
 	const sectors = [...input.sectors].sort((a, b) => a.sortOrder - b.sortOrder);
 
-	const days: RosterDay[] = input.sessionDates.map(({ date, label }) => {
+	const days: RosterDay[] = input.sessionDates.map(({ date, label }, idx) => {
 		const usedToday = new Set<string>();
+		const prevDate =
+			idx > 0 ? (input.sessionDates[idx - 1]?.date ?? null) : null;
 
 		const dayPeople = selectUnitsForDay(
 			input.people,
 			sectors,
 			history,
 			input.keepFamilyTogether,
+			prevDate,
 		);
 
 		const slots = assignPeopleToSectors(

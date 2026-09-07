@@ -38,7 +38,7 @@ export function MidweekIntroductionSection({ slug, parts, baseTime }: Props) {
 								type="button"
 								className="min-h-11 rounded-md px-1 text-right text-label text-foreground underline decoration-dotted underline-offset-4 transition hover:decoration-solid focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50"
 							>
-								{chairmanAssignment?.assigneeName ?? "Não designado"}
+								{chairmanAssignment?.assigneeName ?? "Não designadinho"}
 							</button>
 						}
 					/>

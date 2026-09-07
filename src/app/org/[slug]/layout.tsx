@@ -127,7 +127,6 @@ export default async function OrganizationLayout({
 					currentSlug={currentOrganization.slug}
 					organizationName={currentOrganization.name}
 				/>
-
 				<div className="flex min-h-screen flex-col">
 					<OrgHeader
 						currentOrganization={currentOrganization}
@@ -149,7 +148,6 @@ export default async function OrganizationLayout({
 								labelMap={breadcrumbLabels}
 								hrefLabelMap={breadcrumbHrefLabels}
 							/>
-
 							<main>{children}</main>
 						</div>
 					</div>

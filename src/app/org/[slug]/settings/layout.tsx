@@ -15,7 +15,6 @@ export default async function SettingsLayout({ children, params }: Props) {
 	return (
 		<div className="mx-auto w-full max-w-6xl space-y-5 pb-24 md:pb-8">
 			<SettingsHeader />
-
 			<div className="grid gap-5 md:grid-cols-[260px_minmax(0,1fr)] md:items-start">
 				<aside className="md:sticky md:top-4">
 					<div className="rounded-[28px] border border-border bg-card p-3 shadow-sm">
@@ -25,7 +24,6 @@ export default async function SettingsLayout({ children, params }: Props) {
 
 				<div className="min-w-0 space-y-5">{children}</div>
 			</div>
-
 			<SettingsBottomNav slug={slug} />
 		</div>
 	);

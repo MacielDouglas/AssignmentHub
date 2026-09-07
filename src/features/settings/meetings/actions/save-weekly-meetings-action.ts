@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { getTranslations } from "next-intl/server";
+import { addDays } from "@/features/meetings/application/services/meeting-week-dates";
 import type { SettingsActionState } from "@/features/settings/actions/settings-action-state";
 import { requireSettingsManager } from "@/features/settings/actions/settings-auth";
 import {
@@ -97,7 +98,7 @@ export async function saveWeeklyMeetingsAction(
 				other: typeof covering,
 			) => {
 				if (!other) return false;
-				if (other.weeklyRules.length !== 2) return false;
+				if (other.weeklyRules.length !== rules.length) return false;
 				const a = [...other.weeklyRules]
 					.map((r) => `${r.weekday}|${r.time}`)
 					.sort()
@@ -265,7 +266,7 @@ export async function saveWeeklyMeetingsAction(
 				}
 			}
 
-			// Atualiza scheduledTime dos programas existentes conforme novo horário
+			// Atualiza scheduledTime e scheduledAt dos programas existentes
 			if (currentScheduleId) {
 				const scheduleRecord = await tx.organizationSchedule.findUnique({
 					where: { id: currentScheduleId },
@@ -273,39 +274,61 @@ export async function saveWeeklyMeetingsAction(
 				});
 
 				if (scheduleRecord?.effectiveFrom) {
-					const midweekSlot = currentSlots.find(
-						(s) =>
-							s.weekday === "MONDAY" ||
-							s.weekday === "TUESDAY" ||
-							s.weekday === "WEDNESDAY" ||
-							s.weekday === "THURSDAY" ||
-							s.weekday === "FRIDAY",
-					);
+					const firstSlot = currentSlots[0];
+					const secondSlot = currentSlots[1];
 
-					const weekendSlot = currentSlots.find(
-						(s) => s.weekday === "SATURDAY" || s.weekday === "SUNDAY",
-					);
-
-					if (midweekSlot) {
-						await tx.meetingProgram.updateMany({
+					if (firstSlot) {
+						const programs = await tx.meetingProgram.findMany({
 							where: {
 								organizationId: organization.id,
 								kind: "MIDWEEK",
 								weekStart: { gte: scheduleRecord.effectiveFrom },
 							},
-							data: { scheduledTime: midweekSlot.time },
+							select: { id: true, weekStart: true },
 						});
+
+						for (const program of programs) {
+							const scheduledAt = meetingDateAtTime(
+								program.weekStart,
+								firstSlot.weekday,
+								firstSlot.time,
+							);
+
+							await tx.meetingProgram.update({
+								where: { id: program.id },
+								data: {
+									scheduledTime: firstSlot.time,
+									scheduledAt,
+								},
+							});
+						}
 					}
 
-					if (weekendSlot) {
-						await tx.meetingProgram.updateMany({
+					if (secondSlot) {
+						const programs = await tx.meetingProgram.findMany({
 							where: {
 								organizationId: organization.id,
 								kind: "WEEKEND",
 								weekStart: { gte: scheduleRecord.effectiveFrom },
 							},
-							data: { scheduledTime: weekendSlot.time },
+							select: { id: true, weekStart: true },
 						});
+
+						for (const program of programs) {
+							const scheduledAt = meetingDateAtTime(
+								program.weekStart,
+								secondSlot.weekday,
+								secondSlot.time,
+							);
+
+							await tx.meetingProgram.update({
+								where: { id: program.id },
+								data: {
+									scheduledTime: secondSlot.time,
+									scheduledAt,
+								},
+							});
+						}
 					}
 				}
 			}
@@ -322,6 +345,45 @@ export async function saveWeeklyMeetingsAction(
 			message: t("saveFailed"),
 		};
 	}
+}
+
+const WEEKDAY_JS: Record<number, Weekday> = {
+	0: "SUNDAY",
+	1: "MONDAY",
+	2: "TUESDAY",
+	3: "WEDNESDAY",
+	4: "THURSDAY",
+	5: "FRIDAY",
+	6: "SATURDAY",
+};
+
+function meetingDateAtTime(
+	weekStart: Date,
+	weekday: Weekday,
+	time: string,
+): Date | null {
+	const match = /^([01]\d|2[0-3]):([0-5]\d)$/.exec(time);
+
+	if (!match) {
+		return null;
+	}
+
+	const targetEntry = Object.entries(WEEKDAY_JS).find(
+		([, wd]) => wd === weekday,
+	);
+
+	if (!targetEntry) {
+		return null;
+	}
+
+	const jsWeekday = Number(targetEntry[0]);
+	const mondayBasedOffset = jsWeekday === 0 ? 6 : jsWeekday - 1;
+	const date = addDays(weekStart, mondayBasedOffset);
+
+	const result = new Date(date);
+	result.setUTCHours(Number(match[1]), Number(match[2]), 0, 0);
+
+	return result;
 }
 
 function dateOnly(d: Date) {

@@ -86,7 +86,6 @@ export default async function OrganizationPage({
 					</Card>
 				))}
 			</section>
-
 			<section className="grid gap-4 xl:grid-cols-[1.2fr_0.8fr]">
 				<Card>
 					<CardContent className="space-y-2 p-6">

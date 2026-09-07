@@ -70,16 +70,6 @@ function occurrenceIntersectsWeek(
 	);
 }
 
-function isMidweek(weekday: Weekday) {
-	return (
-		weekday === "MONDAY" ||
-		weekday === "TUESDAY" ||
-		weekday === "WEDNESDAY" ||
-		weekday === "THURSDAY" ||
-		weekday === "FRIDAY"
-	);
-}
-
 export async function resolveOrganizationWeekSchedule(
 	organizationId: string,
 	weekStart: Date,
@@ -186,11 +176,8 @@ export async function resolveOrganizationWeekSchedule(
 			];
 		}) ?? [];
 
-	const midweek = slots.find((slot) => isMidweek(slot.weekday)) ?? null;
-	const weekend =
-		slots.find(
-			(slot) => slot.weekday === "SATURDAY" || slot.weekday === "SUNDAY",
-		) ?? null;
+	const midweek = slots[0] ?? null;
+	const weekend = slots[1] ?? null;
 
 	const specialEvents = schedules
 		.filter((schedule) => schedule.type !== "MEETINGS")

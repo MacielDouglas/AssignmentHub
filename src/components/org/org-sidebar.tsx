@@ -60,7 +60,6 @@ export function OrgSidebar({ currentSlug, organizationName }: OrgSidebarProps) {
 									<Icon className="h-4 w-4" aria-hidden="true" />
 									<span>{item.label}</span>
 								</span>
-
 								<ChevronRight
 									className="h-4 w-4 opacity-70"
 									aria-hidden="true"

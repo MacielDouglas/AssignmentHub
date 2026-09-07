@@ -1,5 +1,6 @@
 import type { SpecialEventListItem } from "@/features/settings/meetings/components/settings-shell";
 import { SpecialEventsSection } from "@/features/settings/meetings/components/special-events-section";
+import type { SpeakerOption } from "@/features/settings/meetings/components/special-talk-form-dialog";
 import { WeeklyMeetingsForm } from "@/features/settings/meetings/components/weekly-meetings-form";
 import type { WeeklyMeetingsView } from "@/features/settings/meetings/lib/meeting-schedule";
 
@@ -8,6 +9,7 @@ type MeetingsSettingsPanelProps = {
 	canEdit: boolean;
 	weekly: WeeklyMeetingsView;
 	specialEvents: SpecialEventListItem[];
+	speakers?: SpeakerOption[];
 };
 
 export function MeetingsSettingsPanel({
@@ -15,6 +17,7 @@ export function MeetingsSettingsPanel({
 	canEdit,
 	weekly,
 	specialEvents,
+	speakers = [],
 }: MeetingsSettingsPanelProps) {
 	return (
 		<div className="space-y-6">
@@ -27,6 +30,7 @@ export function MeetingsSettingsPanel({
 				organizationSlug={organizationSlug}
 				canEdit={canEdit}
 				events={specialEvents}
+				speakers={speakers}
 			/>
 		</div>
 	);

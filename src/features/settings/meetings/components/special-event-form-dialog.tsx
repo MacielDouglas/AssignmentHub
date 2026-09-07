@@ -2,7 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
-import { useActionState, useState } from "react";
+import { useActionState, useEffect, useState } from "react";
 import { HiOutlinePlus } from "react-icons/hi2";
 
 import { Button } from "@/components/ui/button";
@@ -15,8 +15,10 @@ import {
 } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import type { SettingsActionState } from "@/features/settings/actions/settings-action-state";
+import { upsertSpecialTalkAction } from "@/features/settings/meetings/actions/dedicated-event-actions";
 import { upsertSpecialEventAction } from "@/features/settings/meetings/actions/upsert-special-event-action";
 import type { SpecialEventListItem } from "@/features/settings/meetings/components/settings-shell";
+import type { SpeakerOption } from "@/features/settings/meetings/components/special-talk-form-dialog";
 import {
 	SPECIAL_EVENT_META,
 	SPECIAL_EVENT_TYPES,
@@ -54,11 +56,14 @@ function parseTravelerNotes(notes: string | null | undefined): string {
 type SpecialEventFormDialogProps = {
 	organizationSlug: string;
 	event?: SpecialEventListItem;
+	/** Oradores (pessoas com discurso público) para o form de discurso especial. */
+	people?: SpeakerOption[];
 };
 
 export function SpecialEventFormDialog({
 	organizationSlug,
 	event,
+	people = [],
 }: SpecialEventFormDialogProps) {
 	const t = useTranslations("SettingsSpecialEvents");
 	const router = useRouter();
@@ -95,6 +100,7 @@ export function SpecialEventFormDialog({
 						key={formInstance}
 						organizationSlug={organizationSlug}
 						event={event}
+						people={people}
 						onCancel={() => setOpen(false)}
 						onSuccess={() => {
 							setOpen(false);
@@ -110,6 +116,7 @@ export function SpecialEventFormDialog({
 type FormFieldsProps = {
 	organizationSlug: string;
 	event?: SpecialEventListItem;
+	people?: SpeakerOption[];
 	onCancel: () => void;
 	onSuccess: () => void;
 };
@@ -118,6 +125,7 @@ type FormFieldsProps = {
 function SpecialEventFormFields({
 	organizationSlug,
 	event,
+	people = [],
 	onCancel,
 	onSuccess,
 }: FormFieldsProps) {
@@ -128,16 +136,27 @@ function SpecialEventFormFields({
 		event?.type ?? "CELEBRATION",
 	);
 
-	const [state, formAction, pending] = useActionState(
+	const [legacyState, legacyAction, legacyPending] = useActionState(
 		upsertSpecialEventAction,
 		initialState,
 	);
+	const [talkState, talkAction, talkPending] = useActionState(
+		upsertSpecialTalkAction,
+		initialState,
+	);
+
+	// Criação de discurso especial vai para a tabela dedicada (sem horário,
+	// com tema + orador). Edição de linha legada segue o fluxo legado.
+	const isNewTalk = !event && type === "SPECIAL_TALK";
+	const activeState = isNewTalk ? talkState : legacyState;
 
 	const [handledSuccess, setHandledSuccess] = useState(false);
-	if (state.success && !handledSuccess) {
-		setHandledSuccess(true);
-		onSuccess();
-	}
+	useEffect(() => {
+		if (activeState.success && !handledSuccess) {
+			setHandledSuccess(true);
+			onSuccess();
+		}
+	}, [activeState.success, handledSuccess, onSuccess]);
 
 	const meta = SPECIAL_EVENT_META[type];
 	const travelerName = parseTravelerName(event?.notes ?? null);
@@ -149,8 +168,108 @@ function SpecialEventFormFields({
 	const titleLabel =
 		type === "TRAVELING_OVERSEER_VISIT" ? t("travelerName") : t("titleField");
 
+	if (isNewTalk) {
+		return (
+			<form action={talkAction} className="space-y-4">
+				<input type="hidden" name="organizationSlug" value={organizationSlug} />
+
+				<div className="space-y-2">
+					<Label className="text-sm font-medium">{t("type")}</Label>
+					<select
+						name="type"
+						value={type}
+						onChange={(e) => setType(e.target.value as SpecialEventType)}
+						className={fieldClassName}
+					>
+						{SPECIAL_EVENT_TYPES.map((eventType) => (
+							<option key={eventType} value={eventType}>
+								{tTypes(eventType)}
+							</option>
+						))}
+					</select>
+				</div>
+
+				<div className="space-y-2">
+					<Label className="text-sm font-medium">{t("startDate")} *</Label>
+					<input type="date" name="date" required className={fieldClassName} />
+				</div>
+
+				<div className="space-y-2">
+					<Label className="text-sm font-medium">Tema (opcional)</Label>
+					<input
+						name="theme"
+						maxLength={200}
+						placeholder="Ex.: Seja paciente"
+						className={fieldClassName}
+					/>
+				</div>
+
+				<div className="space-y-2">
+					<Label className="text-sm font-medium">
+						Orador — pessoa da organização (opcional)
+					</Label>
+					<select
+						name="speakerPersonId"
+						className={fieldClassName}
+						defaultValue=""
+					>
+						<option value="">Nenhum / externo</option>
+						{people.map((p) => (
+							<option key={p.id} value={p.id}>
+								{p.name}
+							</option>
+						))}
+					</select>
+				</div>
+
+				<div className="space-y-2">
+					<Label className="text-sm font-medium">
+						Orador — nome livre (opcional)
+					</Label>
+					<input
+						name="speakerName"
+						maxLength={200}
+						placeholder="Ex.: Orador visitante"
+						className={fieldClassName}
+					/>
+				</div>
+
+				<div className="space-y-2">
+					<Label className="text-sm font-medium">{t("notes")}</Label>
+					<textarea
+						name="notes"
+						rows={3}
+						className="w-full rounded-4xl border border-border bg-card px-3 py-2 text-sm outline-none ring-primary/30 focus:ring-4"
+					/>
+				</div>
+
+				{talkState.message && !talkState.success ? (
+					<p className="text-sm text-red-600">{talkState.message}</p>
+				) : null}
+
+				<div className="flex justify-end gap-2">
+					<Button
+						type="button"
+						variant="outline"
+						className="h-11 rounded-2xl"
+						onClick={onCancel}
+					>
+						{t("cancel")}
+					</Button>
+					<Button
+						type="submit"
+						disabled={talkPending}
+						className="h-11 rounded-4xl bg-primary text-primary-foreground"
+					>
+						{talkPending ? t("saving") : t("save")}
+					</Button>
+				</div>
+			</form>
+		);
+	}
+
 	return (
-		<form action={formAction} className="space-y-4">
+		<form action={legacyAction} className="space-y-4">
 			<input type="hidden" name="organizationSlug" value={organizationSlug} />
 			{event ? (
 				<input type="hidden" name="occurrenceId" value={event.id} />
@@ -246,8 +365,8 @@ function SpecialEventFormFields({
 				</div>
 			) : null}
 
-			{state.message && !state.success ? (
-				<p className="text-sm text-red-600">{state.message}</p>
+			{legacyState.message && !legacyState.success ? (
+				<p className="text-sm text-red-600">{legacyState.message}</p>
 			) : null}
 
 			<div className="flex justify-end gap-2">
@@ -261,10 +380,10 @@ function SpecialEventFormFields({
 				</Button>
 				<Button
 					type="submit"
-					disabled={pending}
+					disabled={legacyPending}
 					className="h-11 rounded-4xl bg-primary text-primary-foreground"
 				>
-					{pending ? t("saving") : t("save")}
+					{legacyPending ? t("saving") : t("save")}
 				</Button>
 			</div>
 		</form>

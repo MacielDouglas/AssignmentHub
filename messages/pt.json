@@ -182,12 +182,12 @@
 	},
 	"SpecialEventTypes": {
 		"CELEBRATION": "Comemoração",
-		"TRAVELING_OVERSEER_VISIT": "Visita do viajante",
+		"TRAVELING_OVERSEER_VISIT": "Visita do Superintendente de Circuito",
 		"SPECIAL_MEETING": "Reunião especial",
 		"SPECIAL_TALK": "Discurso especial",
 		"CONVENTION": "Congresso",
-		"CIRCUIT_ASSEMBLY_TRAVELING_OVERSEER": "Assembleia com viajante",
-		"CIRCUIT_ASSEMBLY_BRANCH_REPRESENTATIVE": "Assembleia com representante"
+		"CIRCUIT_ASSEMBLY_TRAVELING_OVERSEER": "Assembleia com Viajante",
+		"CIRCUIT_ASSEMBLY_BRANCH_REPRESENTATIVE": "Assembleia com Representante"
 	},
 	"SettingsShell": {
 		"title": "Configurações",
@@ -205,10 +205,10 @@
 		"statusConfigured": "Configurado",
 		"statusPending": "Pendente",
 		"currentSchedule": "Horário atual",
-		"slot1": "1ª reunião",
-		"slot2": "2ª reunião",
-		"slot1Next": "1ª reunião (próximo ano)",
-		"slot2Next": "2ª reunião (próximo ano)",
+		"slot1": "Reunião de meio de semana",
+		"slot2": "Reunião de fim de semana",
+		"slot1Next": "Meio de semana (próximo ano)",
+		"slot2Next": "Fim de semana (próximo ano)",
 		"day": "Dia",
 		"time": "Horário",
 		"nextYearOptional": "Definir horário para {year} (opcional)",
@@ -231,7 +231,7 @@
 	},
 	"SettingsSpecialEvents": {
 		"title": "Eventos especiais",
-		"description": "Ocional. Comemoração e Congresso: no máximo um por ano. Durante a visita do viajante, as reuniões semanais ficam ocultas na agenda.",
+		"description": "Opcional. Comemoração e Congresso: no máximo um por ano. Durante a visita do Superintendente de Circuito, as reuniões semanais ficam ocultas na agenda.",
 		"empty": "Nenhum evento especial cadastrado.",
 		"newEvent": "Novo evento",
 		"edit": "Editar",
@@ -239,7 +239,7 @@
 		"newTitle": "Novo evento especial",
 		"type": "Tipo",
 		"titleField": "Título",
-		"travelerName": "Nome do viajante",
+		"travelerName": "Nome do Superintendente de Circuito",
 		"startDate": "Data inicial",
 		"endDate": "Data final",
 		"time": "Horário",

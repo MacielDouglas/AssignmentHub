@@ -18,6 +18,8 @@ export type SpecialEventField =
 	| "time"
 	| "location"
 	| "title"
+	| "theme"
+	| "speaker"
 	| "notes";
 
 type Meta = {
@@ -43,7 +45,8 @@ export const SPECIAL_EVENT_META: Record<SpecialEventType, Meta> = {
 
 	TRAVELING_OVERSEER_VISIT: {
 		type: "TRAVELING_OVERSEER_VISIT",
-		label: "Visita do viajante",
+		// Label visível renomeado (enum mantido para não migrar dados).
+		label: "Visita do Superintendente de Circuito",
 		mode: "DATE_RANGE",
 		oncePerYear: false,
 		allDay: true,
@@ -66,7 +69,8 @@ export const SPECIAL_EVENT_META: Record<SpecialEventType, Meta> = {
 		mode: "SINGLE_DATETIME",
 		oncePerYear: false,
 		allDay: false,
-		fields: ["startDate", "time", "notes"],
+		// Sem horário; tema e orador opcionais (orador = pessoa + texto livre).
+		fields: ["startDate", "theme", "speaker", "notes"],
 	},
 
 	CONVENTION: {

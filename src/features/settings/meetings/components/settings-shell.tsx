@@ -17,6 +17,11 @@ export type SpecialEventListItem = {
 	location: string | null;
 	notes: string | null;
 	isAllDay: boolean;
+	/** Origem do item: LEGACY (OrganizationScheduleOccurrence) ou tabela dedicada. */
+	source?: string;
+	theme?: string | null;
+	speakerName?: string | null;
+	speakerPersonId?: string | null;
 };
 
 type SettingsShellProps = {

@@ -40,20 +40,27 @@ export async function saveWeeklyMeetingsAction(
 	const currentYear = today.getUTCFullYear();
 	const nextYear = currentYear + 1;
 
+	// A coluna WeeklyRule.kind só existe após a migração 20260908.
+	// Sem ela, grava sem kind (meio/fim seguem posicionais por sortOrder).
+	const withKind = await weeklyRuleKindSupported();
+
 	const currentSlots: Array<{
 		weekday: Weekday;
 		time: string;
 		sortOrder: number;
+		kind?: "MIDWEEK" | "WEEKEND";
 	}> = [
 		{
 			weekday: data.currentSlot1Weekday,
 			time: data.currentSlot1Time,
 			sortOrder: 0,
+			...(withKind ? { kind: "MIDWEEK" as const } : {}),
 		},
 		{
 			weekday: data.currentSlot2Weekday,
 			time: data.currentSlot2Time,
 			sortOrder: 1,
+			...(withKind ? { kind: "WEEKEND" as const } : {}),
 		},
 	];
 
@@ -65,7 +72,16 @@ export async function saveWeeklyMeetingsAction(
 					type: "MEETINGS",
 					mode: "WEEKLY_RECURRING",
 				},
-				include: { weeklyRules: true },
+				// Select explícito SEM `kind`: leitura funciona antes e depois
+				// da migração 20260908.
+				select: {
+					id: true,
+					effectiveFrom: true,
+					effectiveUntil: true,
+					weeklyRules: {
+						select: { weekday: true, time: true },
+					},
+				},
 				orderBy: { effectiveFrom: "asc" },
 			});
 
@@ -99,6 +115,8 @@ export async function saveWeeklyMeetingsAction(
 			) => {
 				if (!other) return false;
 				if (other.weeklyRules.length !== rules.length) return false;
+				// kind é posicional (sortOrder 0=MIDWEEK, 1=WEEKEND), então
+				// weekday|time basta para igualdade.
 				const a = [...other.weeklyRules]
 					.map((r) => `${r.weekday}|${r.time}`)
 					.sort()
@@ -205,11 +223,13 @@ export async function saveWeeklyMeetingsAction(
 						weekday: data.nextSlot1Weekday as Weekday,
 						time: data.nextSlot1Time as string,
 						sortOrder: 0,
+						...(withKind ? { kind: "MIDWEEK" as const } : {}),
 					},
 					{
 						weekday: data.nextSlot2Weekday as Weekday,
 						time: data.nextSlot2Time as string,
 						sortOrder: 1,
+						...(withKind ? { kind: "WEEKEND" as const } : {}),
 					},
 				];
 
@@ -390,4 +410,25 @@ function dateOnly(d: Date) {
 	return new Date(
 		Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate()),
 	);
+}
+
+/** Detecta se a coluna WeeklyRule.kind já existe (migração 20260908). */
+async function weeklyRuleKindSupported(): Promise<boolean> {
+	try {
+		await db.organizationScheduleWeeklyRule.findFirst({
+			select: { kind: true },
+		});
+		return true;
+	} catch (e) {
+		// P2022 = coluna inexistente → grava sem kind até migrar.
+		if (
+			typeof e === "object" &&
+			e !== null &&
+			"code" in e &&
+			(e as { code?: unknown }).code === "P2022"
+		) {
+			return false;
+		}
+		throw e;
+	}
 }

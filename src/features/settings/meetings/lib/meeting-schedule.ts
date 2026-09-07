@@ -182,8 +182,16 @@ export async function loadWeeklyMeetingsView(
 			mode: "WEEKLY_RECURRING",
 			isActive: true,
 		},
-		include: {
-			weeklyRules: { orderBy: { sortOrder: "asc" } },
+		// Select explícito SEM `kind`: funciona antes e depois da migração
+		// 20260908 (o include total quebrava com "column kind does not exist").
+		select: {
+			id: true,
+			effectiveFrom: true,
+			effectiveUntil: true,
+			weeklyRules: {
+				select: { weekday: true, time: true },
+				orderBy: { sortOrder: "asc" },
+			},
 		},
 		orderBy: { effectiveFrom: "asc" },
 	});

@@ -1,10 +1,13 @@
 import { headers } from "next/headers";
 import { notFound } from "next/navigation";
 import { getTranslations } from "next-intl/server";
+import { AssignmentSettingsPanel } from "@/features/settings/assignments/components/assignment-settings-panel";
+import { loadAssignmentSettingsView } from "@/features/settings/assignments/lib/assignment-settings";
 import { CleaningSettingsPanel } from "@/features/settings/cleaning/components/cleaning-settings-panel";
 import { loadCleaningSettingsView } from "@/features/settings/cleaning/lib/cleaning-settings";
 import { formatDateInput } from "@/features/settings/lib/year-bounds";
 import { MeetingsSettingsPanel } from "@/features/settings/meetings/components/meetings-settings-panel";
+import { listDedicatedEvents } from "@/features/settings/meetings/lib/dedicated-events";
 import { loadWeeklyMeetingsView } from "@/features/settings/meetings/lib/meeting-schedule";
 import {
 	SPECIAL_EVENT_TYPES,
@@ -63,9 +66,10 @@ export default async function SettingsPage({
 
 	const tEvents = await getTranslations("SpecialEventTypes");
 
-	const specialEvents = specialSchedules.flatMap((schedule) =>
+	const legacyEvents = specialSchedules.flatMap((schedule) =>
 		schedule.occurrences.map((occ) => ({
 			id: occ.id,
+			source: "LEGACY" as const,
 			type: schedule.type as (typeof SPECIAL_EVENT_TYPES)[number],
 			typeLabel: tEvents(schedule.type as SpecialEventType),
 			startDate: formatDateInput(occ.startDate),
@@ -77,7 +81,47 @@ export default async function SettingsPage({
 		})),
 	);
 
+	// Tabelas dedicadas (Opção B) — leitura em paralelo com o legado (Fase 4:
+	// escrita nova, leitura dupla até a migração total).
+	const dedicated = await listDedicatedEvents(membership.organization.id);
+	const dedicatedAsLegacy = dedicated.map((d) => ({
+		// Talks dedicadas usam id real (edição dedicada); demais tipos seguem
+		// mapeados como legado até ganharem form próprio.
+		id: d.source === "SPECIAL_TALK" ? d.id : `${d.source}:${d.id}`,
+		source: d.source,
+		type: (d.source === "SPECIAL_TALK"
+			? "SPECIAL_TALK"
+			: "SPECIAL_MEETING") as (typeof SPECIAL_EVENT_TYPES)[number],
+		typeLabel: d.typeLabel,
+		startDate: d.startDate,
+		endDate: d.endDate,
+		time: d.time,
+		location: d.location,
+		notes: d.notes,
+		isAllDay: false,
+		theme: d.theme ?? null,
+		speakerName: d.speakerName ?? null,
+		speakerPersonId: d.speakerPersonId ?? null,
+	}));
+
+	const specialEvents = [...dedicatedAsLegacy, ...legacyEvents];
+
+	// Oradores: pessoas ativas com discurso público (select de discurso especial).
+	const speakerOptions = await db.person.findMany({
+		where: {
+			organizationId: membership.organization.id,
+			isActive: true,
+			servicePrivilege: { is: { publicTalk: true } },
+		},
+		select: { id: true, name: true },
+		orderBy: { name: "asc" },
+		take: 1000,
+	});
+
 	const cleaning = await loadCleaningSettingsView(membership.organization.id);
+	const assignmentSettings = await loadAssignmentSettingsView(
+		membership.organization.id,
+	);
 
 	const activeTab =
 		tab === "cleaning" || tab === "assignments" || tab === "meetings"
@@ -92,6 +136,7 @@ export default async function SettingsPage({
 					canEdit={canEdit}
 					weekly={weekly}
 					specialEvents={specialEvents}
+					speakers={speakerOptions}
 				/>
 			) : null}
 
@@ -104,10 +149,11 @@ export default async function SettingsPage({
 			) : null}
 
 			{activeTab === "assignments" ? (
-				<section className="rounded-[28px] border border-dashed border-border bg-card p-5 shadow-sm sm:p-6">
-					<h2 className="text-title text-foreground">Designações</h2>
-					<p className="mt-2 text-sm text-muted-foreground">Em breve.</p>
-				</section>
+				<AssignmentSettingsPanel
+					organizationSlug={membership.organization.slug}
+					canEdit={canEdit}
+					settings={assignmentSettings}
+				/>
 			) : null}
 		</>
 	);

@@ -95,7 +95,10 @@
 		"downloadPdf": "Baixar PDF",
 		"print": "Imprimir",
 		"loading": "Carregando…",
-		"statusPublished": "Publicada"
+		"statusPublished": "Publicada",
+		"today": "Hoje",
+		"nextUp": "Próxima",
+		"past": "Passada"
 	},
 	"CleaningEditor": {
 		"hide": "Ocultar",

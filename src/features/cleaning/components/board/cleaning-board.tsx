@@ -19,7 +19,12 @@ import type { CleaningPageData } from "@/features/cleaning/lib/cleaning-page-dat
 import type { SavedListDetailForPdf } from "@/features/cleaning/lib/cleaning-pdf-types";
 import type { RosterDraft } from "@/features/cleaning/lib/roster-types";
 import { savedListToDraft } from "@/features/cleaning/lib/saved-list-to-draft";
-import type { CleaningType } from "@/generated/prisma/client";
+import { SectorIcon } from "@/features/cleaning/lib/sector-icons";
+import type {
+	CleaningType,
+	MeetingKind,
+	Weekday,
+} from "@/generated/prisma/client";
 
 type Detail = NonNullable<Awaited<ReturnType<typeof getSavedListDetail>>>;
 
@@ -32,6 +37,37 @@ type Props = {
 function formatBr(dateKey: string) {
 	const [y, m, d] = dateKey.split("-");
 	return `${d}/${m}/${y}`;
+}
+
+function todayKey(): string {
+	const now = new Date();
+	const y = now.getFullYear();
+	const m = String(now.getMonth() + 1).padStart(2, "0");
+	const d = String(now.getDate()).padStart(2, "0");
+	return `${y}-${m}-${d}`;
+}
+
+const DOW_TO_WEEKDAY: Record<number, Weekday> = {
+	0: "SUNDAY",
+	1: "MONDAY",
+	2: "TUESDAY",
+	3: "WEDNESDAY",
+	4: "THURSDAY",
+	5: "FRIDAY",
+	6: "SATURDAY",
+};
+
+function weekdayOf(dateKey: string): Weekday {
+	const [y, m, d] = dateKey.split("-").map(Number);
+	return DOW_TO_WEEKDAY[new Date(y, m - 1, d).getDay()] ?? "SUNDAY";
+}
+
+function meetingKindOf(
+	dateKey: string,
+	slots: Array<{ weekday: Weekday; time: string; kind: MeetingKind }>,
+): { kind: MeetingKind; time: string } | null {
+	const wd = weekdayOf(dateKey);
+	return slots.find((s) => s.weekday === wd) ?? null;
 }
 
 export function CleaningBoard({ data, onEditList }: Props) {
@@ -307,49 +343,131 @@ export function CleaningBoard({ data, onEditList }: Props) {
 						<StatusBadge label={t("statusPublished")} tone="emerald" />
 					</div>
 
-					{shownDetail.days.map((day) => {
-						const bySector = new Map<
-							string,
-							{ name: string; description: string | null; people: string[] }
-						>();
-						for (const a of day.assignments) {
-							const cur = bySector.get(a.sectorId) ?? {
-								name: a.sectorName,
-								description: a.sectorDescription,
-								people: [],
-							};
-							cur.people.push(a.personName);
-							bySector.set(a.sectorId, cur);
-						}
-
-						return (
-							<article
-								key={day.date}
-								className="rounded-3xl border border-border bg-card p-4 shadow-sm print:break-inside-avoid print:shadow-none"
-							>
-								<h3 className="mb-3 font-semibold text-foreground">
-									{formatBr(day.date)}
-								</h3>
-								<ul className="space-y-2">
-									{[...bySector.entries()].map(([sectorId, s]) => (
-										<li
-											key={sectorId}
-											className="rounded-2xl bg-muted px-3 py-2"
-										>
-											<p className="text-sm font-medium">{s.name}</p>
-											<p className="text-sm text-primary">
-												{s.people.join(" · ")}
-											</p>
-										</li>
-									))}
-								</ul>
-							</article>
-						);
-					})}
+					<BoardDays
+						days={shownDetail.days}
+						cleaningType={shownDetail.cleaningType}
+						meetingSlots={data.weeklyMeetings.current.slots}
+					/>
 				</div>
 			) : lists.length > 0 ? (
 				<p className="text-sm text-muted-foreground">{t("loading")}</p>
 			) : null}
 		</div>
+	);
+}
+
+type BoardDay = Detail["days"][number];
+
+function BoardDays({
+	days,
+	cleaningType,
+	meetingSlots,
+}: {
+	days: BoardDay[];
+	cleaningType: CleaningType;
+	meetingSlots: Array<{ weekday: Weekday; time: string; kind: MeetingKind }>;
+}) {
+	const t = useTranslations("CleaningBoard");
+	const tSession = useTranslations("CleaningSession");
+
+	const ordered = useMemo(() => {
+		const today = todayKey();
+		const upcoming = days.filter((d) => d.date >= today);
+		const past = days.filter((d) => d.date < today);
+		return {
+			nextDate: upcoming[0]?.date ?? null,
+			today,
+			items: [...upcoming, ...past],
+		};
+	}, [days]);
+
+	const meetingLabel = (date: string): string | null => {
+		if (cleaningType !== "MEETING") return null;
+		const slot = meetingKindOf(date, meetingSlots);
+		if (!slot) return tSession("meeting");
+		if (slot.kind === "MIDWEEK") {
+			return slot.time
+				? tSession("midweekWithTime", { time: slot.time })
+				: tSession("midweek");
+		}
+		if (slot.kind === "WEEKEND") {
+			return slot.time
+				? tSession("weekendWithTime", { time: slot.time })
+				: tSession("weekend");
+		}
+		return slot.time
+			? tSession("meetingWithTime", { time: slot.time })
+			: tSession("meeting");
+	};
+
+	return (
+		<>
+			{ordered.items.map((day) => {
+				const bySector = new Map<
+					string,
+					{ name: string; description: string | null; people: string[] }
+				>();
+				for (const a of day.assignments) {
+					const cur = bySector.get(a.sectorId) ?? {
+						name: a.sectorName,
+						description: a.sectorDescription,
+						people: [],
+					};
+					cur.people.push(a.personName);
+					bySector.set(a.sectorId, cur);
+				}
+
+				const isPast = day.date < ordered.today;
+				const isNext =
+					!isPast && ordered.nextDate != null && day.date === ordered.nextDate;
+				const kindLabel = meetingLabel(day.date);
+
+				return (
+					<article
+						key={day.date}
+						aria-disabled={isPast}
+						className={`rounded-3xl border bg-card p-4 shadow-sm print:break-inside-avoid print:shadow-none print:opacity-100 ${
+							isNext
+								? "border-primary shadow-md ring-1 ring-primary"
+								: isPast
+									? "border-border opacity-60"
+									: "border-border"
+						}`}
+					>
+						<div className="mb-3 flex flex-wrap items-center gap-2">
+							<h3 className="font-semibold text-foreground">
+								{formatBr(day.date)}
+							</h3>
+							{isNext ? (
+								<StatusBadge
+									label={day.date === ordered.today ? t("today") : t("nextUp")}
+									tone="emerald"
+								/>
+							) : null}
+							{isPast ? <StatusBadge label={t("past")} tone="neutral" /> : null}
+							{kindLabel ? (
+								<span className="rounded-full border border-border bg-muted px-2 py-0.5 text-[11px] font-medium text-muted-foreground">
+									{kindLabel}
+								</span>
+							) : null}
+						</div>
+						<ul className="space-y-2">
+							{[...bySector.entries()].map(([sectorId, s]) => (
+								<li key={sectorId} className="rounded-2xl bg-muted px-3 py-2">
+									<p className="flex items-center gap-2 text-sm font-medium">
+										<SectorIcon
+											name={s.name}
+											className="h-4 w-4 shrink-0 text-primary"
+										/>
+										{s.name}
+									</p>
+									<p className="text-sm text-primary">{s.people.join(" · ")}</p>
+								</li>
+							))}
+						</ul>
+					</article>
+				);
+			})}
+		</>
 	);
 }

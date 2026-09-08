@@ -104,7 +104,8 @@ export function downloadCleaningPdf(input: CleaningPdfInput): void {
 		...sectors.map((s) => cellNames(day.bySector?.[s.id], i18n.emptyCell)),
 	]);
 
-	const fontSize = sectors.length >= 7 ? 6 : sectors.length >= 5 ? 6.5 : 7.5;
+	// Fonte mínima de 12 na tabela de designações (data, setor e pessoas).
+	const fontSize = 12;
 
 	autoTable(doc, {
 		startY: y,
@@ -114,7 +115,7 @@ export function downloadCleaningPdf(input: CleaningPdfInput): void {
 		styles: {
 			font: "helvetica",
 			fontSize,
-			cellPadding: 1.2,
+			cellPadding: 2,
 			valign: "middle",
 			halign: "center",
 			overflow: "linebreak",
@@ -127,13 +128,13 @@ export function downloadCleaningPdf(input: CleaningPdfInput): void {
 			fontStyle: "bold",
 			halign: "center",
 			valign: "middle",
-			fontSize: Math.max(6, fontSize - 0.5),
+			fontSize,
 		},
 		columnStyles: {
 			0: {
-				cellWidth: 36,
+				cellWidth: 38,
 				fontStyle: "bold",
-				halign: "left",
+				halign: "center",
 				fillColor: [248, 250, 252],
 			},
 		},

@@ -430,9 +430,14 @@ export function RosterEditor({ draft, onChange, history }: Props) {
 														onToggle={() =>
 															toggleExpand(stableSlotId(day.date, slot))
 														}
-														onSelect={(personId) =>
-															changePerson(day.date, slot.key, personId)
-														}
+														onSelect={(personId) => {
+															changePerson(day.date, slot.key, personId);
+															setExpanded((prev) => {
+																const next = new Set(prev);
+																next.delete(stableSlotId(day.date, slot));
+																return next;
+															});
+														}}
 														personName={personName}
 													/>
 												))}

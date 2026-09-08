@@ -38,6 +38,12 @@ function cloneHistory(h: FairnessHistory): FairnessHistory {
 		datesByPerson: Object.fromEntries(
 			Object.entries(h.datesByPerson).map(([k, v]) => [k, [...v]]),
 		),
+		assignmentsByPerson: Object.fromEntries(
+			Object.entries(h.assignmentsByPerson ?? {}).map(([k, v]) => [
+				k,
+				v.map((a) => ({ ...a })),
+			]),
+		),
 	};
 }
 

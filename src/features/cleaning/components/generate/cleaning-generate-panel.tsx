@@ -17,6 +17,7 @@ import { RosterEditor } from "@/features/cleaning/components/editor/roster-edito
 import type { BlockedWeek } from "@/features/cleaning/lib/blocked-weeks";
 import { splitSessionDatesByBlockedWeeks } from "@/features/cleaning/lib/blocked-weeks";
 import type { CleaningPageData } from "@/features/cleaning/lib/cleaning-page-data";
+import { historyWithDraftBefore } from "@/features/cleaning/lib/draft-history";
 import { generateRoster } from "@/features/cleaning/lib/generate-roster";
 import type { RosterDraft } from "@/features/cleaning/lib/roster-types";
 import { sectorsFromConfig } from "@/features/cleaning/lib/sectors-from-config";
@@ -189,6 +190,17 @@ export function CleaningGeneratePanel({
 			return;
 		}
 
+		// Designações anteriores do rascunho atual (ainda não salvas) entram
+		// na análise em sequência: só contam as de datas antes da nova tabela.
+		const generationHistory =
+			draft && draft.days.length > 0
+				? historyWithDraftBefore(
+						data.history,
+						draft,
+						split.active[0]?.date ?? from,
+					)
+				: data.history;
+
 		const next = generateRoster({
 			cleaningType: type,
 			periodFrom: from,
@@ -197,7 +209,7 @@ export function CleaningGeneratePanel({
 			sectors,
 			people: data.people,
 			sessionDates: split.active,
-			history: data.history,
+			history: generationHistory,
 		});
 
 		onDraftChange({ ...next, blockedWeeks: split.blockedWeeks });
@@ -302,7 +314,11 @@ export function CleaningGeneratePanel({
 					}
 				/>
 
-				<RosterEditor draft={draft} onChange={onDraftChange} />
+				<RosterEditor
+					draft={draft}
+					onChange={onDraftChange}
+					history={data.history}
+				/>
 			</div>
 		);
 	}

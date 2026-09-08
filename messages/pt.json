@@ -101,7 +101,20 @@
 		"hide": "Ocultar",
 		"noAssignment": "Sem designação",
 		"manualSuffix": " · manual",
-		"emDash": "—"
+		"emDash": "—",
+		"change": "Alterar",
+		"close": "Fechar",
+		"filterMale": "Somente homens",
+		"filterFemale": "Somente mulheres",
+		"adultOnly": "Somente adultos",
+		"changePersonLabel": "Alterar pessoa em {sector}",
+		"filteredCount": "{shown} de {total} pessoas elegíveis",
+		"lastAssignments": "Últimas designações",
+		"sameSectorHint": "Mesmo setor",
+		"otherSectorHint": "Outro setor",
+		"colorLegend": "Vermelho = mesmo setor · Azul = outro setor",
+		"searchPerson": "Buscar pessoa…",
+		"neverCleaned": "Nunca limpou"
 	},
 	"CleaningPdf": {
 		"downloadPdf": "Baixar PDF",

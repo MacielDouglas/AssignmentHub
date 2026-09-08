@@ -66,4 +66,9 @@ export type FairnessHistory = {
 	totalByPerson: Record<string, number>;
 	sectorByPerson: Record<string, Record<string, number>>;
 	datesByPerson: Record<string, string[]>;
+	/** Histórico com setor por data (ordem decrescente) — usado para colorir últimas designações. */
+	assignmentsByPerson: Record<
+		string,
+		Array<{ date: string; sectorId: string }>
+	>;
 };

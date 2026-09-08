@@ -163,6 +163,7 @@ async function loadFairnessHistory(
 		totalByPerson: {},
 		sectorByPerson: {},
 		datesByPerson: {},
+		assignmentsByPerson: {},
 	};
 
 	for (const r of rows) {
@@ -178,10 +179,22 @@ async function loadFairnessHistory(
 			history.datesByPerson[r.personId] = [];
 		}
 		history.datesByPerson[r.personId].push(date);
+		if (!history.assignmentsByPerson[r.personId]) {
+			history.assignmentsByPerson[r.personId] = [];
+		}
+		history.assignmentsByPerson[r.personId].push({
+			date,
+			sectorId: r.sectorId,
+		});
 	}
 
 	for (const id of Object.keys(history.datesByPerson)) {
 		history.datesByPerson[id].sort();
+	}
+	for (const id of Object.keys(history.assignmentsByPerson)) {
+		history.assignmentsByPerson[id].sort((a, b) =>
+			a.date < b.date ? 1 : a.date > b.date ? -1 : 0,
+		);
 	}
 
 	return history;

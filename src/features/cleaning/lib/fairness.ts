@@ -109,4 +109,88 @@ export function recordAssignment(
 		history.datesByPerson[personId] = [];
 	}
 	history.datesByPerson[personId].push(date);
+	if (!history.assignmentsByPerson) {
+		history.assignmentsByPerson = {};
+	}
+	if (!history.assignmentsByPerson[personId]) {
+		history.assignmentsByPerson[personId] = [];
+	}
+	history.assignmentsByPerson[personId].push({ date, sectorId });
+}
+
+/**
+ * Últimas N datas distintas (ordem decrescente) com flag se passou pelo setor atual.
+ * Independe do setor para listar, mas sinaliza mesmo setor (vermelho) vs outro (azul).
+ */
+export function lastAssignmentsForDisplay(
+	personId: string,
+	currentSectorId: string,
+	history: FairnessHistory,
+	limit = 6,
+): Array<{ date: string; isSameSector: boolean }> {
+	const all = history.assignmentsByPerson?.[personId] ?? [];
+	const byDate = new Map<string, boolean>();
+	for (const a of all) {
+		const prev = byDate.get(a.date) ?? false;
+		byDate.set(a.date, prev || a.sectorId === currentSectorId);
+	}
+	return [...byDate.entries()]
+		.sort((a, b) => (a[0] < b[0] ? 1 : a[0] > b[0] ? -1 : 0))
+		.slice(0, limit)
+		.map(([date, isSameSector]) => ({ date, isSameSector }));
+}
+
+/**
+ * Últimas designações com o setor de cada data (ordem decrescente).
+ * Usado para exibir os ícones dos setores nas linhas de candidatos.
+ * Deduplica por data: se no mesmo dia houve >1 setor, prioriza o setor atual.
+ */
+export function recentAssignmentsWithSector(
+	personId: string,
+	currentSectorId: string,
+	history: FairnessHistory,
+	limit = 6,
+): Array<{ date: string; sectorId: string; isSameSector: boolean }> {
+	const all = history.assignmentsByPerson?.[personId] ?? [];
+	const byDate = new Map<string, { sectorId: string; isSame: boolean }>();
+	for (const a of all) {
+		const cur = byDate.get(a.date);
+		const isSame = a.sectorId === currentSectorId;
+		if (!cur) {
+			byDate.set(a.date, { sectorId: a.sectorId, isSame });
+		} else if (!cur.isSame && isSame) {
+			byDate.set(a.date, { sectorId: a.sectorId, isSame: true });
+		}
+	}
+	return [...byDate.entries()]
+		.sort((a, b) => (a[0] < b[0] ? 1 : a[0] > b[0] ? -1 : 0))
+		.slice(0, limit)
+		.map(([date, v]) => ({
+			date,
+			sectorId: v.sectorId,
+			isSameSector: v.isSame,
+		}));
+}
+
+/**
+ * Ordena candidatos: quem nunca limpou primeiro, depois quem limpou há mais
+ * tempo; quem limpou por último fica no fim. Desempate por nome.
+ */
+export function sortCandidatesByLeastRecent(
+	candidates: EligiblePerson[],
+	history: FairnessHistory,
+): EligiblePerson[] {
+	const lastOf = new Map<string, string | null>();
+	for (const p of candidates) {
+		lastOf.set(p.id, lastWorkedDate(p.id, history));
+	}
+	return [...candidates].sort((a, b) => {
+		const la = lastOf.get(a.id);
+		const lb = lastOf.get(b.id);
+		if (la == null && lb == null) return a.name.localeCompare(b.name);
+		if (la == null) return -1;
+		if (lb == null) return 1;
+		if (la !== lb) return la < lb ? -1 : 1;
+		return a.name.localeCompare(b.name);
+	});
 }

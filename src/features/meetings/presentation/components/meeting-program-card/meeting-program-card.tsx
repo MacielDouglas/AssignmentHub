@@ -63,7 +63,6 @@ export function MeetingProgramCard({
 					<MidweekSections
 						parts={program.parts}
 						baseTime={program.scheduledTime}
-						slug={slug}
 						renderPartRow={renderPartRow}
 					/>
 				) : (

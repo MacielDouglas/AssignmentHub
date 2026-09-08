@@ -7,16 +7,10 @@ import { SectionHeader } from "./section-header";
 type Props = {
 	parts: MeetingPartDto[];
 	baseTime: string | null;
-	slug: string;
 	renderPartRow: (part: MeetingPartDto) => ReactNode;
 };
 
-export function MidweekSections({
-	parts,
-	baseTime,
-	slug,
-	renderPartRow,
-}: Props) {
+export function MidweekSections({ parts, baseTime, renderPartRow }: Props) {
 	const sections = buildMidweekVisualSections(parts);
 
 	return (
@@ -39,7 +33,6 @@ export function MidweekSections({
 							<MidweekIntroductionSection
 								parts={section.parts}
 								baseTime={baseTime}
-								slug={slug}
 							/>
 						) : (
 							<div className="space-y-1">

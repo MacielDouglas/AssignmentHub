@@ -9,23 +9,45 @@ type Props = {
 	part: MeetingPartDto;
 	startTime: string | null;
 	canManage: boolean;
+	disableEdit?: boolean;
 };
 
-export function MeetingPartRow({ slug, part, startTime, canManage }: Props) {
+function getAssignableRoles(part: MeetingPartDto): MeetingAssignmentRole[] {
+	const meta = getMeetingPartMeta(part.kind);
+	if (!meta?.roles[0]) return [];
+
+	if (part.kind === "MIDWEEK_CHAIRMAN") return ["CHAIRMAN"];
+
+	return meta.roles;
+}
+
+function getAssignmentForRole(
+	part: MeetingPartDto,
+	role: MeetingAssignmentRole,
+) {
+	return part.assignments.find((a) => a.role === role);
+}
+
+export function MeetingPartRow({
+	slug,
+	part,
+	startTime,
+	canManage,
+	disableEdit,
+}: Props) {
 	if (part.kind === "MIDWEEK_CHAIRMAN") {
-		return <ChairmanRow slug={slug} part={part} canManage={canManage} />;
+		return (
+			<ChairmanRow
+				slug={slug}
+				part={part}
+				canManage={canManage}
+				disableEdit={disableEdit}
+			/>
+		);
 	}
 
-	const primaryAssignment = part.assignments.find(
-		(assignment) => assignment.role !== "ASSISTANT",
-	);
-
-	const assistantAssignment = part.assignments.find(
-		(assignment) => assignment.role === "ASSISTANT",
-	);
-
+	const assignableRoles = getAssignableRoles(part);
 	const title = getPartDisplayTitle(part);
-	const assistantName = assistantAssignment?.assigneeName ?? null;
 
 	return (
 		<article
@@ -62,19 +84,29 @@ export function MeetingPartRow({ slug, part, startTime, canManage }: Props) {
 				</div>
 
 				<div className="flex min-w-0 shrink-0 flex-col items-end gap-0.5 text-right">
-					<AssignmentValue
-						slug={slug}
-						part={part}
-						assignment={primaryAssignment}
-						canManage={canManage}
-						fallbackLabel={canManage ? "Não designado" : "Sem programação"}
-					/>
-
-					{assistantName ? (
-						<span className="max-w-36 truncate text-caption text-muted-foreground sm:max-w-52">
-							{assistantName}
+					{assignableRoles.length > 0 ? (
+						assignableRoles.map((role) => {
+							const assignment = getAssignmentForRole(part, role);
+							return (
+								<AssignmentValue
+									key={role}
+									slug={slug}
+									part={part}
+									assignment={assignment}
+									canManage={canManage}
+									disableEdit={disableEdit}
+									fallbackLabel={
+										canManage ? "Não designado" : "Sem programação"
+									}
+									roleFallback={role}
+								/>
+							);
+						})
+					) : (
+						<span className="max-w-40 truncate text-label text-muted-foreground sm:max-w-56">
+							{canManage ? "Não designado" : "Sem programação"}
 						</span>
-					) : null}
+					)}
 				</div>
 			</div>
 
@@ -99,10 +131,12 @@ function ChairmanRow({
 	slug,
 	part,
 	canManage,
+	disableEdit,
 }: {
 	slug: string;
 	part: MeetingPartDto;
 	canManage: boolean;
+	disableEdit?: boolean;
 }) {
 	const assignment = part.assignments[0];
 	const assigneeName = assignment?.assigneeName ?? null;
@@ -116,6 +150,7 @@ function ChairmanRow({
 				part={part}
 				assignment={assignment}
 				canManage={canManage}
+				disableEdit={disableEdit}
 				fallbackLabel={canManage ? "Não designado" : "Sem programação"}
 				roleFallback="CHAIRMAN"
 			/>
@@ -130,6 +165,7 @@ function AssignmentValue({
 	part,
 	assignment,
 	canManage,
+	disableEdit,
 	fallbackLabel,
 	roleFallback,
 }: {
@@ -137,6 +173,7 @@ function AssignmentValue({
 	part: MeetingPartDto;
 	assignment: MeetingPartDto["assignments"][number] | undefined;
 	canManage: boolean;
+	disableEdit?: boolean;
 	fallbackLabel: string;
 	roleFallback?: MeetingAssignmentRole;
 }) {
@@ -144,7 +181,7 @@ function AssignmentValue({
 	const meta = getMeetingPartMeta(part.kind);
 	const assignmentRole = assignment?.role ?? roleFallback ?? meta?.roles[0];
 
-	if (!canManage || !assignmentRole) {
+	if (!canManage || !assignmentRole || disableEdit) {
 		return (
 			<span className="max-w-40 truncate text-label text-muted-foreground sm:max-w-56">
 				{label}

@@ -1,15 +1,13 @@
 import type { MeetingPartDto } from "@/features/meetings/domain/meeting-types";
 
-import { AssignmentDialog } from "../assignment-dialog";
 import { addMinutesToTime } from "./meeting-program.utils";
 
 type Props = {
-	slug: string;
 	parts: MeetingPartDto[];
 	baseTime: string | null;
 };
 
-export function MidweekIntroductionSection({ slug, parts, baseTime }: Props) {
+export function MidweekIntroductionSection({ parts, baseTime }: Props) {
 	const chairman = parts.find((part) => part.kind === "MIDWEEK_CHAIRMAN");
 
 	const openingSong = parts.find(
@@ -28,20 +26,9 @@ export function MidweekIntroductionSection({ slug, parts, baseTime }: Props) {
 				</span>
 
 				{chairman ? (
-					<AssignmentDialog
-						slug={slug}
-						partId={chairman.id}
-						partTitle={chairman.title}
-						assignmentRole="CHAIRMAN"
-						trigger={
-							<button
-								type="button"
-								className="min-h-11 rounded-md px-1 text-right text-label text-foreground underline decoration-dotted underline-offset-4 transition hover:decoration-solid focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50"
-							>
-								{chairmanAssignment?.assigneeName ?? "Não designadinho"}
-							</button>
-						}
-					/>
+					<span className="max-w-40 truncate text-label text-muted-foreground sm:max-w-56">
+						{chairmanAssignment?.assigneeName ?? "Não designado"}
+					</span>
 				) : (
 					<span className="text-label text-muted-foreground">
 						Parte indisponível

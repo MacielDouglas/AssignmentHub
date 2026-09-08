@@ -52,8 +52,6 @@ export function MeetingsPageContent({ data, view }: Props) {
 			) : (
 				<MeetingProgramCard
 					slug={data.organizationSlug}
-					weekStart={data.weekStart}
-					weekEnd={data.weekEnd}
 					program={data.weekend}
 					canManage={data.canManage}
 					variant="weekend"

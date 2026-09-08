@@ -4,12 +4,17 @@ import { getMeetingPartMeta } from "@/features/meetings/domain/meeting-part-meta
 import type { MeetingPartDto } from "@/features/meetings/domain/meeting-types";
 import type { MeetingAssignmentRole } from "@/generated/prisma/client";
 import { cn } from "@/lib/utils";
-import { AssignmentDialog } from "./assignment-dialog";
+import {
+	AssignmentDialog,
+	type AssignmentSelection,
+} from "./assignment-dialog";
 
 type Props = {
 	slug: string;
 	part: MeetingPartDto;
 	canManage: boolean;
+	pendingSelections?: AssignmentSelection[];
+	onSelect?: (selection: AssignmentSelection) => void;
 };
 
 function getPartDisplayTitle(part: MeetingPartDto) {
@@ -18,25 +23,50 @@ function getPartDisplayTitle(part: MeetingPartDto) {
 	return `Cântico ${part.songNumber}${songTitle}`;
 }
 
-function getAssignmentRole(part: MeetingPartDto): MeetingAssignmentRole | null {
+function getAssignableRoles(part: MeetingPartDto): MeetingAssignmentRole[] {
 	const meta = getMeetingPartMeta(part.kind);
-	if (!meta?.roles[0]) return null;
+	if (!meta?.roles[0]) return [];
 
-	if (part.kind === "MIDWEEK_CHAIRMAN") return "CHAIRMAN";
+	if (part.kind === "MIDWEEK_CHAIRMAN") return ["CHAIRMAN"];
 
-	const existing = part.assignments[0];
-	if (existing) return existing.role;
-
-	return meta.roles[0];
+	return meta.roles;
 }
 
-export function MwbPartRow({ slug, part, canManage }: Props) {
-	const meta = getMeetingPartMeta(part.kind);
-	const role = getAssignmentRole(part);
-	const isAssignable = meta && role;
+function getAssignmentForRole(
+	part: MeetingPartDto,
+	role: MeetingAssignmentRole,
+) {
+	return part.assignments.find((a) => a.role === role);
+}
 
-	const existingAssignment = part.assignments[0];
-	const displayName = existingAssignment?.assigneeName ?? null;
+function getPendingForRole(
+	pendingSelections: AssignmentSelection[] | undefined,
+	partId: string,
+	role: MeetingAssignmentRole,
+): AssignmentSelection | undefined {
+	return pendingSelections?.find((s) => s.partId === partId && s.role === role);
+}
+
+const ROLE_LABELS: Record<MeetingAssignmentRole, string> = {
+	PRIMARY: "Principal",
+	CHAIRMAN: "Presidente",
+	READER: "Leitor",
+	ASSISTANT: "Ajudante",
+	PRAYER: "Oração",
+	SPEAKER: "Orador",
+	CONDUCTOR: "Dirigente",
+};
+
+export function MwbPartRow({
+	slug,
+	part,
+	canManage,
+	pendingSelections,
+	onSelect,
+}: Props) {
+	const assignableRoles = getAssignableRoles(part);
+	const isAssignable = assignableRoles.length > 0;
+	const hasMultipleRoles = assignableRoles.length > 1;
 
 	return (
 		<article
@@ -65,34 +95,74 @@ export function MwbPartRow({ slug, part, canManage }: Props) {
 				) : null}
 
 				{isAssignable && canManage ? (
-					<div className="flex items-center gap-1">
-						<AssignmentDialog
-							slug={slug}
-							partId={part.id}
-							partTitle={part.title}
-							assignmentRole={role}
-							trigger={
-								<button
-									type="button"
-									className={cn(
-										"max-w-32 rounded-md px-1.5 py-0.5 text-right text-caption transition",
-										displayName
-											? "font-medium text-foreground underline decoration-dotted underline-offset-2 hover:decoration-solid"
-											: "text-muted-foreground underline decoration-dotted underline-offset-2 hover:text-foreground hover:decoration-solid",
-									)}
-								>
-									<span className="block truncate">
-										{displayName ?? "Designar"}
-									</span>
-								</button>
-							}
-						/>
+					<div className="flex flex-col items-end gap-0.5">
+						{assignableRoles.map((role) => {
+							const pending = getPendingForRole(
+								pendingSelections,
+								part.id,
+								role,
+							);
+							const assignment = getAssignmentForRole(part, role);
+							const displayName =
+								pending?.assigneeName ?? assignment?.assigneeName ?? null;
+							const isPending = !!pending;
+
+							return (
+								<AssignmentDialog
+									key={role}
+									slug={slug}
+									partId={part.id}
+									partTitle={part.title}
+									assignmentRole={role}
+									onSelect={onSelect}
+									autoClose={!hasMultipleRoles}
+									trigger={
+										<button
+											type="button"
+											className={cn(
+												"max-w-32 rounded-md px-1.5 py-0.5 text-right text-caption transition",
+												displayName
+													? cn(
+															"font-medium underline decoration-dotted underline-offset-2 hover:decoration-solid",
+															isPending ? "text-primary" : "text-foreground",
+														)
+													: "text-muted-foreground underline decoration-dotted underline-offset-2 hover:text-foreground hover:decoration-solid",
+											)}
+										>
+											<span className="block truncate">
+												{displayName ?? ROLE_LABELS[role]}
+											</span>
+										</button>
+									}
+								/>
+							);
+						})}
 					</div>
-				) : displayName ? (
-					<span className="max-w-32 truncate text-caption font-medium text-foreground">
-						{displayName}
-					</span>
-				) : null}
+				) : (
+					<div className="flex flex-col items-end gap-0.5">
+						{assignableRoles.map((role) => {
+							const pending = getPendingForRole(
+								pendingSelections,
+								part.id,
+								role,
+							);
+							const assignment = getAssignmentForRole(part, role);
+							const displayName =
+								pending?.assigneeName ?? assignment?.assigneeName ?? null;
+
+							if (!displayName) return null;
+
+							return (
+								<span
+									key={role}
+									className="max-w-32 truncate text-caption font-medium text-foreground"
+								>
+									{displayName}
+								</span>
+							);
+						})}
+					</div>
+				)}
 			</div>
 		</article>
 	);

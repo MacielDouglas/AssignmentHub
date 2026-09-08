@@ -2,65 +2,12 @@
 
 import { Skeleton } from "@/components/ui/skeleton";
 import type { MeetingPartDto } from "@/features/meetings/domain/meeting-types";
+import type { AssignmentSelection } from "./assignment-dialog";
+import {
+	MIDWEEK_SECTION_DEFINITIONS,
+	type VisualSection,
+} from "./meeting-program-card/meeting-program.constants";
 import { MwbPartRow } from "./mwb-part-row";
-
-type VisualSection = {
-	label: string | null;
-	displayLabel?: string;
-	color?: string;
-	parts: MeetingPartDto[];
-};
-
-const MIDWEEK_SECTION_KINDS: Record<
-	string,
-	{ label: string; displayLabel?: string; color?: string; partKinds: string[] }
-> = {
-	INTRODUCAO: {
-		label: "Introdução",
-		partKinds: [
-			"MIDWEEK_CHAIRMAN",
-			"MIDWEEK_OPENING_SONG",
-			"MIDWEEK_INTRODUCTION",
-		],
-	},
-	TREASURES: {
-		label: "Tesouros Espirituais",
-		displayLabel: "TESOUROS DA PALAVRA DE DEUS",
-		partKinds: [
-			"MIDWEEK_TREASURES_TALK",
-			"MIDWEEK_SPIRITUAL_GEMS",
-			"MIDWEEK_BIBLE_READING",
-		],
-	},
-	MINISTRY: {
-		label: "Ministério",
-		displayLabel: "FAÇA SEU MELHOR NO MINISTÉRIO",
-		color: "#d68f00",
-		partKinds: [
-			"MIDWEEK_MINISTRY_INITIATING_CONVERSATION",
-			"MIDWEEK_MINISTRY_CULTIVATING_INTEREST",
-			"MIDWEEK_MINISTRY_MAKING_DISCIPLES",
-			"MIDWEEK_MINISTRY_EXPLAINING_BELIEFS",
-			"MIDWEEK_MINISTRY_TALK",
-		],
-	},
-	LIVING: {
-		label: "Vida Cristã",
-		displayLabel: "NOSSA VIDA CRISTÃ",
-		color: "#bf2f13",
-		partKinds: [
-			"MIDWEEK_MIDDLE_SONG",
-			"MIDWEEK_LIVING_PART",
-			"MIDWEEK_ORGANIZATION_ACCOMPLISHMENTS",
-			"MIDWEEK_BIBLE_STUDY",
-			"MIDWEEK_SERVICE_TALK",
-		],
-	},
-	CONCLUSAO: {
-		label: "Conclusão",
-		partKinds: ["MIDWEEK_CONCLUSION", "MIDWEEK_CLOSING_SONG_AND_PRAYER"],
-	},
-};
 
 function buildSections(parts: MeetingPartDto[]): VisualSection[] {
 	const byKind = new Map<string, MeetingPartDto[]>();
@@ -70,24 +17,27 @@ function buildSections(parts: MeetingPartDto[]): VisualSection[] {
 		byKind.set(part.kind, list);
 	}
 
-	const sections: VisualSection[] = [];
-	for (const [, sectionDef] of Object.entries(MIDWEEK_SECTION_KINDS)) {
-		const sectionParts: MeetingPartDto[] = [];
-		for (const kind of sectionDef.partKinds) {
-			const kindParts = byKind.get(kind);
-			if (kindParts) sectionParts.push(...kindParts);
-		}
-		if (sectionParts.length > 0) {
-			sectionParts.sort((a, b) => a.sortOrder - b.sortOrder);
+	return MIDWEEK_SECTION_DEFINITIONS.reduce<VisualSection[]>(
+		(sections, definition) => {
+			const sectionParts = definition.partKinds
+				.flatMap((kind) => byKind.get(kind) ?? [])
+				.sort((a, b) => a.sortOrder - b.sortOrder);
+
+			if (sectionParts.length === 0) {
+				return sections;
+			}
+
 			sections.push({
-				label: sectionDef.label,
-				displayLabel: sectionDef.displayLabel,
-				color: sectionDef.color,
+				label: definition.label,
+				displayLabel: definition.displayLabel,
+				color: definition.color,
 				parts: sectionParts,
 			});
-		}
-	}
-	return sections;
+
+			return sections;
+		},
+		[],
+	);
 }
 
 function SectionLabel({ label, color }: { label: string; color?: string }) {
@@ -127,9 +77,17 @@ type PartsProps = {
 	slug: string;
 	parts: MeetingPartDto[];
 	canManage: boolean;
+	pendingSelections?: AssignmentSelection[];
+	onSelect?: (selection: AssignmentSelection) => void;
 };
 
-export function MwbWeekParts({ slug, parts, canManage }: PartsProps) {
+export function MwbWeekParts({
+	slug,
+	parts,
+	canManage,
+	pendingSelections,
+	onSelect,
+}: PartsProps) {
 	const sections = buildSections(parts);
 
 	return (
@@ -151,6 +109,8 @@ export function MwbWeekParts({ slug, parts, canManage }: PartsProps) {
 								slug={slug}
 								part={part}
 								canManage={canManage}
+								pendingSelections={pendingSelections}
+								onSelect={onSelect}
 							/>
 						))}
 					</div>
@@ -163,16 +123,30 @@ export function MwbWeekParts({ slug, parts, canManage }: PartsProps) {
 export function MwbWeekPartsSkeleton() {
 	return (
 		<div className="space-y-4">
-			{Array.from({ length: 4 }).map((_, i) => (
-				// biome-ignore lint/suspicious/noArrayIndexKey: skeleton - static list
-				<div key={i} className="space-y-2">
-					<Skeleton className="h-4 w-32" />
-					{Array.from({ length: 3 }).map((_, j) => (
-						// biome-ignore lint/suspicious/noArrayIndexKey: skeleton - static list
-						<Skeleton key={j} className="h-10 w-full" />
-					))}
-				</div>
-			))}
+			<div className="space-y-2">
+				<Skeleton className="h-4 w-32" />
+				<Skeleton className="h-10 w-full" />
+				<Skeleton className="h-10 w-full" />
+				<Skeleton className="h-10 w-full" />
+			</div>
+			<div className="space-y-2">
+				<Skeleton className="h-4 w-32" />
+				<Skeleton className="h-10 w-full" />
+				<Skeleton className="h-10 w-full" />
+				<Skeleton className="h-10 w-full" />
+			</div>
+			<div className="space-y-2">
+				<Skeleton className="h-4 w-32" />
+				<Skeleton className="h-10 w-full" />
+				<Skeleton className="h-10 w-full" />
+				<Skeleton className="h-10 w-full" />
+			</div>
+			<div className="space-y-2">
+				<Skeleton className="h-4 w-32" />
+				<Skeleton className="h-10 w-full" />
+				<Skeleton className="h-10 w-full" />
+				<Skeleton className="h-10 w-full" />
+			</div>
 		</div>
 	);
 }

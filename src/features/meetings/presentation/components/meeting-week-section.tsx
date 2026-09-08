@@ -64,8 +64,6 @@ export function MeetingWeekSection({ data, view }: Props) {
 
 					<MeetingProgramCard
 						slug={data.organizationSlug}
-						weekStart={data.weekStart}
-						weekEnd={data.weekEnd}
 						program={program}
 						canManage={data.canManage}
 						variant={view}

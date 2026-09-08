@@ -685,84 +685,37 @@ async function upsertProgramParts(
 		parts: GeneratedPart[];
 	},
 ) {
-	const existingParts = await tx.meetingProgramPart.findMany({
+	await tx.meetingProgramAssignment.deleteMany({
 		where: {
-			meetingProgramId: input.meetingProgramId,
-		},
-		select: {
-			id: true,
-			kind: true,
-			sortOrder: true,
-			assignments: {
-				select: {
-					id: true,
-				},
-				take: 1,
+			meetingProgramPart: {
+				meetingProgramId: input.meetingProgramId,
 			},
 		},
 	});
 
-	const existingByKindAndOrder = new Map(
-		existingParts.map((part) => [`${part.kind}:${part.sortOrder}`, part]),
-	);
-
-	const incomingKeys = new Set(
-		input.parts.map((part) => `${part.kind}:${part.sortOrder}`),
-	);
+	await tx.meetingProgramPart.deleteMany({
+		where: {
+			meetingProgramId: input.meetingProgramId,
+		},
+	});
 
 	for (const part of input.parts) {
-		const key = `${part.kind}:${part.sortOrder}`;
-		const existing = existingByKindAndOrder.get(key);
-
-		const data = {
-			kind: part.kind,
-			sectionCode: part.sectionCode,
-			sortOrder: part.sortOrder,
-			title: part.title,
-			theme: part.theme ?? null,
-			durationMin: part.durationMin ?? null,
-			modality: part.modality ?? null,
-			source: part.source ?? null,
-			songNumber: part.songNumber ?? null,
-			songTitle: part.songTitle ?? null,
-			customTitle: part.customTitle ?? null,
-			sourceMwbPartId: part.sourceMwbPartId ?? null,
-			isDisabled: part.isDisabled ?? false,
-		};
-
-		if (existing) {
-			await tx.meetingProgramPart.update({
-				where: {
-					id: existing.id,
-				},
-				data,
-			});
-
-			continue;
-		}
-
 		await tx.meetingProgramPart.create({
 			data: {
 				meetingProgramId: input.meetingProgramId,
-				...data,
-			},
-		});
-	}
-
-	const removablePartIds = existingParts
-		.filter((part) => {
-			const key = `${part.kind}:${part.sortOrder}`;
-
-			return !incomingKeys.has(key) && part.assignments.length === 0;
-		})
-		.map((part) => part.id);
-
-	if (removablePartIds.length > 0) {
-		await tx.meetingProgramPart.deleteMany({
-			where: {
-				id: {
-					in: removablePartIds,
-				},
+				kind: part.kind,
+				sectionCode: part.sectionCode,
+				sortOrder: part.sortOrder,
+				title: part.title,
+				theme: part.theme ?? null,
+				durationMin: part.durationMin ?? null,
+				modality: part.modality ?? null,
+				source: part.source ?? null,
+				songNumber: part.songNumber ?? null,
+				songTitle: part.songTitle ?? null,
+				customTitle: part.customTitle ?? null,
+				sourceMwbPartId: part.sourceMwbPartId ?? null,
+				isDisabled: part.isDisabled ?? false,
 			},
 		});
 	}

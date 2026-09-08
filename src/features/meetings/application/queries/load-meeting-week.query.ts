@@ -218,14 +218,7 @@ export async function loadMeetingWeekQuery(
 		throw new Error("Não foi possível gerar os programas da semana.");
 	}
 
-	const hasApostilaSections = midweek.parts.some(
-		(part) =>
-			part.sectionCode === "TREASURES" ||
-			part.sectionCode === "MINISTRY" ||
-			part.sectionCode === "LIVING",
-	);
-
-	if (!hasApostilaSections && !midweek.sourceMwbWeek) {
+	if (!midweek.sourceMwbWeek) {
 		await generateMeetingProgramsForWeek({
 			organizationId: organization.id,
 			weekStart,

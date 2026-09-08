@@ -2,6 +2,7 @@
 
 import type { MeetingWeekDto } from "../../domain/meeting-types";
 import { MeetingProgramCard } from "./meeting-program-card";
+import { MeetingWeekSection } from "./meeting-week-section";
 import { WeekNavigation } from "./week-navigation";
 
 type Props = {
@@ -46,14 +47,18 @@ export function MeetingsPageContent({ data, view }: Props) {
 				</div>
 			</section>
 
-			<MeetingProgramCard
-				slug={data.organizationSlug}
-				weekStart={data.weekStart}
-				weekEnd={data.weekEnd}
-				program={view === "midweek" ? data.midweek : data.weekend}
-				canManage={data.canManage}
-				variant={view}
-			/>
+			{view === "midweek" ? (
+				<MeetingWeekSection data={data} view={view} />
+			) : (
+				<MeetingProgramCard
+					slug={data.organizationSlug}
+					weekStart={data.weekStart}
+					weekEnd={data.weekEnd}
+					program={data.weekend}
+					canManage={data.canManage}
+					variant="weekend"
+				/>
+			)}
 		</>
 	);
 }

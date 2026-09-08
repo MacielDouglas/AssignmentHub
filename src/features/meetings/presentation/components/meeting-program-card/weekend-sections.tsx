@@ -1,5 +1,6 @@
 import type { ReactNode } from "react";
 import type { MeetingPartDto } from "@/features/meetings/domain/meeting-types";
+import { cn } from "@/lib/utils";
 
 import { groupPartsBySection } from "./meeting-program.utils";
 import { SectionHeader } from "./section-header";
@@ -30,13 +31,29 @@ export function WeekendSections({ parts, renderPartRow }: Props) {
 			{groups.map((group) => {
 				const meta = group.sectionCode ? SECTION_META[group.sectionCode] : null;
 
+				const watchtowerColor = group.parts.find(
+					(p) => p.highlightColor,
+				)?.highlightColor;
+
 				if (meta) {
 					return (
 						<div key={group.sectionCode}>
 							<div className="mb-3">
 								<SectionHeader label={meta.label} />
 							</div>
-							<div className="space-y-2">
+							<div
+								className={cn(
+									"space-y-2",
+									watchtowerColor &&
+										group.sectionCode === "WATCHTOWER" &&
+										"rounded-xl border-l-4 pl-3",
+								)}
+								style={
+									watchtowerColor && group.sectionCode === "WATCHTOWER"
+										? { borderLeftColor: watchtowerColor }
+										: undefined
+								}
+							>
 								{group.parts.map((part) => renderPartRow(part))}
 							</div>
 						</div>

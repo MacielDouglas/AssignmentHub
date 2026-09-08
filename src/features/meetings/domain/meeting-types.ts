@@ -32,6 +32,7 @@ export type MeetingPartDto = {
 	songTitle: string | null;
 	customTitle: string | null;
 	isDisabled: boolean;
+	highlightColor: string | null;
 	assignments: AssignmentDto[];
 };
 

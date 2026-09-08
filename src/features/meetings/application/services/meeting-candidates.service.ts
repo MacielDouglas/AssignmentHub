@@ -21,7 +21,7 @@ type LoadCandidatesInput = {
 	role: MeetingAssignmentRole;
 };
 
-function personPassesRoleRules(input: {
+export function personPassesRoleRules(input: {
 	role: MeetingAssignmentRole;
 	partKind: MeetingProgramPartKind;
 	person: {

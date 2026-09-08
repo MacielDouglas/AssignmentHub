@@ -23,30 +23,53 @@ const AES_XOR_CONST = Buffer.from(
 const SECTION_HEADINGS = new Set([
 	"TESOROS DE LA BIBLIA",
 	"TESOUROS DA BIBLIA",
+	"TESOUROS DA PALAVRA DE DEUS",
+	"TESOROS DE LA PALABRA DE DIOS",
 	"SEAMOS MEJORES MAESTROS",
 	"FACAMOS MELHORES MESTRES",
+	"FAÇAMOS MELHORES MESTRES",
 	"NUESTRA VIDA CRISTIANA",
 	"NOSSA VIDA CRISTA",
+	"NOSSA VIDA CRISTÃ",
 ]);
 
 const GENERIC_PART_TYPES = new Set([
 	"Busquemos perlas escondidas",
 	"Busquemos perolas escondidas",
+	"Busquemos joias espirituais",
+	"Busquemos joyas espirituales",
 	"Leitura da Biblia",
 	"Lectura de la Biblia",
+	"Leitura bíblica",
+	"Lectura bíblica",
 	"Estudo biblico de congregacao",
 	"Estudio biblico de la congregacion",
+	"Estudo Bíblico de Congregação",
+	"Estudio Bíblico de la Congregación",
 	"Discurso",
 	"Comece conversas",
 	"Empiece conversaciones",
+	"Inicie conversas",
+	"Inicie conversaciones",
 	"Faca revisitas",
 	"Haga revisitas",
+	"Faça revisitas",
+	"Haga visitas de regreso",
 	"Faca discipulos",
 	"Haga discipulos",
+	"Faça discípulos",
+	"Haga discípulos",
 	"Explique suas crencas",
 	"Explique sus creencias",
+	"Explique suas crenças",
+	"Explique sus creyencias",
 	"Necessidades da congregacao",
 	"Necesidades de la congregacion",
+	"Necessidades da Congregação",
+	"Necesidades de la Congregación",
+	"Palavras de conclusão",
+	"Palabras de conclusión",
+	"Palavras de conclusao",
 ]);
 
 const TEACHING_MARKERS = [
@@ -434,6 +457,7 @@ function classifySection(
 	if (
 		normalized.includes("SEAMOS MEJORES") ||
 		normalized.includes("FACAMOS MELHORES") ||
+		normalized.includes("FAÇAMOS MELHORES") ||
 		normalized.includes("APPLY YOURSELF") ||
 		normalized.includes("MEJORES MAESTROS") ||
 		normalized.includes("MELHORES MESTRES")
@@ -446,7 +470,8 @@ function classifySection(
 		normalized.includes("NOSSA VIDA") ||
 		normalized.includes("LIVING AS CHRISTIANS") ||
 		normalized.includes("VIDA CRISTIANA") ||
-		normalized.includes("VIDA CRISTA")
+		normalized.includes("VIDA CRISTA") ||
+		normalized.includes("VIDA CRISTÃ")
 	) {
 		return "LIVING";
 	}
@@ -517,6 +542,7 @@ function headingMatchesSection(text: string): boolean {
 		normalized.includes("TESOUROS") ||
 		normalized.includes("SEAMOS MEJORES") ||
 		normalized.includes("FACAMOS MELHORES") ||
+		normalized.includes("FAÇAMOS MELHORES") ||
 		normalized.includes("NUESTRA VIDA") ||
 		normalized.includes("NOSSA VIDA")
 	);

@@ -7,6 +7,8 @@ import type {
 } from "@/generated/prisma/client";
 
 import { db } from "@/lib/db";
+import { getMeetingPartMeta } from "../../domain/meeting-part-meta";
+import { personPassesRoleRules } from "./meeting-candidates.service";
 import { resolveOrganizationWeekSchedule } from "./meeting-schedule.service";
 import { endOfWeekSunday, toIsoDateOnly } from "./meeting-week-dates";
 
@@ -49,12 +51,14 @@ const MIDWEEK_PREFIX_PARTS: GeneratedPart[] = [
 		sectionCode: null,
 		sortOrder: 10,
 		title: "Presidente",
+		durationMin: 6,
 	},
 	{
 		kind: "MIDWEEK_OPENING_SONG",
 		sectionCode: null,
 		sortOrder: 20,
 		title: "Cântico inicial e oração",
+		durationMin: 5,
 	},
 	{
 		kind: "MIDWEEK_INTRODUCTION",
@@ -71,12 +75,14 @@ const WEEKEND_PREFIX_PARTS: GeneratedPart[] = [
 		sectionCode: null,
 		sortOrder: 10,
 		title: "Presidente",
+		durationMin: 5,
 	},
 	{
 		kind: "WEEKEND_OPENING_SONG",
 		sectionCode: null,
 		sortOrder: 20,
 		title: "Cântico inicial e oração",
+		durationMin: 5,
 	},
 ];
 
@@ -495,6 +501,7 @@ function buildMidweekParts(input: {
 				"Cântico final e oração",
 			songNumber: closingSongNumber,
 			songTitle: closingSongTitle,
+			durationMin: 5,
 			isDisabled,
 		},
 	);
@@ -565,6 +572,7 @@ function buildWeekendParts(input: {
 			title: watchtowerStudy?.title ?? "Estudo de A Sentinela",
 			theme: watchtowerStudy?.weekLabelRaw ?? null,
 			source: watchtowerStudy?.issueCode ?? null,
+			durationMin: 30,
 			isDisabled,
 		},
 		{
@@ -576,6 +584,7 @@ function buildWeekendParts(input: {
 				"Cântico final e oração",
 			songNumber: closingSongNumber,
 			songTitle: closingSongTitle,
+			durationMin: 5,
 			isDisabled,
 		},
 	);
@@ -756,6 +765,262 @@ async function upsertMeetingProgram(
 	return program;
 }
 
+type AutoAssignInput = {
+	organizationId: string;
+	meetingDate: Date;
+	parts: GeneratedPart[];
+	meetingProgramId: string;
+};
+
+type AutoAssignment = {
+	meetingProgramPartId: string;
+	role: "PRIMARY" | "ASSISTANT" | "READER" | "CONDUCTOR";
+	sortOrder: number;
+	personId?: string | null;
+	subPersonId?: string | null;
+	externalName?: string | null;
+};
+
+/**
+ * Auto-designa pessoas para partes do programa com base em elegibilidade e histórico.
+ * Retorna assignments como rascunho (não salva — quem chama decide o que fazer).
+ */
+async function autoAssignPeople(
+	input: AutoAssignInput,
+): Promise<AutoAssignment[]> {
+	const assignments: AutoAssignment[] = [];
+
+	// Busca partes criadas no banco para ter os IDs
+	const partsInDb = await db.meetingProgramPart.findMany({
+		where: { meetingProgramId: input.meetingProgramId },
+		select: {
+			id: true,
+			kind: true,
+			sortOrder: true,
+			title: true,
+		},
+		orderBy: { sortOrder: "asc" },
+	});
+
+	// Mapa de kind+sortOrder → partId no banco
+	const partIdMap = new Map(
+		partsInDb.map((p) => [`${p.kind}:${p.sortOrder}`, p.id]),
+	);
+
+	// Busca todas as pessoas elegíveis da organização (uma única vez)
+	const allPeople = await db.person.findMany({
+		where: {
+			organizationId: input.organizationId,
+			isActive: true,
+		},
+		select: {
+			id: true,
+			name: true,
+			sex: true,
+			isActive: true,
+			baptized: true,
+			bibleReading: true,
+			initiatingConversations: true,
+			cultivatingInterest: true,
+			makingDisciples: true,
+			explainingBeliefs: true,
+			bibleStudyReader: true,
+			watchtowerReader: true,
+			privilegePrayer: true,
+			servicePrivilege: {
+				select: {
+					lifeAndMinistryChairman: true,
+					weekendChairman: true,
+					treasuresFromGodsWordTalk: true,
+					spiritualGems: true,
+					ourChristianLifeAssignment: true,
+					localNeeds: true,
+					bibleStudyConductor: true,
+					watchtowerConductor: true,
+					publicTalk: true,
+				},
+			},
+		},
+		orderBy: { name: "asc" },
+	});
+
+	// Sub-pessoas para partes que permitem
+	const subPeople = await db.subPerson.findMany({
+		where: {
+			isActive: true,
+			publicTalk: true,
+			subOrganization: { organizationId: input.organizationId },
+		},
+		select: {
+			id: true,
+			name: true,
+			sex: true,
+		},
+	});
+
+	// Histórico de designações (12 meses)
+	const historyEnd = new Date();
+	const historyStart = new Date();
+	historyStart.setMonth(historyStart.getMonth() - 12);
+
+	const historyRows = await db.meetingProgramAssignment.findMany({
+		where: {
+			meetingProgramPart: {
+				meetingProgram: {
+					organizationId: input.organizationId,
+					scheduledAt: { gte: historyStart, lte: historyEnd },
+				},
+			},
+			OR: [{ personId: { not: null } }, { subPersonId: { not: null } }],
+		},
+		select: {
+			personId: true,
+			subPersonId: true,
+			role: true,
+			meetingProgramPart: {
+				select: {
+					kind: true,
+					meetingProgram: {
+						select: { scheduledAt: true },
+					},
+				},
+			},
+		},
+	});
+
+	// Indexa histórico: `${personId}:${kind}` → última data
+	const lastAssignmentByPersonAndKind = new Map<string, Date>();
+	const lastAssignmentByPersonAny = new Map<string, Date>();
+	const countByPersonAndKind = new Map<string, number>();
+
+	for (const row of historyRows) {
+		const personKey = row.personId ?? row.subPersonId;
+		if (!personKey) continue;
+
+		const kind = row.meetingProgramPart.kind;
+		const date = row.meetingProgramPart.meetingProgram.scheduledAt;
+		if (!date) continue;
+
+		const kindKey = `${personKey}:${kind}`;
+		const existingKind = lastAssignmentByPersonAndKind.get(kindKey);
+		if (!existingKind || date > existingKind) {
+			lastAssignmentByPersonAndKind.set(kindKey, date);
+		}
+
+		const existingAny = lastAssignmentByPersonAny.get(personKey);
+		if (!existingAny || date > existingAny) {
+			lastAssignmentByPersonAny.set(personKey, date);
+		}
+
+		countByPersonAndKind.set(
+			kindKey,
+			(countByPersonAndKind.get(kindKey) ?? 0) + 1,
+		);
+	}
+
+	// Pessoas já usadas hoje (evita repetição no mesmo dia)
+	const usedToday = new Set<string>();
+
+	for (const part of input.parts) {
+		if (part.isDisabled) continue;
+
+		const meta = getMeetingPartMeta(part.kind);
+		if (!meta) continue;
+
+		// Define quais roles precisam de designação automática
+		const rolesToAssign: Array<
+			"PRIMARY" | "ASSISTANT" | "READER" | "CONDUCTOR"
+		> = [];
+
+		if (meta.roles.includes("PRIMARY")) rolesToAssign.push("PRIMARY");
+		if (meta.roles.includes("ASSISTANT")) rolesToAssign.push("ASSISTANT");
+		if (meta.roles.includes("READER")) rolesToAssign.push("READER");
+		if (meta.roles.includes("CONDUCTOR")) rolesToAssign.push("CONDUCTOR");
+
+		if (rolesToAssign.length === 0) continue;
+
+		const partId = partIdMap.get(`${part.kind}:${part.sortOrder}`);
+		if (!partId) continue;
+
+		for (const role of rolesToAssign) {
+			// Filtra pessoas elegíveis para este role+part
+			const eligible = allPeople.filter((person) =>
+				personPassesRoleRules({
+					role,
+					partKind: part.kind,
+					person,
+				}),
+			);
+
+			// Filtra sub-pessoas se aplicável
+			const eligibleSubs = meta.allowSubPerson
+				? subPeople.filter((s) => s.sex === "MALE") // Sub-pessoas sempre masculinas para público
+				: [];
+
+			// Combina e ordena por histórico (quem menos fez primeiro)
+			const allCandidates: Array<{
+				id: string;
+				name: string;
+				kind: "PERSON" | "SUB_PERSON";
+			}> = [
+				...eligible.map((p) => ({
+					id: p.id,
+					name: p.name,
+					kind: "PERSON" as const,
+				})),
+				...eligibleSubs.map((s) => ({
+					id: s.id,
+					name: s.name,
+					kind: "SUB_PERSON" as const,
+				})),
+			];
+
+			// Ordena: nunca fez > quem faz há mais tempo > menos vezes
+			allCandidates.sort((a, b) => {
+				const aKindKey = `${a.id}:${part.kind}`;
+				const bKindKey = `${b.id}:${part.kind}`;
+
+				const aCount = countByPersonAndKind.get(aKindKey) ?? 0;
+				const bCount = countByPersonAndKind.get(bKindKey) ?? 0;
+
+				// Prioriza quem nunca fez
+				if (aCount === 0 && bCount > 0) return -1;
+				if (bCount === 0 && aCount > 0) return 1;
+
+				// Depois, quem faz há mais tempo
+				const aLast = lastAssignmentByPersonAndKind.get(aKindKey);
+				const bLast = lastAssignmentByPersonAndKind.get(bKindKey);
+
+				if (!aLast && bLast) return -1;
+				if (aLast && !bLast) return 1;
+				if (aLast && bLast) return aLast.getTime() - bLast.getTime();
+
+				// Empate: menos vezes
+				return aCount - bCount;
+			});
+
+			// Seleciona a primeira pessoa não usada hoje
+			const selected = allCandidates.find((c) => !usedToday.has(c.id));
+
+			if (selected) {
+				usedToday.add(selected.id);
+
+				assignments.push({
+					meetingProgramPartId: partId,
+					role,
+					sortOrder: 0,
+					personId: selected.kind === "PERSON" ? selected.id : null,
+					subPersonId: selected.kind === "SUB_PERSON" ? selected.id : null,
+					externalName: null,
+				});
+			}
+			// Se não encontrou ninguém, fica sem assignment (designação manual)
+		}
+	}
+
+	return assignments;
+}
+
 export async function generateMeetingProgramsForWeek(
 	input: GenerationInput,
 ): Promise<{
@@ -897,6 +1162,65 @@ export async function generateMeetingProgramsForWeek(
 
 		return [generatedMidweek, generatedWeekend];
 	});
+
+	// Auto-designa pessoas (rascunho)
+	const midweekDate = midweekScheduledAt ?? input.weekStart;
+	const weekendDate = weekendScheduledAt ?? weekEnd;
+
+	const [midweekAssignments, weekendAssignments] = await Promise.all([
+		autoAssignPeople({
+			organizationId: input.organizationId,
+			meetingDate: midweekDate,
+			parts: midweekParts,
+			meetingProgramId: midweek.id,
+		}),
+		autoAssignPeople({
+			organizationId: input.organizationId,
+			meetingDate: weekendDate,
+			parts: weekendParts,
+			meetingProgramId: weekend.id,
+		}),
+	]);
+
+	// Salva assignments (designações sugeridas — ajustáveis pelo usuário)
+	for (const assignment of [...midweekAssignments, ...weekendAssignments]) {
+		const existing = await db.meetingProgramAssignment.findFirst({
+			where: {
+				meetingProgramPartId: assignment.meetingProgramPartId,
+				role: assignment.role,
+			},
+		});
+
+		if (!existing) {
+			// Busca nome da pessoa para o snapshot
+			let assigneeName = assignment.externalName ?? "";
+			if (assignment.personId) {
+				const person = await db.person.findUnique({
+					where: { id: assignment.personId },
+					select: { name: true },
+				});
+				assigneeName = person?.name ?? "";
+			} else if (assignment.subPersonId) {
+				const sub = await db.subPerson.findUnique({
+					where: { id: assignment.subPersonId },
+					select: { name: true },
+				});
+				assigneeName = sub?.name ?? "";
+			}
+
+			await db.meetingProgramAssignment.create({
+				data: {
+					meetingProgramPartId: assignment.meetingProgramPartId,
+					role: assignment.role,
+					sortOrder: 0,
+					personId: assignment.personId ?? null,
+					subPersonId: assignment.subPersonId ?? null,
+					externalName: assignment.externalName ?? null,
+					assigneeNameSnapshot: assigneeName,
+				},
+			});
+		}
+	}
 
 	return {
 		weekStart: toIsoDateOnly(input.weekStart),

@@ -115,6 +115,13 @@ export const MEETING_PART_META: Partial<
 		privilegeFlag: "bibleStudyConductor",
 	},
 
+	MIDWEEK_CONCLUSION: {
+		roles: ["CHAIRMAN"],
+		sex: "MALE",
+		requiresBaptized: true,
+		privilegeFlag: "lifeAndMinistryChairman",
+	},
+
 	MIDWEEK_SERVICE_TALK: {
 		roles: PRIMARY,
 		sex: "MALE",

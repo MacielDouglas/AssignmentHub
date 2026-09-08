@@ -60,6 +60,10 @@ function mapProgram(row: {
 	specialEventTime: string | null;
 	specialEventLocation: string | null;
 	specialEventNotes: string | null;
+	sourceWatchtowerStudy: {
+		id: string;
+		highlightColor: string | null;
+	} | null;
 	parts: Array<{
 		id: string;
 		kind: MeetingPartDto["kind"];
@@ -85,6 +89,8 @@ function mapProgram(row: {
 		}>;
 	}>;
 }): MeetingProgramDto {
+	const watchtowerColor = row.sourceWatchtowerStudy?.highlightColor ?? null;
+
 	return {
 		id: row.id,
 		kind: row.kind,
@@ -117,6 +123,8 @@ function mapProgram(row: {
 				songTitle: part.songTitle,
 				customTitle: part.customTitle,
 				isDisabled: part.isDisabled,
+				highlightColor:
+					part.kind === "WEEKEND_WATCHTOWER_STUDY" ? watchtowerColor : null,
 				assignments: part.assignments
 					.slice()
 					.sort((a, b) => a.sortOrder - b.sortOrder)
@@ -179,6 +187,12 @@ export async function loadMeetingWeekQuery(
 			},
 		},
 		include: {
+			sourceWatchtowerStudy: {
+				select: {
+					id: true,
+					highlightColor: true,
+				},
+			},
 			parts: {
 				orderBy: {
 					sortOrder: "asc",

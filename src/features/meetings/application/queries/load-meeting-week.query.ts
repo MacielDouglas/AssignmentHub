@@ -178,7 +178,7 @@ export async function loadMeetingWeekQuery(
 		});
 	}
 
-	const programs = await db.meetingProgram.findMany({
+	let programs = await db.meetingProgram.findMany({
 		where: {
 			organizationId: organization.id,
 			weekStart,
@@ -187,6 +187,9 @@ export async function loadMeetingWeekQuery(
 			},
 		},
 		include: {
+			sourceMwbWeek: {
+				select: { id: true },
+			},
 			sourceWatchtowerStudy: {
 				select: {
 					id: true,
@@ -215,6 +218,61 @@ export async function loadMeetingWeekQuery(
 		throw new Error("Não foi possível gerar os programas da semana.");
 	}
 
+	const hasApostilaSections = midweek.parts.some(
+		(part) =>
+			part.sectionCode === "TREASURES" ||
+			part.sectionCode === "MINISTRY" ||
+			part.sectionCode === "LIVING",
+	);
+
+	if (!hasApostilaSections && !midweek.sourceMwbWeek) {
+		await generateMeetingProgramsForWeek({
+			organizationId: organization.id,
+			weekStart,
+			locale,
+		});
+
+		programs = await db.meetingProgram.findMany({
+			where: {
+				organizationId: organization.id,
+				weekStart,
+				kind: {
+					in: ["MIDWEEK", "WEEKEND"],
+				},
+			},
+			include: {
+				sourceMwbWeek: {
+					select: { id: true },
+				},
+				sourceWatchtowerStudy: {
+					select: {
+						id: true,
+						highlightColor: true,
+					},
+				},
+				parts: {
+					orderBy: {
+						sortOrder: "asc",
+					},
+					include: {
+						assignments: {
+							orderBy: {
+								sortOrder: "asc",
+							},
+						},
+					},
+				},
+			},
+		});
+	}
+
+	const finalMidweek = programs.find((program) => program.kind === "MIDWEEK");
+	const finalWeekend = programs.find((program) => program.kind === "WEEKEND");
+
+	if (!finalMidweek || !finalWeekend) {
+		throw new Error("Não foi possível gerar os programas da semana.");
+	}
+
 	return {
 		organizationName: organization.name,
 		organizationSlug: organization.slug,
@@ -222,7 +280,7 @@ export async function loadMeetingWeekQuery(
 		weekEnd: toIsoDateOnly(weekEnd),
 		locale,
 		canManage: access.canManage,
-		midweek: mapProgram(midweek),
-		weekend: mapProgram(weekend),
+		midweek: mapProgram(finalMidweek),
+		weekend: mapProgram(finalWeekend),
 	};
 }

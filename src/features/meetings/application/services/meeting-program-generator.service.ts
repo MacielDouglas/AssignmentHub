@@ -242,11 +242,74 @@ async function getMwbWeek(input: {
 	weekStart: Date;
 	locale: ContentLocale;
 }) {
-	return db.mwbWeek.findFirst({
+	const week = await db.mwbWeek.findFirst({
 		where: {
 			weekStart: input.weekStart,
 			issue: {
 				locale: input.locale,
+				OR: [
+					{
+						organizationId: input.organizationId,
+					},
+					{
+						organizationId: null,
+					},
+				],
+			},
+		},
+		include: {
+			issue: {
+				select: {
+					organizationId: true,
+				},
+			},
+			openingSong: {
+				select: {
+					number: true,
+					title: true,
+				},
+			},
+			middleSong: {
+				select: {
+					number: true,
+					title: true,
+				},
+			},
+			closingSong: {
+				select: {
+					number: true,
+					title: true,
+				},
+			},
+			sections: {
+				orderBy: {
+					sortOrder: "asc",
+				},
+				include: {
+					parts: {
+						orderBy: {
+							sortOrder: "asc",
+						},
+					},
+				},
+			},
+		},
+		orderBy: {
+			issue: {
+				organizationId: "desc",
+			},
+		},
+	});
+
+	if (week) return week;
+
+	const fallbackLocale: ContentLocale = input.locale === "pt" ? "es" : "pt";
+
+	return db.mwbWeek.findFirst({
+		where: {
+			weekStart: input.weekStart,
+			issue: {
+				locale: fallbackLocale,
 				OR: [
 					{
 						organizationId: input.organizationId,
@@ -306,10 +369,35 @@ async function getWatchtowerStudy(input: {
 	weekStart: Date;
 	locale: ContentLocale;
 }) {
-	return db.watchtowerStudy.findFirst({
+	const study = await db.watchtowerStudy.findFirst({
 		where: {
 			weekStart: input.weekStart,
 			locale: input.locale,
+		},
+		include: {
+			openingSong: {
+				select: {
+					number: true,
+					title: true,
+				},
+			},
+			closingSong: {
+				select: {
+					number: true,
+					title: true,
+				},
+			},
+		},
+	});
+
+	if (study) return study;
+
+	const fallbackLocale: ContentLocale = input.locale === "pt" ? "es" : "pt";
+
+	return db.watchtowerStudy.findFirst({
+		where: {
+			weekStart: input.weekStart,
+			locale: fallbackLocale,
 		},
 		include: {
 			openingSong: {

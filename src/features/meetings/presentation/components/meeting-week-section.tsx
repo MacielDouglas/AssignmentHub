@@ -1,10 +1,11 @@
 "use client";
 
+import { FileDownIcon } from "lucide-react";
 import { useState } from "react";
 import { HiOutlinePencilSquare, HiOutlinePlus } from "react-icons/hi2";
 import { Button } from "@/components/ui/button";
-
 import type { MeetingWeekDto } from "../../domain/meeting-types";
+import { CreateWeekdayMeetingPdfDialog } from "./create-weekday-meeting-pdf-dialog";
 import { MeetingProgramCard } from "./meeting-program-card";
 import { MeetingWeekModal } from "./meeting-week-modal";
 
@@ -16,6 +17,7 @@ type Props = {
 export function MeetingWeekSection({ data, view }: Props) {
 	const [modalOpen, setModalOpen] = useState(false);
 	const [modalMode, setModalMode] = useState<"create" | "edit">("create");
+	const [pdfDialogOpen, setPdfDialogOpen] = useState(false);
 
 	const program = view === "midweek" ? data.midweek : data.weekend;
 	const hasMeeting = program.parts.length > 0 && !program.isCancelled;
@@ -38,6 +40,7 @@ export function MeetingWeekSection({ data, view }: Props) {
 						<div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-primary/10 text-primary">
 							<HiOutlinePlus className="h-6 w-6" />
 						</div>
+
 						<div className="flex-1">
 							<h3 className="text-title text-foreground">
 								Nenhuma reunião criada para esta semana
@@ -47,6 +50,7 @@ export function MeetingWeekSection({ data, view }: Props) {
 								partir da apostila.
 							</p>
 						</div>
+
 						<Button onClick={handleCreate} className="shrink-0">
 							<HiOutlinePlus className="mr-2 h-4 w-4" />
 							Criar Reunião
@@ -60,6 +64,17 @@ export function MeetingWeekSection({ data, view }: Props) {
 							<HiOutlinePencilSquare className="mr-1.5 h-4 w-4" />
 							Editar
 						</Button>
+
+						{view === "midweek" && (
+							<Button
+								variant="outline"
+								size="sm"
+								onClick={() => setPdfDialogOpen(true)}
+							>
+								<FileDownIcon className="mr-1.5 h-4 w-4" />
+								Criar PDF
+							</Button>
+						)}
 					</div>
 
 					<MeetingProgramCard
@@ -78,6 +93,15 @@ export function MeetingWeekSection({ data, view }: Props) {
 				initialWeekStart={data.weekStart}
 				mode={modalMode}
 			/>
+
+			{view === "midweek" && (
+				<CreateWeekdayMeetingPdfDialog
+					open={pdfDialogOpen}
+					onOpenChange={setPdfDialogOpen}
+					slug={data.organizationSlug}
+					currentLocale={data.locale}
+				/>
+			)}
 		</>
 	);
 }

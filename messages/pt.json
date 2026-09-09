@@ -383,5 +383,25 @@
 		"assign": "Designar",
 		"replace": "Trocar",
 		"noAssignment": "Sem designação"
+	},
+	"MeetingsPdf": {
+		"createPdf": "Criar PDF",
+		"dialogTitle": "Criar PDF — Reuniões de meio de semana",
+		"dialogDescription": "Escolha o idioma do documento e selecione uma ou mais datas para gerar o programa em PDF.",
+		"languageLabel": "Idioma do PDF",
+		"languageHint": "Este idioma será usado nos títulos e rótulos fixos do programa.",
+		"selectDates": "Selecione as datas",
+		"selectDatesHint": "Clique nas datas com bolinha para selecioná-las.",
+		"loadingDates": "Carregando datas disponíveis…",
+		"noSelection": "Nenhuma data selecionada.",
+		"selectionCount": "{count} reunião(ões) selecionada(s)",
+		"remove": "Remover",
+		"clearSelection": "Limpar seleção",
+		"cancel": "Cancelar",
+		"generate": "Gerar PDF",
+		"generating": "Gerando PDF…",
+		"errNoMeetings": "Nenhuma reunião encontrada para as datas selecionadas.",
+		"errLoad": "Falha ao gerar o PDF.",
+		"errLoadDates": "Não foi possível carregar as datas disponíveis."
 	}
 }

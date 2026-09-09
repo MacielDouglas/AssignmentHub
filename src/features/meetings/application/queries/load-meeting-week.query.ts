@@ -9,6 +9,7 @@ import type {
 	MeetingWeekDto,
 } from "../../domain/meeting-types";
 import { generateMeetingProgramsForWeek } from "../services/meeting-program-generator.service";
+import { resolveOrganizationWeekSchedule } from "../services/meeting-schedule.service";
 import {
 	endOfWeekSunday,
 	resolveWeekStart,
@@ -131,6 +132,23 @@ function mapProgram(row: {
 					.map(mapAssignment),
 			})),
 	};
+}
+
+function dateAtTimeUtc(date: Date, time: string | null): Date | null {
+	if (!time) {
+		return null;
+	}
+
+	const match = /^([01]\d|2[0-3]):([0-5]\d)$/.exec(time);
+
+	if (!match) {
+		return null;
+	}
+
+	const result = new Date(date);
+	result.setUTCHours(Number(match[1]), Number(match[2]), 0, 0);
+
+	return result;
 }
 
 export async function loadMeetingWeekQuery(
@@ -265,6 +283,69 @@ export async function loadMeetingWeekQuery(
 	if (!finalMidweek || !finalWeekend) {
 		throw new Error("Não foi possível gerar os programas da semana.");
 	}
+
+	// Ressincroniza scheduledAt/scheduledTime com a configuração vigente.
+	// Programas gerados antes de uma troca de dia (ex: quarta → quinta)
+	// manteriam a data antiga e o PDF listaria o dia errado. Atualiza só as
+	// colunas de agendamento para não apagar as designações existentes.
+	const schedule = await resolveOrganizationWeekSchedule(
+		organization.id,
+		weekStart,
+	);
+
+	const resync: Array<Promise<unknown>> = [];
+
+	if (schedule.midweek) {
+		const expectedAt = dateAtTimeUtc(
+			schedule.midweek.date,
+			schedule.midweek.time,
+		);
+
+		if (
+			expectedAt &&
+			(finalMidweek.scheduledAt?.getTime() !== expectedAt.getTime() ||
+				finalMidweek.scheduledTime !== schedule.midweek.time)
+		) {
+			resync.push(
+				db.meetingProgram.update({
+					where: { id: finalMidweek.id },
+					data: {
+						scheduledAt: expectedAt,
+						scheduledTime: schedule.midweek.time,
+					},
+				}),
+			);
+			finalMidweek.scheduledAt = expectedAt;
+			finalMidweek.scheduledTime = schedule.midweek.time;
+		}
+	}
+
+	if (schedule.weekend) {
+		const expectedAt = dateAtTimeUtc(
+			schedule.weekend.date,
+			schedule.weekend.time,
+		);
+
+		if (
+			expectedAt &&
+			(finalWeekend.scheduledAt?.getTime() !== expectedAt.getTime() ||
+				finalWeekend.scheduledTime !== schedule.weekend.time)
+		) {
+			resync.push(
+				db.meetingProgram.update({
+					where: { id: finalWeekend.id },
+					data: {
+						scheduledAt: expectedAt,
+						scheduledTime: schedule.weekend.time,
+					},
+				}),
+			);
+			finalWeekend.scheduledAt = expectedAt;
+			finalWeekend.scheduledTime = schedule.weekend.time;
+		}
+	}
+
+	await Promise.all(resync);
 
 	return {
 		organizationName: organization.name,

@@ -302,7 +302,7 @@ export async function saveWeeklyMeetingsAction(
 							where: {
 								organizationId: organization.id,
 								kind: "MIDWEEK",
-								weekStart: { gte: scheduleRecord.effectiveFrom },
+								weekEnd: { gte: scheduleRecord.effectiveFrom },
 							},
 							select: { id: true, weekStart: true },
 						});
@@ -329,7 +329,7 @@ export async function saveWeeklyMeetingsAction(
 							where: {
 								organizationId: organization.id,
 								kind: "WEEKEND",
-								weekStart: { gte: scheduleRecord.effectiveFrom },
+								weekEnd: { gte: scheduleRecord.effectiveFrom },
 							},
 							select: { id: true, weekStart: true },
 						});

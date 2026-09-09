@@ -871,80 +871,83 @@ export async function generateMeetingProgramsForWeek(
 		specialMeeting?.title ??
 		null;
 
-	const [midweek, weekend] = await db.$transaction(async (tx) => {
-		const generatedMidweek = await upsertMeetingProgram(tx, {
-			organizationId: input.organizationId,
-			weekStart: input.weekStart,
-			weekEnd,
-			kind: "MIDWEEK",
-			locale: input.locale,
-			sourceMwbWeekId: mwbWeek?.id ?? null,
-			scheduledAt: midweekScheduledAt,
-			scheduledTime: schedule.midweek?.time ?? null,
-			isCancelled: midweekIsCancelled,
-			cancellationReason: midweekIsCancelled ? cancellationReason : null,
-			specialEventTitle:
-				schedule.celebration?.title ?? schedule.blockingEvent?.title ?? null,
-			specialEventDate:
-				schedule.celebration?.occurrence.startDate ??
-				schedule.blockingEvent?.occurrence.startDate ??
-				null,
-			specialEventTime:
-				schedule.celebration?.occurrence.time ??
-				schedule.blockingEvent?.occurrence.time ??
-				null,
-			specialEventLocation:
-				schedule.celebration?.occurrence.location ??
-				schedule.blockingEvent?.occurrence.location ??
-				null,
-			specialEventNotes:
-				schedule.celebration?.occurrence.notes ??
-				schedule.blockingEvent?.occurrence.notes ??
-				null,
-			parts: midweekParts,
-		});
+	const [midweek, weekend] = await db.$transaction(
+		async (tx) => {
+			const generatedMidweek = await upsertMeetingProgram(tx, {
+				organizationId: input.organizationId,
+				weekStart: input.weekStart,
+				weekEnd,
+				kind: "MIDWEEK",
+				locale: input.locale,
+				sourceMwbWeekId: mwbWeek?.id ?? null,
+				scheduledAt: midweekScheduledAt,
+				scheduledTime: schedule.midweek?.time ?? null,
+				isCancelled: midweekIsCancelled,
+				cancellationReason: midweekIsCancelled ? cancellationReason : null,
+				specialEventTitle:
+					schedule.celebration?.title ?? schedule.blockingEvent?.title ?? null,
+				specialEventDate:
+					schedule.celebration?.occurrence.startDate ??
+					schedule.blockingEvent?.occurrence.startDate ??
+					null,
+				specialEventTime:
+					schedule.celebration?.occurrence.time ??
+					schedule.blockingEvent?.occurrence.time ??
+					null,
+				specialEventLocation:
+					schedule.celebration?.occurrence.location ??
+					schedule.blockingEvent?.occurrence.location ??
+					null,
+				specialEventNotes:
+					schedule.celebration?.occurrence.notes ??
+					schedule.blockingEvent?.occurrence.notes ??
+					null,
+				parts: midweekParts,
+			});
 
-		const generatedWeekend = await upsertMeetingProgram(tx, {
-			organizationId: input.organizationId,
-			weekStart: input.weekStart,
-			weekEnd,
-			kind: "WEEKEND",
-			locale: input.locale,
-			sourceWatchtowerStudyId: watchtowerStudy?.id ?? null,
-			scheduledAt: weekendScheduledAt,
-			scheduledTime: schedule.weekend?.time ?? null,
-			isCancelled: weekendIsCancelled,
-			cancellationReason: weekendIsCancelled ? cancellationReason : null,
-			specialEventTitle:
-				specialMeeting?.title ??
-				schedule.celebration?.title ??
-				schedule.blockingEvent?.title ??
-				null,
-			specialEventDate:
-				specialMeeting?.occurrence.startDate ??
-				schedule.celebration?.occurrence.startDate ??
-				schedule.blockingEvent?.occurrence.startDate ??
-				null,
-			specialEventTime:
-				specialMeeting?.occurrence.time ??
-				schedule.celebration?.occurrence.time ??
-				schedule.blockingEvent?.occurrence.time ??
-				null,
-			specialEventLocation:
-				specialMeeting?.occurrence.location ??
-				schedule.celebration?.occurrence.location ??
-				schedule.blockingEvent?.occurrence.location ??
-				null,
-			specialEventNotes:
-				specialMeeting?.occurrence.notes ??
-				schedule.celebration?.occurrence.notes ??
-				schedule.blockingEvent?.occurrence.notes ??
-				null,
-			parts: weekendParts,
-		});
+			const generatedWeekend = await upsertMeetingProgram(tx, {
+				organizationId: input.organizationId,
+				weekStart: input.weekStart,
+				weekEnd,
+				kind: "WEEKEND",
+				locale: input.locale,
+				sourceWatchtowerStudyId: watchtowerStudy?.id ?? null,
+				scheduledAt: weekendScheduledAt,
+				scheduledTime: schedule.weekend?.time ?? null,
+				isCancelled: weekendIsCancelled,
+				cancellationReason: weekendIsCancelled ? cancellationReason : null,
+				specialEventTitle:
+					specialMeeting?.title ??
+					schedule.celebration?.title ??
+					schedule.blockingEvent?.title ??
+					null,
+				specialEventDate:
+					specialMeeting?.occurrence.startDate ??
+					schedule.celebration?.occurrence.startDate ??
+					schedule.blockingEvent?.occurrence.startDate ??
+					null,
+				specialEventTime:
+					specialMeeting?.occurrence.time ??
+					schedule.celebration?.occurrence.time ??
+					schedule.blockingEvent?.occurrence.time ??
+					null,
+				specialEventLocation:
+					specialMeeting?.occurrence.location ??
+					schedule.celebration?.occurrence.location ??
+					schedule.blockingEvent?.occurrence.location ??
+					null,
+				specialEventNotes:
+					specialMeeting?.occurrence.notes ??
+					schedule.celebration?.occurrence.notes ??
+					schedule.blockingEvent?.occurrence.notes ??
+					null,
+				parts: weekendParts,
+			});
 
-		return [generatedMidweek, generatedWeekend];
-	});
+			return [generatedMidweek, generatedWeekend];
+		},
+		{ timeout: 30000 },
+	);
 
 	return {
 		weekStart: toIsoDateOnly(input.weekStart),

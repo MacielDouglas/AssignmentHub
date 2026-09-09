@@ -39,18 +39,17 @@ const WEEKDAY_BY_JS: Record<number, Weekday> = {
 	6: "SATURDAY",
 };
 
-function isInEffectiveRange(
-	date: Date,
+function weekOverlapsEffectiveRange(
+	weekStart: Date,
+	weekEnd: Date,
 	effectiveFrom: Date | null,
 	effectiveUntil: Date | null,
 ) {
-	const timestamp = date.getTime();
-
-	if (effectiveFrom && timestamp < effectiveFrom.getTime()) {
+	if (effectiveFrom && weekEnd.getTime() < effectiveFrom.getTime()) {
 		return false;
 	}
 
-	if (effectiveUntil && timestamp > effectiveUntil.getTime()) {
+	if (effectiveUntil && weekStart.getTime() > effectiveUntil.getTime()) {
 		return false;
 	}
 
@@ -138,8 +137,9 @@ export async function resolveOrganizationWeekSchedule(
 			(schedule) =>
 				schedule.type === "MEETINGS" &&
 				schedule.mode === "WEEKLY_RECURRING" &&
-				isInEffectiveRange(
+				weekOverlapsEffectiveRange(
 					weekStart,
+					weekEnd,
 					schedule.effectiveFrom,
 					schedule.effectiveUntil,
 				),

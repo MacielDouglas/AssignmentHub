@@ -6,6 +6,7 @@ import {
 	type WeekdayMeetingPdfI18n,
 	type WeekdayMeetingPdfLabels,
 } from "./weekday-meeting-pdf-i18n";
+import { drawSectionIcon } from "./weekday-meeting-pdf-icons";
 import {
 	getColumnMetrics,
 	PDF_LAYOUT,
@@ -43,16 +44,16 @@ const SECTION_STYLES: Record<
 	}
 > = {
 	bibleTreasures: {
-		strong: [101, 101, 106],
-		light: [237, 237, 239],
+		strong: [60, 127, 139],
+		light: [230, 240, 242],
 	},
 	applyYourself: {
-		strong: [194, 145, 28],
-		light: [251, 245, 230],
+		strong: [214, 143, 0],
+		light: [253, 244, 229],
 	},
 	christianLife: {
-		strong: [157, 34, 44],
-		light: [249, 230, 233],
+		strong: [191, 47, 19],
+		light: [249, 233, 228],
 	},
 };
 
@@ -68,131 +69,6 @@ function setTextColor(pdf: Pdf, color: [number, number, number]) {
 
 function setFillColor(pdf: Pdf, color: [number, number, number]) {
 	pdf.setFillColor(color[0], color[1], color[2]);
-}
-
-function drawDiamondIcon(
-	pdf: Pdf,
-	centerX: number,
-	centerY: number,
-	size: number,
-) {
-	const half = size / 2;
-
-	pdf.setDrawColor(255, 255, 255);
-	pdf.setFillColor(255, 255, 255);
-	pdf.setLineWidth(0.25);
-
-	pdf.line(centerX, centerY - half, centerX + half, centerY);
-	pdf.line(centerX + half, centerY, centerX, centerY + half);
-	pdf.line(centerX, centerY + half, centerX - half, centerY);
-	pdf.line(centerX - half, centerY, centerX, centerY - half);
-
-	pdf.line(centerX - half, centerY, centerX + half, centerY);
-	pdf.line(centerX - half / 2, centerY - half / 2, centerX, centerY);
-	pdf.line(centerX + half / 2, centerY - half / 2, centerX, centerY);
-	pdf.line(centerX - half / 2, centerY + half / 2, centerX, centerY);
-	pdf.line(centerX + half / 2, centerY + half / 2, centerX, centerY);
-}
-
-function drawWheatIcon(
-	pdf: Pdf,
-	centerX: number,
-	centerY: number,
-	size: number,
-) {
-	const half = size / 2;
-	const step = size / 4;
-
-	pdf.setDrawColor(255, 255, 255);
-	pdf.setLineWidth(0.35);
-
-	pdf.line(centerX, centerY - half, centerX, centerY + half);
-
-	pdf.line(
-		centerX,
-		centerY - half + step * 0.4,
-		centerX - step,
-		centerY - half + step,
-	);
-	pdf.line(
-		centerX,
-		centerY - half + step * 0.4,
-		centerX + step,
-		centerY - half + step,
-	);
-
-	pdf.line(
-		centerX,
-		centerY - half + step * 1.2,
-		centerX - step,
-		centerY - half + step * 1.8,
-	);
-	pdf.line(
-		centerX,
-		centerY - half + step * 1.2,
-		centerX + step,
-		centerY - half + step * 1.8,
-	);
-
-	pdf.line(
-		centerX,
-		centerY - half + step * 2,
-		centerX - step * 0.85,
-		centerY - half + step * 2.6,
-	);
-	pdf.line(
-		centerX,
-		centerY - half + step * 2,
-		centerX + step * 0.85,
-		centerY - half + step * 2.6,
-	);
-}
-
-function drawHeartIcon(
-	pdf: Pdf,
-	centerX: number,
-	centerY: number,
-	size: number,
-) {
-	const radius = size * 0.18;
-	const bottomY = centerY + size * 0.26;
-
-	pdf.setFillColor(255, 255, 255);
-	pdf.setDrawColor(255, 255, 255);
-	pdf.setLineWidth(0.25);
-
-	pdf.circle(centerX - radius, centerY - radius * 0.25, radius, "F");
-	pdf.circle(centerX + radius, centerY - radius * 0.25, radius, "F");
-
-	pdf.triangle(
-		centerX - radius * 1.8,
-		centerY,
-		centerX + radius * 1.8,
-		centerY,
-		centerX,
-		bottomY,
-		"F",
-	);
-}
-
-function drawSectionIcon(
-	pdf: Pdf,
-	key: WeekdayMeetingPdfSectionKey,
-	centerX: number,
-	centerY: number,
-	size: number,
-) {
-	switch (key) {
-		case "bibleTreasures":
-			drawDiamondIcon(pdf, centerX, centerY, size);
-			return;
-		case "applyYourself":
-			drawWheatIcon(pdf, centerX, centerY, size);
-			return;
-		case "christianLife":
-			drawHeartIcon(pdf, centerX, centerY, size);
-			return;
-	}
 }
 
 function getAssigneeDisplayText(
@@ -265,7 +141,7 @@ function drawTime(
 	pdf.setFont("helvetica", "bold");
 	pdf.setFontSize(PDF_LAYOUT.timeTextSize);
 	pdf.setTextColor(38, 38, 38);
-	pdf.text(value, x + width / 2, topY + PDF_LAYOUT.rowPaddingTop + 2.05, {
+	pdf.text(value, x + width / 2, topY + PDF_LAYOUT.rowPaddingTop + 2.4, {
 		align: "center",
 	});
 }
@@ -337,7 +213,7 @@ function drawProgramRow(
 	pdf.setFontSize(PDF_LAYOUT.bodyTextSize);
 	pdf.setTextColor(30, 30, 30);
 
-	let textY = y + PDF_LAYOUT.rowPaddingTop + 2.1;
+	let textY = y + PDF_LAYOUT.rowPaddingTop + 2.45;
 
 	for (const line of titleLines.length > 0 ? titleLines : [""]) {
 		pdf.text(line, activityX, textY);
@@ -396,7 +272,7 @@ function drawSectionBand(
 	);
 
 	const textX = x + iconWidth + 2.3;
-	const textY = y + height / 2 + 1.1;
+	const textY = y + height / 2 + 1.3;
 
 	pdf.setFont("helvetica", "bold");
 	pdf.setFontSize(PDF_LAYOUT.sectionTitleSize);
@@ -410,7 +286,7 @@ function drawSectionBand(
 	if (pdf.getTextWidth(completeTitle) <= availableWidth) {
 		pdf.text(completeTitle, textX, textY);
 	} else {
-		pdf.text(title, textX, y + 3.15);
+		pdf.text(title, textX, y + 3.6);
 
 		if (subtitle) {
 			pdf.setFont("helvetica", "normal");
@@ -420,7 +296,7 @@ function drawSectionBand(
 			const subtitleLines = splitPdfText(pdf, subtitle, availableWidth);
 
 			if (subtitleLines[0]) {
-				pdf.text(subtitleLines[0], textX, y + 5.95);
+				pdf.text(subtitleLines[0], textX, y + 6.6);
 			}
 		}
 	}
@@ -449,7 +325,7 @@ function drawDateBand(
 	const week = safeText(weekLabel);
 
 	if (week) {
-		pdf.text(week, x + weekCellWidth / 2, y + height / 2 + 1.1, {
+		pdf.text(week, x + weekCellWidth / 2, y + height / 2 + 1.3, {
 			align: "center",
 		});
 	}
@@ -461,16 +337,15 @@ function drawDateBand(
 	pdf.setFont("helvetica", "bold");
 	pdf.setFontSize(PDF_LAYOUT.dateBandTextSize);
 	pdf.setTextColor(255, 255, 255);
-	pdf.text(dateText, x + weekCellWidth + 3, y + height / 2 + 1.05);
+	pdf.text(dateText, x + weekCellWidth + 3, y + height / 2 + 1.3);
 
 	return y + height + PDF_LAYOUT.dateBandGapAfter;
 }
 
-function drawHeader(
+function drawPageHeader(
 	pdf: Pdf,
 	meeting: WeekdayMeetingPdfData,
 	labels: WeekdayMeetingPdfLabels,
-	locale: PdfLocale,
 	x: number,
 	y: number,
 	width: number,
@@ -480,31 +355,22 @@ function drawHeader(
 	pdf.setFont("helvetica", "normal");
 	pdf.setFontSize(PDF_LAYOUT.congregationSize);
 	pdf.setTextColor(25, 25, 25);
-	pdf.text(safeText(meeting.congregationName), centerX, y + 5.1, {
+	pdf.text(safeText(meeting.congregationName), centerX, y + 5.8, {
 		align: "center",
 	});
 
 	pdf.setDrawColor(190, 190, 190);
 	pdf.setLineWidth(0.2);
-	pdf.line(x + 10, y + 6.7, x + width - 10, y + 6.7);
+	pdf.line(x + 10, y + 7.5, x + width - 10, y + 7.5);
 
 	pdf.setFont("helvetica", "bold");
 	pdf.setFontSize(PDF_LAYOUT.headerTitleSize);
 	pdf.setTextColor(20, 20, 20);
-	pdf.text(labels.documentTitle, centerX, y + 10.25, {
+	pdf.text(labels.documentTitle, centerX, y + 11.2, {
 		align: "center",
 	});
 
-	const dateBandY = y + 13;
-
-	return drawDateBand(
-		pdf,
-		meeting.weekLabel,
-		formatMeetingDate(meeting.date, locale),
-		x,
-		dateBandY,
-		width,
-	);
+	return y + PDF_LAYOUT.pageHeaderHeight;
 }
 
 function drawMeetingBlock(
@@ -516,7 +382,14 @@ function drawMeetingBlock(
 	y: number,
 	width: number,
 ): void {
-	let cursorY = drawHeader(pdf, meeting, labels, locale, x, y, width);
+	let cursorY = drawDateBand(
+		pdf,
+		meeting.weekLabel,
+		formatMeetingDate(meeting.date, locale),
+		x,
+		y,
+		width,
+	);
 
 	if (meeting.openingItem) {
 		cursorY = drawProgramRow(
@@ -572,39 +445,31 @@ function drawMeetingBlock(
 	}
 }
 
-function drawFullPageMeeting(
-	pdf: Pdf,
-	meeting: WeekdayMeetingPdfData,
-	labels: WeekdayMeetingPdfLabels,
-	locale: PdfLocale,
-): void {
-	drawMeetingBlock(
-		pdf,
-		meeting,
-		labels,
-		locale,
-		PDF_LAYOUT.marginX,
-		PDF_LAYOUT.marginTop,
-		PDF_LAYOUT.contentWidth,
-	);
-}
-
 function drawPage(
 	pdf: Pdf,
 	page: PdfPageLayout,
 	labels: WeekdayMeetingPdfLabels,
 	locale: PdfLocale,
 ): void {
-	if (page.fullMeeting) {
-		drawFullPageMeeting(pdf, page.fullMeeting, labels, locale);
-		return;
+	const headerMeeting = page.topMeeting ?? page.bottomMeeting;
+
+	let topBlockY = PDF_LAYOUT.marginTop;
+
+	if (headerMeeting) {
+		drawPageHeader(
+			pdf,
+			headerMeeting,
+			labels,
+			PDF_LAYOUT.marginX,
+			topBlockY,
+			PDF_LAYOUT.contentWidth,
+		);
+		topBlockY += PDF_LAYOUT.pageHeaderHeight + PDF_LAYOUT.pageHeaderGap;
 	}
 
-	const topBlockY = PDF_LAYOUT.marginTop;
-	const bottomBlockY =
-		PDF_LAYOUT.marginTop + PDF_LAYOUT.blockHeight + PDF_LAYOUT.blockGap;
+	const bottomBlockY = topBlockY + PDF_LAYOUT.blockHeight + PDF_LAYOUT.blockGap;
 	const separatorY =
-		PDF_LAYOUT.marginTop + PDF_LAYOUT.blockHeight + PDF_LAYOUT.blockGap / 2;
+		topBlockY + PDF_LAYOUT.blockHeight + PDF_LAYOUT.blockGap / 2;
 
 	if (page.topMeeting) {
 		drawMeetingBlock(
@@ -675,7 +540,7 @@ export function generateWeekdayMeetingPdf(
 		first.date.localeCompare(second.date),
 	);
 
-	const pages = planPages(sortedMeetings, PDF_LAYOUT.contentWidth, pdf);
+	const pages = planPages(sortedMeetings);
 
 	pages.forEach((page, index) => {
 		if (index > 0) {

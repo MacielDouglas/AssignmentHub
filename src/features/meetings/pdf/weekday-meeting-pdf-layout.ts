@@ -15,33 +15,36 @@ export const PDF_LAYOUT = {
 
 	contentWidth: 184,
 
-	blockHeight: 136.5,
+	pageHeaderHeight: 14.5,
+	pageHeaderGap: 1.5,
+
+	blockHeight: 128,
 	blockGap: 8,
 
-	congregationSize: 10.4,
-	headerTitleSize: 6.2,
-	subtitleSize: 5.7,
+	congregationSize: 12,
+	headerTitleSize: 7.2,
+	subtitleSize: 6.6,
 
-	dateBandTextSize: 7.2,
-	dateBandWeekSize: 8.4,
+	dateBandTextSize: 8.5,
+	dateBandWeekSize: 9.6,
 
-	sectionTitleSize: 7.2,
-	bodyTextSize: 6.15,
-	bodyTextSmallSize: 5.35,
-	assigneeTextSize: 5.6,
-	timeTextSize: 5.35,
+	sectionTitleSize: 8.5,
+	bodyTextSize: 7.2,
+	bodyTextSmallSize: 6.2,
+	assigneeTextSize: 6.5,
+	timeTextSize: 6.2,
 
-	headerCongregationHeight: 5.4,
-	headerRuleOffset: 1.4,
+	headerCongregationHeight: 6,
+	headerRuleOffset: 1.5,
 	headerRuleHeight: 0.5,
-	headerTitleHeight: 4.2,
+	headerTitleHeight: 4.7,
 
-	dateBandHeight: 8.6,
-	sectionBandHeight: 7.6,
+	dateBandHeight: 9,
+	sectionBandHeight: 8,
 
-	lineHeight: 2.8,
-	subtitleLineHeight: 2.45,
-	assigneeLineHeight: 2.75,
+	lineHeight: 3.3,
+	subtitleLineHeight: 2.9,
+	assigneeLineHeight: 3.2,
 
 	openingRowHeight: 5.45,
 	itemMinHeight: 5.45,
@@ -56,7 +59,7 @@ export const PDF_LAYOUT = {
 	rowPaddingBottom: 1.05,
 	sectionGapAfter: 0.55,
 	dateBandGapAfter: 0.55,
-	headerGapBeforeDateBand: 0.6,
+	headerGapBeforeDateBand: 1.5,
 
 	fullPageContentHeight: 281,
 } as const;
@@ -65,12 +68,9 @@ export type Splitter = {
 	splitTextToSize: (text: string, maxWidth: number) => string[];
 };
 
-export type MeetingBlockPlacement = "half" | "full";
-
 export type PdfPageLayout = {
 	topMeeting: WeekdayMeetingPdfData | null;
 	bottomMeeting: WeekdayMeetingPdfData | null;
-	fullMeeting: WeekdayMeetingPdfData | null;
 };
 
 function normalizeText(value: string | undefined): string {
@@ -261,66 +261,13 @@ export function estimateMeetingBlockHeight(
 	return height;
 }
 
-export function getMeetingPlacement(
-	meeting: WeekdayMeetingPdfData,
-	contentWidth: number,
-	doc: Splitter,
-): MeetingBlockPlacement {
-	const height = estimateMeetingBlockHeight(meeting, contentWidth, doc);
-
-	return height <= PDF_LAYOUT.blockHeight ? "half" : "full";
-}
-
-export function planPages(
-	meetings: WeekdayMeetingPdfData[],
-	contentWidth: number,
-	doc: Splitter,
-): PdfPageLayout[] {
+export function planPages(meetings: WeekdayMeetingPdfData[]): PdfPageLayout[] {
 	const pages: PdfPageLayout[] = [];
-	let waitingTopMeeting: WeekdayMeetingPdfData | null = null;
 
-	for (const meeting of meetings) {
-		const placement = getMeetingPlacement(meeting, contentWidth, doc);
-
-		if (placement === "full") {
-			if (waitingTopMeeting) {
-				pages.push({
-					topMeeting: waitingTopMeeting,
-					bottomMeeting: null,
-					fullMeeting: null,
-				});
-
-				waitingTopMeeting = null;
-			}
-
-			pages.push({
-				topMeeting: null,
-				bottomMeeting: null,
-				fullMeeting: meeting,
-			});
-
-			continue;
-		}
-
-		if (!waitingTopMeeting) {
-			waitingTopMeeting = meeting;
-			continue;
-		}
-
+	for (let index = 0; index < meetings.length; index += 2) {
 		pages.push({
-			topMeeting: waitingTopMeeting,
-			bottomMeeting: meeting,
-			fullMeeting: null,
-		});
-
-		waitingTopMeeting = null;
-	}
-
-	if (waitingTopMeeting) {
-		pages.push({
-			topMeeting: waitingTopMeeting,
-			bottomMeeting: null,
-			fullMeeting: null,
+			topMeeting: meetings[index] ?? null,
+			bottomMeeting: meetings[index + 1] ?? null,
 		});
 	}
 

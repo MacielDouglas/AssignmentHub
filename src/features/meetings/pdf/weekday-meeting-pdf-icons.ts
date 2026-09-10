@@ -1,5 +1,10 @@
 import type { jsPDF } from "jspdf";
 import type { WeekdayMeetingPdfSectionKey } from "./weekday-meeting-pdf-types";
+import type { WeekendMeetingPdfSectionKey } from "./weekend-meeting-pdf-types";
+
+export type SectionIconKey =
+	| WeekdayMeetingPdfSectionKey
+	| WeekendMeetingPdfSectionKey;
 
 /**
  * Ícones exatos das seções, com path data copiado verbatim dos pacotes
@@ -22,7 +27,7 @@ type SectionIconDef = {
 	paths: string[];
 };
 
-const SECTION_ICONS: Record<WeekdayMeetingPdfSectionKey, SectionIconDef> = {
+const SECTION_ICONS: Record<SectionIconKey, SectionIconDef> = {
 	bibleTreasures: {
 		viewBox: 512,
 		paint: "fill",
@@ -44,6 +49,22 @@ const SECTION_ICONS: Record<WeekdayMeetingPdfSectionKey, SectionIconDef> = {
 			"M11.47 17.47 13 19l-1.53 1.53a3.5 3.5 0 0 1-4.94 0L5 19l1.53-1.53a3.5 3.5 0 0 1 4.94 0Z",
 			"M15.47 13.47 17 15l-1.53 1.53a3.5 3.5 0 0 1-4.94 0L9 15l1.53-1.53a3.5 3.5 0 0 1 4.94 0Z",
 			"M19.47 9.47 21 11l-1.53 1.53a3.5 3.5 0 0 1-4.94 0L13 11l1.53-1.53a3.5 3.5 0 0 1 4.94 0Z",
+		],
+	},
+	publicTalk: {
+		viewBox: 48,
+		paint: "fill",
+		strokeWidth: 0,
+		paths: [
+			"M24 28c3.31 0 5.98-2.69 5.98-6L30 10c0-3.32-2.68-6-6-6-3.31 0-6 2.68-6 6v12c0 3.31 2.69 6 6 6zm10.6-6c0 6-5.07 10.2-10.6 10.2-5.52 0-10.6-4.2-10.6-10.2H10c0 6.83 5.44 12.47 12 13.44V42h4v-6.56c6.56-.97 12-6.61 12-13.44h-3.4z",
+		],
+	},
+	watchtowerStudy: {
+		viewBox: 48,
+		paint: "fill",
+		strokeWidth: 0,
+		paths: [
+			"M43.98 8c0-2.21-1.77-4-3.98-4H8C5.79 4 4 5.79 4 8v24c0 2.21 1.79 4 4 4h28l8 8-.02-36zM36 28H12v-4h24v4zm0-6H12v-4h24v4zm0-6H12v-4h24v4z",
 		],
 	},
 	christianLife: {
@@ -461,7 +482,7 @@ export function parseSvgPathData(value: string): PathSubpath[] {
 
 export function drawSectionIcon(
 	pdf: jsPDF,
-	key: WeekdayMeetingPdfSectionKey,
+	key: SectionIconKey,
 	centerX: number,
 	centerY: number,
 	size: number,

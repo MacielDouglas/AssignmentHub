@@ -65,16 +65,14 @@ export function MeetingWeekSection({ data, view }: Props) {
 							Editar
 						</Button>
 
-						{view === "midweek" && (
-							<Button
-								variant="outline"
-								size="sm"
-								onClick={() => setPdfDialogOpen(true)}
-							>
-								<FileDownIcon className="mr-1.5 h-4 w-4" />
-								Criar PDF
-							</Button>
-						)}
+						<Button
+							variant="outline"
+							size="sm"
+							onClick={() => setPdfDialogOpen(true)}
+						>
+							<FileDownIcon className="mr-1.5 h-4 w-4" />
+							Criar PDF
+						</Button>
 					</div>
 
 					<MeetingProgramCard
@@ -94,14 +92,13 @@ export function MeetingWeekSection({ data, view }: Props) {
 				mode={modalMode}
 			/>
 
-			{view === "midweek" && (
-				<CreateWeekdayMeetingPdfDialog
-					open={pdfDialogOpen}
-					onOpenChange={setPdfDialogOpen}
-					slug={data.organizationSlug}
-					currentLocale={data.locale}
-				/>
-			)}
+			<CreateWeekdayMeetingPdfDialog
+				open={pdfDialogOpen}
+				onOpenChange={setPdfDialogOpen}
+				slug={data.organizationSlug}
+				currentLocale={data.locale}
+				initialKind={view === "weekend" ? "WEEKEND" : "MIDWEEK"}
+			/>
 		</>
 	);
 }

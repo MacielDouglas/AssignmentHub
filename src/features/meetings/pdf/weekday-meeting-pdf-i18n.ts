@@ -3,12 +3,16 @@ import type {
 	WeekdayMeetingPdfAssigneeRole,
 	WeekdayMeetingPdfSectionKey,
 } from "./weekday-meeting-pdf-types";
+import type { WeekendMeetingPdfSectionKey } from "./weekend-meeting-pdf-types";
 
 export type WeekdayMeetingPdfLabels = {
 	documentTitle: string;
+	weekendDocumentTitle: string;
 	bibleTreasures: string;
 	applyYourself: string;
 	christianLife: string;
+	publicTalk: string;
+	watchtowerStudy: string;
 	song: string;
 	prayer: string;
 	openingComments: string;
@@ -23,9 +27,12 @@ export type WeekdayMeetingPdfLabels = {
 const TRANSLATIONS: Record<PdfLocale, WeekdayMeetingPdfLabels> = {
 	"pt-BR": {
 		documentTitle: "REUNIÃO DE MEIO DE SEMANA",
+		weekendDocumentTitle: "REUNIÃO DE FIM DE SEMANA",
 		bibleTreasures: "TESOUROS DA BÍBLIA",
 		applyYourself: "SEJA MELHOR INSTRUTOR",
 		christianLife: "NOSSA VIDA CRISTÃ",
+		publicTalk: "DISCURSO PÚBLICO",
+		watchtowerStudy: "ESTUDO DE A SENTINELA",
 		song: "Cântico",
 		prayer: "Oração",
 		openingComments: "Palavras de introdução",
@@ -38,9 +45,12 @@ const TRANSLATIONS: Record<PdfLocale, WeekdayMeetingPdfLabels> = {
 	},
 	es: {
 		documentTitle: "REUNIÓN DE ENTRE SEMANA",
+		weekendDocumentTitle: "REUNIÓN DE FIN DE SEMANA",
 		bibleTreasures: "TESOROS DE LA BIBLIA",
 		applyYourself: "SEAMOS MEJORES MAESTROS",
 		christianLife: "NUESTRA VIDA CRISTIANA",
+		publicTalk: "DISCURSO PÚBLICO",
+		watchtowerStudy: "ESTUDIO DE LA ATALAYA",
 		song: "Canción",
 		prayer: "Oración",
 		openingComments: "Palabras de introducción",
@@ -53,9 +63,12 @@ const TRANSLATIONS: Record<PdfLocale, WeekdayMeetingPdfLabels> = {
 	},
 	en: {
 		documentTitle: "MIDWEEK MEETING",
+		weekendDocumentTitle: "WEEKEND MEETING",
 		bibleTreasures: "TREASURES FROM GOD'S WORD",
 		applyYourself: "APPLY YOURSELF TO THE FIELD MINISTRY",
 		christianLife: "LIVING AS CHRISTIANS",
+		publicTalk: "PUBLIC TALK",
+		watchtowerStudy: "WATCHTOWER STUDY",
 		song: "Song",
 		prayer: "Prayer",
 		openingComments: "Opening comments",
@@ -73,19 +86,27 @@ const FILE_PREFIXES: Record<
 	{
 		single: string;
 		plural: string;
+		weekendSingle: string;
+		weekendPlural: string;
 	}
 > = {
 	"pt-BR": {
 		single: "reuniao-meio-de-semana",
 		plural: "reunioes-meio-de-semana",
+		weekendSingle: "reuniao-fim-de-semana",
+		weekendPlural: "reunioes-fim-de-semana",
 	},
 	es: {
 		single: "reunion-entre-semana",
 		plural: "reuniones-entre-semana",
+		weekendSingle: "reunion-fin-de-semana",
+		weekendPlural: "reuniones-fin-de-semana",
 	},
 	en: {
 		single: "midweek-meeting",
 		plural: "midweek-meetings",
+		weekendSingle: "weekend-meeting",
+		weekendPlural: "weekend-meetings",
 	},
 };
 
@@ -93,6 +114,8 @@ export type WeekdayMeetingPdfI18n = {
 	labels: WeekdayMeetingPdfLabels;
 	filePrefixSingle: string;
 	filePrefixPlural: string;
+	filePrefixWeekendSingle: string;
+	filePrefixWeekendPlural: string;
 	locale: PdfLocale;
 };
 
@@ -104,6 +127,8 @@ export function getPdfI18n(locale: PdfLocale): WeekdayMeetingPdfI18n {
 		labels: TRANSLATIONS[safeLocale],
 		filePrefixSingle: FILE_PREFIXES[safeLocale].single,
 		filePrefixPlural: FILE_PREFIXES[safeLocale].plural,
+		filePrefixWeekendSingle: FILE_PREFIXES[safeLocale].weekendSingle,
+		filePrefixWeekendPlural: FILE_PREFIXES[safeLocale].weekendPlural,
 	};
 }
 
@@ -165,6 +190,18 @@ export function getSectionLabel(
 			return labels.applyYourself;
 		case "christianLife":
 			return labels.christianLife;
+	}
+}
+
+export function getWeekendSectionLabel(
+	labels: WeekdayMeetingPdfLabels,
+	section: WeekendMeetingPdfSectionKey,
+): string {
+	switch (section) {
+		case "publicTalk":
+			return labels.publicTalk;
+		case "watchtowerStudy":
+			return labels.watchtowerStudy;
 	}
 }
 

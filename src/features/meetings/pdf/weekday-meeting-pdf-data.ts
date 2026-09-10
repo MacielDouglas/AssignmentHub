@@ -12,7 +12,9 @@ import type {
 	WeekdayMeetingPdfSectionKey,
 } from "./weekday-meeting-pdf-types";
 
-function cleanText(value: string | null | undefined): string | undefined {
+export function cleanText(
+	value: string | null | undefined,
+): string | undefined {
 	const text = value?.replace(/\s+/g, " ").trim();
 
 	return text || undefined;
@@ -35,7 +37,9 @@ function mapRole(role: string): WeekdayMeetingPdfAssignee["role"] {
 	}
 }
 
-function extractAssignees(part: MeetingPartDto): WeekdayMeetingPdfAssignee[] {
+export function extractAssignees(
+	part: MeetingPartDto,
+): WeekdayMeetingPdfAssignee[] {
 	return part.assignments
 		.map((assignment) => ({
 			name: cleanText(assignment.assigneeName) ?? "",
@@ -50,7 +54,10 @@ const SONG_LABELS: Record<PdfLocale, string> = {
 	en: "Song",
 };
 
-function buildSongTitle(part: MeetingPartDto, locale: PdfLocale): string {
+export function buildSongTitle(
+	part: MeetingPartDto,
+	locale: PdfLocale,
+): string {
 	const label = SONG_LABELS[locale] ?? SONG_LABELS["pt-BR"];
 	const number = cleanText(part.songNumber?.toString());
 	const songTitle = cleanText(part.songTitle);
@@ -99,16 +106,88 @@ function mapPartToItem(
 					? "conclusion"
 					: "normal";
 
+	const durationMin =
+		part.kind === "MIDWEEK_MIDDLE_SONG"
+			? (part.durationMin ?? 5)
+			: (part.durationMin ?? undefined);
+
 	return {
 		id: part.id,
 		time: undefined,
 		title: isSong
-			? buildSongTitle(part, locale)
-			: (cleanText(part.customTitle) ?? cleanText(part.title)),
+			? withDurationSuffix(buildSongTitle(part, locale), durationMin)
+			: withDurationSuffix(
+					cleanText(part.customTitle) ?? cleanText(part.title),
+					durationMin,
+				),
 		subtitle: undefined,
 		assignees: extractAssignees(part),
 		emphasis,
+		durationMin,
+		compactAfter: part.kind === "MIDWEEK_MIDDLE_SONG",
+		gapAfterMin:
+			part.kind === "MIDWEEK_BIBLE_READING" ||
+			part.kind.startsWith("MIDWEEK_MINISTRY")
+				? 1
+				: undefined,
 	};
+}
+
+export function withDurationSuffix(
+	title: string | undefined,
+	durationMin: number | null | undefined,
+): string | undefined {
+	const text = cleanText(title);
+
+	if (!text) {
+		return undefined;
+	}
+
+	if (durationMin === null || durationMin === undefined || durationMin <= 0) {
+		return text;
+	}
+
+	return `${text} (${durationMin}min)`;
+}
+
+function parseTimeToMinutes(value: string | null | undefined): number | null {
+	const match = /^([01]\d|2[0-3]):([0-5]\d)$/.exec((value ?? "").trim());
+
+	if (!match) {
+		return null;
+	}
+
+	return Number(match[1]) * 60 + Number(match[2]);
+}
+
+function formatMinutesToTime(total: number): string {
+	const normalized = ((total % 1440) + 1440) % 1440;
+
+	return `${String(Math.floor(normalized / 60)).padStart(2, "0")}:${String(
+		normalized % 60,
+	).padStart(2, "0")}`;
+}
+
+export function assignPartTimes(
+	items: Array<WeekdayMeetingPdfItem | undefined>,
+	startTime: string | null | undefined,
+): void {
+	const start = parseTimeToMinutes(startTime);
+
+	if (start === null) {
+		return;
+	}
+
+	let cursor = start;
+
+	for (const item of items) {
+		if (!item) {
+			continue;
+		}
+
+		item.time = formatMinutesToTime(cursor);
+		cursor += (item.durationMin ?? 0) + (item.gapAfterMin ?? 0);
+	}
 }
 
 function findTreasuresSubtitle(items: MeetingPartDto[]): string | undefined {
@@ -210,8 +289,11 @@ export function mapProgramToPdfData(
 	const openingItem: WeekdayMeetingPdfItem | undefined = openingSong
 		? {
 				id: openingSong.id,
-				time: cleanText(program.scheduledTime),
-				title: buildSongTitle(openingSong, locale),
+				time: undefined,
+				title: withDurationSuffix(
+					buildSongTitle(openingSong, locale),
+					openingSong.durationMin,
+				),
 				assignees: chairman
 					? extractAssignees(chairman).map((assignee) => ({
 							...assignee,
@@ -219,6 +301,7 @@ export function mapProgramToPdfData(
 						}))
 					: undefined,
 				emphasis: "song",
+				durationMin: openingSong.durationMin ?? undefined,
 			}
 		: undefined;
 
@@ -226,10 +309,13 @@ export function mapProgramToPdfData(
 		? {
 				id: introduction.id,
 				time: undefined,
-				title:
+				title: withDurationSuffix(
 					cleanText(introduction.customTitle) ?? cleanText(introduction.title),
+					introduction.durationMin,
+				),
 				assignees: undefined,
 				emphasis: "opening",
+				durationMin: introduction.durationMin ?? undefined,
 			}
 		: undefined;
 
@@ -237,12 +323,15 @@ export function mapProgramToPdfData(
 		? {
 				id: conclusion.id,
 				time: undefined,
-				title:
+				title: withDurationSuffix(
 					cleanText(conclusion.customTitle) ??
-					cleanText(conclusion.title) ??
-					CONCLUSION_LABELS[locale],
+						cleanText(conclusion.title) ??
+						CONCLUSION_LABELS[locale],
+					conclusion.durationMin,
+				),
 				assignees: extractAssignees(conclusion),
 				emphasis: "conclusion",
+				durationMin: conclusion.durationMin ?? undefined,
 			}
 		: undefined;
 
@@ -250,14 +339,31 @@ export function mapProgramToPdfData(
 		? {
 				id: closingSongAndPrayer.id,
 				time: undefined,
-				title: buildSongTitle(closingSongAndPrayer, locale),
+				title: withDurationSuffix(
+					buildSongTitle(closingSongAndPrayer, locale),
+					closingSongAndPrayer.durationMin,
+				),
 				assignees: extractAssignees(closingSongAndPrayer),
 				emphasis: "song",
+				durationMin: closingSongAndPrayer.durationMin ?? undefined,
 			}
 		: undefined;
 
 	const sectionParts = parts.filter(
 		(part) => !OPENING_KINDS.has(part.kind) && !CLOSING_KINDS.has(part.kind),
+	);
+
+	const sections = groupPartsIntoSections(sectionParts, locale);
+
+	assignPartTimes(
+		[
+			openingItem,
+			introductionItem,
+			...sections.flatMap((section) => section.items),
+			conclusionItem,
+			closingItem,
+		],
+		program.scheduledTime,
 	);
 
 	return {
@@ -268,7 +374,7 @@ export function mapProgramToPdfData(
 		startTime: cleanText(program.scheduledTime),
 		openingItem,
 		introduction: introductionItem,
-		sections: groupPartsIntoSections(sectionParts, locale),
+		sections,
 		conclusion: conclusionItem,
 		closingItem,
 	};

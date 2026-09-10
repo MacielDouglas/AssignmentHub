@@ -36,12 +36,16 @@ import {
 	PDF_LOCALE_OPTIONS,
 } from "../../pdf/weekday-meeting-pdf-i18n";
 import type { PdfLocale } from "../../pdf/weekday-meeting-pdf-types";
+import { mapWeeksToWeekendPdfData } from "../../pdf/weekend-meeting-pdf-data";
+
+type MeetingKindFilter = "MIDWEEK" | "WEEKEND";
 
 type Props = {
 	open: boolean;
 	onOpenChange: (open: boolean) => void;
 	slug: string;
 	currentLocale: string;
+	initialKind?: MeetingKindFilter;
 };
 
 function getDateFnsLocale(pdfLocale: PdfLocale) {
@@ -93,6 +97,7 @@ export function CreateWeekdayMeetingPdfDialog({
 	onOpenChange,
 	slug,
 	currentLocale,
+	initialKind = "MIDWEEK",
 }: Props) {
 	const defaultPdfLocale = useMemo(
 		() => mapAppLocaleToPdfLocale(currentLocale),
@@ -100,6 +105,8 @@ export function CreateWeekdayMeetingPdfDialog({
 	);
 
 	const [pdfLocale, setPdfLocale] = useState<PdfLocale>(defaultPdfLocale);
+	const [meetingKind, setMeetingKind] =
+		useState<MeetingKindFilter>(initialKind);
 	const [availableDates, setAvailableDates] = useState<
 		AvailableWeekdayMeetingDate[]
 	>([]);
@@ -131,14 +138,27 @@ export function CreateWeekdayMeetingPdfDialog({
 			return;
 		}
 
+		setPdfLocale(defaultPdfLocale);
+		setMeetingKind(initialKind);
+		setSelectedDates(new Set());
+		setError(null);
+	}, [defaultPdfLocale, initialKind, open]);
+
+	useEffect(() => {
+		if (!open) {
+			return;
+		}
+
 		let active = true;
 
-		setPdfLocale(defaultPdfLocale);
 		setSelectedDates(new Set());
 		setError(null);
 		setIsLoadingDates(true);
 
-		void listWeekdayMeetingDatesAction({ slug }).then((result) => {
+		void listWeekdayMeetingDatesAction({
+			slug,
+			kind: meetingKind,
+		}).then((result) => {
 			if (!active) {
 				return;
 			}
@@ -164,7 +184,7 @@ export function CreateWeekdayMeetingPdfDialog({
 		return () => {
 			active = false;
 		};
-	}, [defaultPdfLocale, open, slug]);
+	}, [meetingKind, open, slug]);
 
 	const handleCalendarSelect = (dates: Date[] | undefined) => {
 		if (isGenerating) {
@@ -232,30 +252,52 @@ export function CreateWeekdayMeetingPdfDialog({
 				return;
 			}
 
-			const allMeetings = mapWeeksToPdfData(result.data, pdfLocale);
-
-			const meetings = allMeetings
-				.filter((meeting) => selectedDates.has(meeting.date))
-				.sort((a, b) => a.date.localeCompare(b.date));
-
-			if (meetings.length === 0) {
-				setError("Nenhuma reunião encontrada para as datas selecionadas.");
-				return;
-			}
-
 			const { jsPDF } = await import("jspdf");
-			const { generateWeekdayMeetingPdf } = await import(
-				"../../pdf/weekday-meeting-pdf"
-			);
 
-			generateWeekdayMeetingPdf(meetings, pdfI18n, () => {
+			const createPdf = () => {
 				return new jsPDF({
 					orientation: "portrait",
 					unit: "mm",
 					format: "a4",
 					compress: true,
 				});
-			});
+			};
+
+			if (meetingKind === "WEEKEND") {
+				const allMeetings = mapWeeksToWeekendPdfData(result.data, pdfLocale);
+
+				const meetings = allMeetings
+					.filter((meeting) => selectedDates.has(meeting.date))
+					.sort((a, b) => a.date.localeCompare(b.date));
+
+				if (meetings.length === 0) {
+					setError("Nenhuma reunião encontrada para as datas selecionadas.");
+					return;
+				}
+
+				const { generateWeekendMeetingPdf } = await import(
+					"../../pdf/weekend-meeting-pdf"
+				);
+
+				generateWeekendMeetingPdf(meetings, pdfI18n, createPdf);
+			} else {
+				const allMeetings = mapWeeksToPdfData(result.data, pdfLocale);
+
+				const meetings = allMeetings
+					.filter((meeting) => selectedDates.has(meeting.date))
+					.sort((a, b) => a.date.localeCompare(b.date));
+
+				if (meetings.length === 0) {
+					setError("Nenhuma reunião encontrada para as datas selecionadas.");
+					return;
+				}
+
+				const { generateWeekdayMeetingPdf } = await import(
+					"../../pdf/weekday-meeting-pdf"
+				);
+
+				generateWeekdayMeetingPdf(meetings, pdfI18n, createPdf);
+			}
 
 			onOpenChange(false);
 		} catch (cause) {
@@ -273,15 +315,41 @@ export function CreateWeekdayMeetingPdfDialog({
 		<Dialog open={open} onOpenChange={onOpenChange}>
 			<DialogContent className="flex max-h-[min(800px,calc(100dvh-2rem))] flex-col gap-0 overflow-hidden p-0 sm:max-w-xl">
 				<DialogHeader className="border-b px-5 py-4">
-					<DialogTitle>Criar PDF — Reuniões de meio de semana</DialogTitle>
+					<DialogTitle>
+						Criar PDF — Reuniões de{" "}
+						{meetingKind === "WEEKEND" ? "fim de semana" : "meio de semana"}
+					</DialogTitle>
 					<DialogDescription>
-						Escolha o idioma do documento e selecione uma ou mais datas para
-						gerar o programa em PDF.
+						Escolha o tipo e o idioma do documento e selecione uma ou mais datas
+						para gerar o programa em PDF.
 					</DialogDescription>
 				</DialogHeader>
 
 				<div className="flex-1 overflow-y-auto px-5 py-4">
 					<div className="space-y-5">
+						<div className="space-y-2">
+							<Label htmlFor="pdf-kind">Tipo de reunião</Label>
+
+							<Select
+								value={meetingKind}
+								onValueChange={(value) =>
+									setMeetingKind(value as MeetingKindFilter)
+								}
+								disabled={isGenerating || isLoadingDates}
+							>
+								<SelectTrigger id="pdf-kind" className="w-full">
+									<SelectValue />
+								</SelectTrigger>
+
+								<SelectContent>
+									<SelectItem value="MIDWEEK">Meio de semana</SelectItem>
+									<SelectItem value="WEEKEND">Fim de semana</SelectItem>
+								</SelectContent>
+							</Select>
+						</div>
+
+						<Separator />
+
 						<div className="space-y-2">
 							<Label htmlFor="pdf-locale">Idioma do PDF</Label>
 							<p className="text-caption text-muted-foreground">

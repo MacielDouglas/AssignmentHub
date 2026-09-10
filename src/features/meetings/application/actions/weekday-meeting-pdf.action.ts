@@ -16,6 +16,7 @@ export type AvailableWeekdayMeetingDate = {
 
 const ListDatesSchema = z.object({
 	slug: z.string().min(1),
+	kind: z.enum(["MIDWEEK", "WEEKEND"]).default("MIDWEEK"),
 });
 
 function toLocalDateOnly(date: Date): string {
@@ -49,7 +50,7 @@ export async function listWeekdayMeetingDatesAction(
 		const programs = await db.meetingProgram.findMany({
 			where: {
 				organizationId: organization.id,
-				kind: "MIDWEEK",
+				kind: parsed.kind,
 				isCancelled: false,
 				scheduledAt: {
 					not: null,

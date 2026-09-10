@@ -27,6 +27,9 @@ export type WeekdayMeetingPdfItem = {
 	subtitle?: string;
 	assignees?: WeekdayMeetingPdfAssignee[];
 	emphasis?: WeekdayMeetingPdfItemEmphasis;
+	durationMin?: number;
+	compactAfter?: boolean;
+	gapAfterMin?: number;
 };
 
 export type WeekdayMeetingPdfSectionKey =

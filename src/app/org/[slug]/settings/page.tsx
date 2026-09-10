@@ -1,8 +1,8 @@
 import { headers } from "next/headers";
 import { notFound } from "next/navigation";
 import { getTranslations } from "next-intl/server";
-import { AssignmentSettingsPanel } from "@/features/settings/assignments/components/assignment-settings-panel";
-import { loadAssignmentSettingsView } from "@/features/settings/assignments/lib/assignment-settings";
+import { DutySettingsPanel } from "@/features/settings/assignments/components/duty-settings-panel";
+import { loadDutySettingsView } from "@/features/settings/assignments/lib/duty-settings";
 import { CleaningSettingsPanel } from "@/features/settings/cleaning/components/cleaning-settings-panel";
 import { loadCleaningSettingsView } from "@/features/settings/cleaning/lib/cleaning-settings";
 import { formatDateInput } from "@/features/settings/lib/year-bounds";
@@ -119,9 +119,7 @@ export default async function SettingsPage({
 	});
 
 	const cleaning = await loadCleaningSettingsView(membership.organization.id);
-	const assignmentSettings = await loadAssignmentSettingsView(
-		membership.organization.id,
-	);
+	const dutySettings = await loadDutySettingsView(membership.organization.id);
 
 	const activeTab =
 		tab === "cleaning" || tab === "assignments" || tab === "meetings"
@@ -149,10 +147,10 @@ export default async function SettingsPage({
 			) : null}
 
 			{activeTab === "assignments" ? (
-				<AssignmentSettingsPanel
+				<DutySettingsPanel
 					organizationSlug={membership.organization.slug}
 					canEdit={canEdit}
-					settings={assignmentSettings}
+					settings={dutySettings}
 				/>
 			) : null}
 		</>

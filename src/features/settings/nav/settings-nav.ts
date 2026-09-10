@@ -23,7 +23,7 @@ export const SETTINGS_SECTIONS = [
 		id: "assignments",
 		label: "Designações",
 		shortLabel: "Designações",
-		description: "Atribuição de tarefas em breve",
+		description: "Setores de serviço",
 		icon: HiOutlineClipboardDocument,
 	},
 ] as const;

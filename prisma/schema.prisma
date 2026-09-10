@@ -169,7 +169,7 @@ model Organization {
   conventions               Convention[]
   circuitAssembliesOverseer CircuitAssemblyOverseer[]
   circuitAssembliesBranch   CircuitAssemblyBranchRep[]
-  assignmentSettings        AssignmentSettings?
+  dutySettings              MeetingDutySettings?
 
   publicTalkHistories PublicTalkHistory[]
   meetingPrograms     MeetingProgram[]
@@ -658,42 +658,25 @@ model CircuitAssemblyBranchRep {
   @@map("circuit_assembly_branch_rep")
 }
 
-enum AssignmentRotationMode {
-  LEAST_LOAD
-  ROUND_ROBIN
-}
+/// Setores de serviço das reuniões (indicadores, microfones, som, vídeo, palco).
+model MeetingDutySettings {
+  id             String   @id @default(uuid())
+  organizationId String   @unique
+  indicatorActive Boolean @default(false)
+  indicatorCount  Int     @default(2)
+  /// Nomes dos postos digitados manualmente (ex: "Entrada principal").
+  indicatorSectors String[] @default([])
+  micActive Boolean @default(false)
+  micCount  Int     @default(2)
+  soundActive Boolean @default(false)
+  videoActive Boolean @default(false)
+  stageActive Boolean @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
-/// Configurações de designações por organização.
-model AssignmentSettings {
-  id             String                 @id @default(uuid())
-  organizationId String                 @unique
-  rotationMode   AssignmentRotationMode @default(LEAST_LOAD)
-  createdAt      DateTime               @default(now())
-  updatedAt      DateTime               @updatedAt
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
 
-  organization Organization                @relation(fields: [organizationId], references: [id], onDelete: Cascade)
-  rules        AssignmentEligibilityRule[]
-
-  @@map("assignment_settings")
-}
-
-/// Regra de elegibilidade padrão por tipo de parte.
-model AssignmentEligibilityRule {
-  id           String                 @id @default(uuid())
-  settingsId   String
-  partKind     MeetingProgramPartKind
-  requiredSex  Sex?
-  baptizedOnly Boolean                @default(false)
-  allowYoung   Boolean                @default(true)
-  minPrivilege String?
-  createdAt    DateTime               @default(now())
-  updatedAt    DateTime               @updatedAt
-
-  settings AssignmentSettings @relation(fields: [settingsId], references: [id], onDelete: Cascade)
-
-  @@unique([settingsId, partKind])
-  @@index([settingsId])
-  @@map("assignment_eligibility_rule")
+  @@map("meeting_duty_settings")
 }
 
 model CleaningAssignmentList {

@@ -73,7 +73,6 @@ const WEEKEND_PREFIX_PARTS: GeneratedPart[] = [
 		sectionCode: null,
 		sortOrder: 10,
 		title: "Presidente",
-		durationMin: 5,
 	},
 	{
 		kind: "WEEKEND_OPENING_SONG",
@@ -608,8 +607,8 @@ function buildWeekendParts(input: {
 		circuitOverseerTitle,
 	} = input;
 
-	const openingSongNumber = watchtowerStudy?.openingSongNum ?? null;
-	const openingSongTitle = watchtowerStudy?.openingSong?.title ?? null;
+	const middleSongNumber = watchtowerStudy?.openingSongNum ?? null;
+	const middleSongTitle = watchtowerStudy?.openingSong?.title ?? null;
 	const closingSongNumber = watchtowerStudy?.closingSongNum ?? null;
 	const closingSongTitle = watchtowerStudy?.closingSong?.title ?? null;
 
@@ -619,12 +618,8 @@ function buildWeekendParts(input: {
 			isDisabled,
 		},
 		{
+			// Cântico inicial escolhido pelo usuário (editável na semana).
 			...WEEKEND_PREFIX_PARTS[1],
-			songNumber: openingSongNumber,
-			songTitle: openingSongTitle,
-			title:
-				songLabel(openingSongNumber, openingSongTitle) ??
-				"Cântico inicial e oração",
 			isDisabled,
 		},
 		{
@@ -642,7 +637,7 @@ function buildWeekendParts(input: {
 		parts.push({
 			kind: "WEEKEND_CIRCUIT_OVERSEER_FINAL_TALK",
 			sectionCode: "PUBLIC_TALK",
-			sortOrder: 40,
+			sortOrder: 35,
 			title: circuitOverseerTitle,
 			customTitle: circuitOverseerTitle,
 			durationMin: 30,
@@ -652,13 +647,25 @@ function buildWeekendParts(input: {
 
 	parts.push(
 		{
+			// Cântico do meio = primeiro cântico da Sentinela (editável na semana).
+			kind: "WEEKEND_WATCHTOWER_OPENING_SONG",
+			sectionCode: "WATCHTOWER",
+			sortOrder: 40,
+			title:
+				songLabel(middleSongNumber, middleSongTitle) ?? "Cântico para o estudo",
+			songNumber: middleSongNumber,
+			songTitle: middleSongTitle,
+			durationMin: 5,
+			isDisabled,
+		},
+		{
 			kind: "WEEKEND_WATCHTOWER_STUDY",
 			sectionCode: "WATCHTOWER",
 			sortOrder: 50,
 			title: watchtowerStudy?.title ?? "Estudo de A Sentinela",
 			theme: watchtowerStudy?.weekLabelRaw ?? null,
 			source: watchtowerStudy?.issueCode ?? null,
-			durationMin: 30,
+			durationMin: 60,
 			isDisabled,
 		},
 		{

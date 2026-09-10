@@ -15,12 +15,7 @@ import {
 	type WeekdayMeetingPdfI18n,
 	type WeekdayMeetingPdfLabels,
 } from "./weekday-meeting-pdf-i18n";
-import {
-	PDF_LAYOUT,
-	type PdfLayout,
-	type PdfPageLayout,
-	planPages,
-} from "./weekday-meeting-pdf-layout";
+import { PDF_LAYOUT, type PdfLayout } from "./weekday-meeting-pdf-layout";
 import type { PdfLocale } from "./weekday-meeting-pdf-types";
 import type {
 	WeekendMeetingPdfData,
@@ -28,6 +23,30 @@ import type {
 } from "./weekend-meeting-pdf-types";
 
 type Pdf = jsPDF;
+
+const WEEKEND_PER_PAGE = 4;
+const WEEKEND_BLOCK_HEIGHT = 64;
+const WEEKEND_BLOCK_GAP = 3;
+
+type WeekendPdfPage = {
+	slots: Array<WeekendMeetingPdfData | null>;
+};
+
+function planWeekendPages(meetings: WeekendMeetingPdfData[]): WeekendPdfPage[] {
+	const pages: WeekendPdfPage[] = [];
+
+	for (let index = 0; index < meetings.length; index += WEEKEND_PER_PAGE) {
+		const slots: Array<WeekendMeetingPdfData | null> = [];
+
+		for (let slot = 0; slot < WEEKEND_PER_PAGE; slot += 1) {
+			slots.push(meetings[index + slot] ?? null);
+		}
+
+		pages.push({ slots });
+	}
+
+	return pages;
+}
 
 const WEEKEND_SECTION_STYLES: Record<
 	WeekendMeetingPdfSection["key"],
@@ -185,14 +204,16 @@ function drawMeetingBlock(
 
 function drawPage(
 	pdf: Pdf,
-	page: PdfPageLayout<WeekendMeetingPdfData>,
+	page: WeekendPdfPage,
 	labels: WeekdayMeetingPdfLabels,
 	locale: PdfLocale,
 	layout: PdfLayout = PDF_LAYOUT,
 ): void {
-	const headerMeeting = page.topMeeting ?? page.bottomMeeting;
+	const headerMeeting = page.slots.find(
+		(meeting): meeting is WeekendMeetingPdfData => meeting !== null,
+	);
 
-	let topBlockY = PDF_LAYOUT.marginTop;
+	let blockY = PDF_LAYOUT.marginTop;
 
 	if (headerMeeting) {
 		drawPageHeader(
@@ -200,56 +221,48 @@ function drawPage(
 			headerMeeting,
 			labels.weekendDocumentTitle,
 			PDF_LAYOUT.marginX,
-			topBlockY,
+			blockY,
 			PDF_LAYOUT.contentWidth,
 		);
-		topBlockY += PDF_LAYOUT.pageHeaderHeight + PDF_LAYOUT.pageHeaderGap;
+		blockY += PDF_LAYOUT.pageHeaderHeight + PDF_LAYOUT.pageHeaderGap;
 	}
 
-	const bottomBlockY = topBlockY + PDF_LAYOUT.blockHeight + PDF_LAYOUT.blockGap;
-	const fixedSeparatorY =
-		topBlockY + PDF_LAYOUT.blockHeight + PDF_LAYOUT.blockGap / 2;
+	let previousPresent = false;
 
-	let topEndY = topBlockY;
+	page.slots.forEach((meeting, index) => {
+		const slotY = blockY + index * (WEEKEND_BLOCK_HEIGHT + WEEKEND_BLOCK_GAP);
 
-	if (page.topMeeting) {
-		topEndY = drawMeetingBlock(
-			pdf,
-			page.topMeeting,
-			labels,
-			locale,
-			PDF_LAYOUT.marginX,
-			topBlockY,
-			PDF_LAYOUT.contentWidth,
-			layout,
-		);
-	}
+		if (!meeting) {
+			previousPresent = false;
+			return;
+		}
 
-	if (page.bottomMeeting) {
-		const separatorY = page.topMeeting
-			? Math.min(topEndY + 2, fixedSeparatorY)
-			: fixedSeparatorY;
+		if (previousPresent) {
+			const separatorY = slotY - WEEKEND_BLOCK_GAP / 2;
 
-		pdf.setDrawColor(190, 190, 190);
-		pdf.setLineWidth(0.2);
-		pdf.line(
-			PDF_LAYOUT.marginX,
-			separatorY,
-			PDF_LAYOUT.pageWidth - PDF_LAYOUT.marginX,
-			separatorY,
-		);
+			pdf.setDrawColor(190, 190, 190);
+			pdf.setLineWidth(0.2);
+			pdf.line(
+				PDF_LAYOUT.marginX,
+				separatorY,
+				PDF_LAYOUT.pageWidth - PDF_LAYOUT.marginX,
+				separatorY,
+			);
+		}
 
 		drawMeetingBlock(
 			pdf,
-			page.bottomMeeting,
+			meeting,
 			labels,
 			locale,
 			PDF_LAYOUT.marginX,
-			bottomBlockY,
+			slotY,
 			PDF_LAYOUT.contentWidth,
 			layout,
 		);
-	}
+
+		previousPresent = true;
+	});
 }
 
 export function generateWeekendMeetingPdf(
@@ -267,14 +280,14 @@ export function generateWeekendMeetingPdf(
 		first.date.localeCompare(second.date),
 	);
 
-	const pages = planPages(sortedMeetings);
+	const pages = planWeekendPages(sortedMeetings);
 
 	pages.forEach((page, index) => {
 		if (index > 0) {
 			pdf.addPage();
 		}
 
-		const present = [page.topMeeting, page.bottomMeeting].filter(
+		const present = page.slots.filter(
 			(meeting): meeting is WeekendMeetingPdfData => meeting !== null,
 		);
 
@@ -289,7 +302,7 @@ export function generateWeekendMeetingPdf(
 						candidate,
 					),
 			),
-			PDF_LAYOUT.blockHeight,
+			WEEKEND_BLOCK_HEIGHT,
 		);
 
 		drawPage(pdf, page, i18n.labels, i18n.locale, layout);

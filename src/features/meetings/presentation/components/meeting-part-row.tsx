@@ -35,7 +35,7 @@ export function MeetingPartRow({
 	canManage,
 	disableEdit,
 }: Props) {
-	if (part.kind === "MIDWEEK_CHAIRMAN") {
+	if (part.kind === "MIDWEEK_CHAIRMAN" || part.kind === "WEEKEND_CHAIRMAN") {
 		return (
 			<ChairmanRow
 				slug={slug}

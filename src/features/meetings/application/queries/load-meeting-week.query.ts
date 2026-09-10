@@ -28,6 +28,7 @@ function mapAssignment(row: {
 	personId: string | null;
 	subPersonId: string | null;
 	externalName: string | null;
+	externalCongregation: string | null;
 	assigneeNameSnapshot: string;
 }): AssignmentDto {
 	const source = row.personId
@@ -45,6 +46,7 @@ function mapAssignment(row: {
 		personId: row.personId,
 		subPersonId: row.subPersonId,
 		externalName: row.externalName,
+		externalCongregation: row.externalCongregation,
 	};
 }
 
@@ -78,6 +80,11 @@ function mapProgram(row: {
 		songNumber: number | null;
 		songTitle: string | null;
 		customTitle: string | null;
+		publicTalkId: string | null;
+		publicTalk: {
+			number: number;
+			title: string;
+		} | null;
 		isDisabled: boolean;
 		assignments: Array<{
 			id: string;
@@ -86,6 +93,7 @@ function mapProgram(row: {
 			personId: string | null;
 			subPersonId: string | null;
 			externalName: string | null;
+			externalCongregation: string | null;
 			assigneeNameSnapshot: string;
 		}>;
 	}>;
@@ -123,6 +131,9 @@ function mapProgram(row: {
 				songNumber: part.songNumber,
 				songTitle: part.songTitle,
 				customTitle: part.customTitle,
+				publicTalkId: part.publicTalkId,
+				publicTalkNumber: part.publicTalk?.number ?? null,
+				publicTalkTitle: part.publicTalk?.title ?? null,
 				isDisabled: part.isDisabled,
 				highlightColor:
 					part.kind === "WEEKEND_WATCHTOWER_STUDY" ? watchtowerColor : null,
@@ -219,6 +230,12 @@ export async function loadMeetingWeekQuery(
 					sortOrder: "asc",
 				},
 				include: {
+					publicTalk: {
+						select: {
+							number: true,
+							title: true,
+						},
+					},
 					assignments: {
 						orderBy: {
 							sortOrder: "asc",
@@ -266,6 +283,12 @@ export async function loadMeetingWeekQuery(
 						sortOrder: "asc",
 					},
 					include: {
+						publicTalk: {
+							select: {
+								number: true,
+								title: true,
+							},
+						},
 						assignments: {
 							orderBy: {
 								sortOrder: "asc",

@@ -51,6 +51,22 @@ const SaveAssignmentSchema = z.object({
 	personId: z.string().min(1).nullable().optional(),
 	subPersonId: z.string().min(1).nullable().optional(),
 	externalName: z.string().trim().max(120).nullable().optional(),
+	externalCongregation: z.string().trim().max(120).nullable().optional(),
+});
+
+const UpdateCongregationSchema = z.object({
+	slug: z.string().min(1),
+	partId: z.string().min(1),
+	role: z.enum([
+		"PRIMARY",
+		"ASSISTANT",
+		"READER",
+		"CHAIRMAN",
+		"PRAYER",
+		"SPEAKER",
+		"CONDUCTOR",
+	]),
+	congregation: z.string().trim().max(120).nullable().optional(),
 });
 
 const ClearAssignmentSchema = z.object({
@@ -208,6 +224,8 @@ export async function saveMeetingAssignmentAction(
 		let personId: string | null = null;
 		let subPersonId: string | null = null;
 		let externalName: string | null = null;
+		const externalCongregation =
+			parsed.externalCongregation?.trim().slice(0, 120) || null;
 
 		if (parsed.source === "PERSON") {
 			if (!parsed.personId) {
@@ -306,6 +324,8 @@ export async function saveMeetingAssignmentAction(
 					personId,
 					subPersonId,
 					externalName,
+					externalCongregation:
+						parsed.role === "SPEAKER" ? externalCongregation : null,
 					assigneeNameSnapshot,
 				},
 			});
@@ -324,6 +344,71 @@ export async function saveMeetingAssignmentAction(
 				error instanceof Error
 					? error.message
 					: "Não foi possível salvar a designação.",
+		};
+	}
+}
+
+export async function updateSpeakerCongregationAction(
+	input: z.infer<typeof UpdateCongregationSchema>,
+): Promise<ActionResult> {
+	try {
+		await requireMeetingContentManage(input.slug);
+
+		const parsed = UpdateCongregationSchema.parse(input);
+
+		if (parsed.role !== "SPEAKER") {
+			return {
+				ok: false,
+				error: "Congregação só pode ser informada para o orador.",
+			};
+		}
+
+		const part = await db.meetingProgramPart.findFirst({
+			where: {
+				id: parsed.partId,
+				meetingProgram: {
+					organization: {
+						slug: parsed.slug,
+					},
+				},
+			},
+			select: {
+				id: true,
+			},
+		});
+
+		if (!part) {
+			return {
+				ok: false,
+				error: "Parte da reunião não encontrada.",
+			};
+		}
+
+		const congregation = parsed.congregation?.trim().slice(0, 120) || null;
+
+		await db.meetingProgramAssignment.updateMany({
+			where: {
+				meetingProgramPartId: parsed.partId,
+				role: parsed.role,
+			},
+			data: {
+				externalCongregation: congregation,
+			},
+		});
+
+		revalidateMeetings(parsed.slug);
+
+		return {
+			ok: true,
+			data: undefined,
+		};
+	} catch (error) {
+		return {
+			ok: false,
+			error:
+				error instanceof Error
+					? error.message
+					: "Não foi possível salvar a congregação.",
 		};
 	}
 }

@@ -27,7 +27,7 @@ export function MeetingProgramCard({
 
 	const startTimes = computeStartTimes({
 		parts: program.parts,
-		baseTime: isMidweek ? program.scheduledTime : null,
+		baseTime: program.scheduledTime,
 	});
 
 	function renderPartRow(part: MeetingPartDto) {
@@ -67,7 +67,11 @@ export function MeetingProgramCard({
 					/>
 				) : (
 					<WeekendSections
+						slug={slug}
+						program={program}
 						parts={program.parts}
+						canManage={canManage}
+						startTimes={startTimes}
 						renderPartRow={renderPartRow}
 					/>
 				)}

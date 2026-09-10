@@ -24,8 +24,31 @@ function mapTalkItem(part: MeetingProgramDto["parts"][number]) {
 			part.durationMin,
 		),
 		subtitle: undefined,
-		assignees: extractAssignees(part),
+		assignees: extractAssignees(part).map((assignee, index) => {
+			const congregation = cleanText(
+				part.assignments[index]?.externalCongregation,
+			);
+
+			return congregation
+				? { ...assignee, name: `${assignee.name} — ${congregation}` }
+				: assignee;
+		}),
 		emphasis: "normal" as const,
+		durationMin: part.durationMin ?? undefined,
+	};
+}
+
+function mapSongItem(
+	part: MeetingProgramDto["parts"][number],
+	locale: PdfLocale,
+) {
+	return {
+		id: part.id,
+		time: undefined,
+		title: withDurationSuffix(buildSongTitle(part, locale), part.durationMin),
+		subtitle: undefined,
+		assignees: extractAssignees(part),
+		emphasis: "song" as const,
 		durationMin: part.durationMin ?? undefined,
 	};
 }
@@ -49,10 +72,15 @@ export function mapWeekendProgramToPdfData(
 	const circuitFinalTalk = parts.find(
 		(part) => part.kind === "WEEKEND_CIRCUIT_OVERSEER_FINAL_TALK",
 	);
+	const middleSong = parts.find(
+		(part) => part.kind === "WEEKEND_WATCHTOWER_OPENING_SONG",
+	);
 	const study = parts.find((part) => part.kind === "WEEKEND_WATCHTOWER_STUDY");
 	const closingSongAndPrayer = parts.find(
 		(part) => part.kind === "WEEKEND_CLOSING_SONG_AND_PRAYER",
 	);
+
+	const openingPrayer = openingSong ? extractAssignees(openingSong) : [];
 
 	const openingItem = openingSong
 		? {
@@ -62,12 +90,15 @@ export function mapWeekendProgramToPdfData(
 					buildSongTitle(openingSong, locale),
 					openingSong.durationMin,
 				),
-				assignees: chairman
-					? extractAssignees(chairman).map((assignee) => ({
-							...assignee,
-							role: "chairman" as const,
-						}))
-					: undefined,
+				assignees: [
+					...(chairman
+						? extractAssignees(chairman).map((assignee) => ({
+								...assignee,
+								role: "chairman" as const,
+							}))
+						: []),
+					...openingPrayer,
+				],
 				emphasis: "song" as const,
 				durationMin: openingSong.durationMin ?? undefined,
 			}
@@ -76,6 +107,8 @@ export function mapWeekendProgramToPdfData(
 	const talkItems = [publicTalk, circuitFinalTalk]
 		.filter((part) => part !== undefined)
 		.map((part) => mapTalkItem(part));
+
+	const middleItem = middleSong ? mapSongItem(middleSong, locale) : undefined;
 
 	const studyItem = study
 		? {
@@ -98,8 +131,12 @@ export function mapWeekendProgramToPdfData(
 		sections.push({ key: "publicTalk", items: talkItems });
 	}
 
-	if (studyItem) {
-		sections.push({ key: "watchtowerStudy", items: [studyItem] });
+	const watchtowerItems = [middleItem, studyItem].filter(
+		(item): item is NonNullable<typeof item> => item !== undefined,
+	);
+
+	if (watchtowerItems.length > 0) {
+		sections.push({ key: "watchtowerStudy", items: watchtowerItems });
 	}
 
 	const closingItem = closingSongAndPrayer

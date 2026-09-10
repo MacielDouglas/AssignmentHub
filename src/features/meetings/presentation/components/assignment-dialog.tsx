@@ -48,6 +48,7 @@ export type AssignmentSelection = {
 	personId: string | null;
 	subPersonId: string | null;
 	externalName: string | null;
+	externalCongregation: string | null;
 	assigneeName: string;
 };
 
@@ -304,6 +305,7 @@ export function AssignmentDialog({
 	const [error, setError] = useState<string | null>(null);
 	const [search, setSearch] = useState("");
 	const [externalName, setExternalName] = useState("");
+	const [externalCongregation, setExternalCongregation] = useState("");
 	const [selectedRole, setSelectedRole] = useState(assignmentRole);
 	const [pendingSelection, setPendingSelection] =
 		useState<AssignmentSelection | null>(null);
@@ -341,6 +343,7 @@ export function AssignmentDialog({
 		setError(null);
 		setSearch("");
 		setExternalName("");
+		setExternalCongregation("");
 		setSelectedRole(assignmentRole);
 		setPendingSelection(null);
 	}
@@ -386,8 +389,22 @@ export function AssignmentDialog({
 		setSelectedRole(nextRole);
 		setSearch("");
 		setExternalName("");
+		setExternalCongregation("");
 		setError(null);
 		loadDialogData(nextRole);
+	}
+
+	function congregationForSave() {
+		if (selectedRole !== "SPEAKER") {
+			return null;
+		}
+
+		const normalized = externalCongregation
+			.replace(/\s+/g, " ")
+			.trim()
+			.slice(0, 120);
+
+		return normalized.length > 0 ? normalized : null;
 	}
 
 	function handleCandidateSelect(candidate: MeetingCandidateDto) {
@@ -398,6 +415,7 @@ export function AssignmentDialog({
 			personId: candidate.kind === "PERSON" ? candidate.id : null,
 			subPersonId: candidate.kind === "SUB_PERSON" ? candidate.id : null,
 			externalName: null,
+			externalCongregation: congregationForSave(),
 			assigneeName: candidate.name,
 		};
 
@@ -421,6 +439,7 @@ export function AssignmentDialog({
 				personId: candidate.kind === "PERSON" ? candidate.id : null,
 				subPersonId: candidate.kind === "SUB_PERSON" ? candidate.id : null,
 				externalName: null,
+				externalCongregation: congregationForSave(),
 			});
 
 			if (!result.ok) {
@@ -434,7 +453,7 @@ export function AssignmentDialog({
 	}
 
 	function handleExternalNameChange(value: string) {
-		setExternalName(normalizeExternalName(value));
+		setExternalName(value.slice(0, 120));
 	}
 
 	function handleExternalNameSave() {
@@ -452,6 +471,7 @@ export function AssignmentDialog({
 			personId: null,
 			subPersonId: null,
 			externalName: normalizedName,
+			externalCongregation: congregationForSave(),
 			assigneeName: normalizedName,
 		};
 
@@ -475,6 +495,7 @@ export function AssignmentDialog({
 				personId: null,
 				subPersonId: null,
 				externalName: normalizedName,
+				externalCongregation: congregationForSave(),
 			});
 
 			if (!result.ok) {
@@ -661,6 +682,34 @@ export function AssignmentDialog({
 									Ajuste a busca ou altere o papel para ver outros elegíveis.
 								</p>
 							</div>
+						) : null}
+
+						{selectedRole === "SPEAKER" ? (
+							<section className="space-y-2 rounded-2xl border border-border bg-muted/20 p-3">
+								<Label
+									htmlFor="assignment-speaker-congregation"
+									className="text-label"
+								>
+									Congregação do orador
+								</Label>
+
+								<p className="text-caption text-muted-foreground">
+									Exibida abaixo do nome no discurso público. Deixe em branco
+									para orador da própria congregação.
+								</p>
+
+								<Input
+									id="assignment-speaker-congregation"
+									value={externalCongregation}
+									disabled={pending}
+									maxLength={120}
+									onChange={(event) =>
+										setExternalCongregation(event.target.value)
+									}
+									className="min-h-11 rounded-xl"
+									placeholder="Ex.: Congregação Jardim América"
+								/>
+							</section>
 						) : null}
 
 						{data?.canUseExternalName ? (

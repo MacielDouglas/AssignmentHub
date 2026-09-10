@@ -820,6 +820,7 @@ enum MeetingProgramPartKind {
   WEEKEND_CHAIRMAN
   WEEKEND_OPENING_SONG
   WEEKEND_PUBLIC_TALK
+  WEEKEND_WATCHTOWER_OPENING_SONG
   WEEKEND_WATCHTOWER_STUDY
   WEEKEND_CLOSING_SONG_AND_PRAYER
   WEEKEND_CIRCUIT_OVERSEER_FINAL_TALK
@@ -1164,6 +1165,9 @@ model MeetingProgramAssignment {
 
   /// Para visitante/orador externo e superintendente inserido manualmente.
   externalName String?
+
+  /// Congregação do orador visitante (exibida abaixo do nome no discurso público).
+  externalCongregation String?
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt

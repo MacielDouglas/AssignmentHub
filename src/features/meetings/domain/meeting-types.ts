@@ -16,6 +16,7 @@ export type AssignmentDto = {
 	personId: string | null;
 	subPersonId: string | null;
 	externalName: string | null;
+	externalCongregation: string | null;
 };
 
 export type MeetingPartDto = {
@@ -31,6 +32,9 @@ export type MeetingPartDto = {
 	songNumber: number | null;
 	songTitle: string | null;
 	customTitle: string | null;
+	publicTalkId: string | null;
+	publicTalkNumber: number | null;
+	publicTalkTitle: string | null;
 	isDisabled: boolean;
 	highlightColor: string | null;
 	assignments: AssignmentDto[];

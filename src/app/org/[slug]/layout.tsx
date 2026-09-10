@@ -115,6 +115,7 @@ export default async function OrganizationLayout({
 		"sub-organizations": "Suborganizações",
 		outlines: "Discursos",
 		meetings: "Reuniões",
+		duties: "Designações",
 		settings: "Configurações",
 	};
 
@@ -127,6 +128,7 @@ export default async function OrganizationLayout({
 		[`/org/${currentOrganization.slug}/sub-organizations`]: "Suborganizações",
 		[`/org/${currentOrganization.slug}/outlines`]: "Discursos",
 		[`/org/${currentOrganization.slug}/meetings`]: "Reuniões",
+		[`/org/${currentOrganization.slug}/duties`]: "Designações",
 		[`/org/${currentOrganization.slug}/settings`]: "Configurações",
 	};
 

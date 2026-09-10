@@ -2,6 +2,7 @@ import type { LucideIcon } from "lucide-react";
 import {
 	BrushCleaning,
 	CalendarDays,
+	ClipboardList,
 	FolderKanban,
 	Home,
 	NotebookPen,
@@ -57,6 +58,11 @@ export function getOrgNavItems(slug: string, t: Translate): OrgNavItem[] {
 			href: `/org/${slug}/cleaning`,
 			label: t("cleaning"),
 			icon: BrushCleaning,
+		},
+		{
+			href: `/org/${slug}/duties`,
+			label: t("duties"),
+			icon: ClipboardList,
 		},
 		{
 			href: `/org/${slug}/outlines`,

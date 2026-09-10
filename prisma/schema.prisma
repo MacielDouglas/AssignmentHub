@@ -173,6 +173,7 @@ model Organization {
 
   publicTalkHistories PublicTalkHistory[]
   meetingPrograms     MeetingProgram[]
+  dutyLists           MeetingDutyList[]
 
   localPublicTalks PublicTalk[] @relation("OrganizationLocalPublicTalks")
   localMwbIssues   MwbIssue[]   @relation("OrganizationLocalMwbIssues")
@@ -319,6 +320,7 @@ model Person {
   attendant        Boolean @default(false)
 
   meetingAssignments MeetingProgramAssignment[]
+  dutyAssignments    MeetingDutyAssignment[]
 
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt
@@ -677,6 +679,72 @@ model MeetingDutySettings {
   organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
 
   @@map("meeting_duty_settings")
+}
+
+enum MeetingDutySector {
+  INDICATOR
+  MIC
+  SOUND
+  VIDEO
+  STAGE
+}
+
+enum MeetingDutySide {
+  EXTERNO
+  INTERNO
+}
+
+/// Programa salvo de designações de reunião (indicadores, som, etc.).
+model MeetingDutyList {
+  id             String   @id @default(uuid())
+  organizationId String
+  periodFrom     DateTime @db.Date
+  periodTo       DateTime @db.Date
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  organization Organization      @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  dates        MeetingDutyDate[]
+
+  @@index([organizationId, periodFrom])
+  @@map("meeting_duty_list")
+}
+
+model MeetingDutyDate {
+  id          String      @id @default(uuid())
+  listId      String
+  date        DateTime    @db.Date
+  meetingKind MeetingKind
+
+  list        MeetingDutyList         @relation(fields: [listId], references: [id], onDelete: Cascade)
+  assignments MeetingDutyAssignment[]
+
+  @@unique([listId, date, meetingKind])
+  @@index([listId, date])
+  @@map("meeting_duty_date")
+}
+
+model MeetingDutyAssignment {
+  id         String           @id @default(uuid())
+  dutyDateId String
+  sector     MeetingDutySector
+  /// Nome do posto (indicador); "" quando genérico.
+  postLabel  String           @default("")
+  /// Lado do indicador (externo/interno); nulo nos demais setores.
+  side       MeetingDutySide?
+  position   Int              @default(0)
+  personId   String?
+  isManual   Boolean          @default(false)
+  createdAt  DateTime         @default(now())
+  updatedAt  DateTime         @updatedAt
+
+  dutyDate MeetingDutyDate @relation(fields: [dutyDateId], references: [id], onDelete: Cascade)
+  person   Person?         @relation(fields: [personId], references: [id], onDelete: Restrict)
+
+  @@unique([dutyDateId, sector, postLabel, position])
+  @@index([dutyDateId])
+  @@index([personId])
+  @@map("meeting_duty_assignment")
 }
 
 model CleaningAssignmentList {
